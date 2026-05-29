@@ -1,6 +1,7 @@
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
@@ -71,8 +72,8 @@ export default function LoginScreen() {
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
       <View style={styles.hero}>
-        <View style={[styles.logoBox, { backgroundColor: Colors.primary }]}>
-          <Text style={styles.logoText}>K</Text>
+        <View style={styles.logoBox}>
+          <Image source={require('../../assets/icon.png')} style={styles.logoImg} />
         </View>
         <Text style={[styles.appName, { color: c.text }]}>KPSS Quiz</Text>
         <Text style={[styles.tagline, { color: c.textSecondary }]}>
@@ -162,6 +163,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   logoText: { fontSize: 40, fontWeight: '800', color: '#fff' },
+  logoImg: { width: 80, height: 80, borderRadius: 24 },
   appName: { fontSize: 32, fontWeight: '800', letterSpacing: -0.5 },
   tagline: { fontSize: 16, textAlign: 'center', lineHeight: 24 },
   features: { gap: 10 },
