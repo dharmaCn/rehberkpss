@@ -17,6 +17,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['23 Nisan 1920', '29 Ekim 1923', '30 Ağustos 1922', '1 Kasım 1922'],
     correctIndex: 0,
     difficulty: 'kolay',
+    aciklama: 'TBMM, 23 Nisan 1920\'de Ankara\'da açıldı ve millî egemenliğe dayalı yeni Türk devletinin temeli atıldı. Bu tarih bugün Ulusal Egemenlik ve Çocuk Bayramı olarak kutlanır.',
   },
   {
     id: 'h002',
@@ -25,6 +26,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1920', '1921', '1923', '1925'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Lozan Barış Antlaşması 24 Temmuz 1923\'te imzalandı; yeni Türk devletinin bağımsızlığı uluslararası alanda tanındı ve kapitülasyonlar kaldırıldı.',
   },
   {
     id: 'h003',
@@ -33,6 +35,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1919', '1920', '1921', '1922'],
     correctIndex: 2,
     difficulty: 'orta',
+    aciklama: 'Sakarya Meydan Muharebesi 23 Ağustos-13 Eylül 1921\'de kazanıldı. 1683 Viyana bozgunundan beri süren geri çekilme sona erdi; bu zaferle Mustafa Kemal\'e "Gazi" unvanı ve mareşallik rütbesi verildi.',
   },
   {
     id: 'h004',
@@ -41,6 +44,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1071', '1176', '1299', '1453'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Osmanlı Devleti, Osman Bey önderliğinde 1299\'da Söğüt çevresinde kuruldu. Bir uç beyliğiyken zamanla üç kıtaya yayılan büyük bir imparatorluğa dönüştü.',
   },
   {
     id: 'h005',
@@ -49,6 +53,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['I. Murat', 'II. Murat', 'II. Mehmet', 'I. Selim'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'İstanbul 29 Mayıs 1453\'te II. Mehmet (Fatih Sultan Mehmet) tarafından fethedildi. Bu olay Orta Çağ\'ın sonu, Yeni Çağ\'ın başlangıcı kabul edilir.',
   },
   {
     id: 'h006',
@@ -62,6 +67,7 @@ export const QUESTION_POOL: Question[] = [
     ],
     correctIndex: 1,
     difficulty: 'orta',
+    aciklama: 'I. Dünya Savaşı, 28 Haziran 1914\'te Avusturya-Macaristan veliahtı Franz Ferdinand\'ın Saraybosna\'da bir Sırp milliyetçisi tarafından öldürülmesiyle başladı.',
   },
   {
     id: 'h007',
@@ -70,6 +76,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1923', '1930', '1946', '1950'],
     correctIndex: 2,
     difficulty: 'orta',
+    aciklama: 'Türkiye\'de çok partili siyasi hayata geçiş 1946\'da gerçekleşti; Demokrat Parti kuruldu ve ilk kez birden fazla partinin katıldığı seçim yapıldı. 1950\'de DP iktidara geldi.',
   },
   {
     id: 'h008',
@@ -78,6 +85,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['30 Ekim 1918', '30 Kasım 1918', '11 Kasım 1918', '18 Ocak 1919'],
     correctIndex: 0,
     difficulty: 'orta',
+    aciklama: 'Mondros Ateşkesi 30 Ekim 1918\'de imzalandı. Osmanlı I. Dünya Savaşı\'ndan çekildi; ağır hükümleriyle Anadolu\'nun işgaline zemin hazırladı.',
   },
   {
     id: 'h009',
@@ -86,6 +94,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1924', '1926', '1928', '1932'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Harf İnkılabı (Latin alfabesi) 1 Kasım 1928\'de kabul edildi; Arap alfabesi bırakılarak Türkçeye uygun Latin temelli yeni Türk alfabesine geçildi. Okuryazarlığı artırmak için Millet Mektepleri açıldı.',
   },
   {
     id: 'h010',
@@ -94,6 +103,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['10 Kasım 1938', '10 Kasım 1937', '19 Mayıs 1938', '29 Ekim 1938'],
     correctIndex: 0,
     difficulty: 'kolay',
+    aciklama: 'Mustafa Kemal Atatürk 10 Kasım 1938\'de Dolmabahçe Sarayı\'nda vefat etti. Her yıl 10 Kasım\'da saat 09.05\'te anılır.',
   },
   {
     id: 'h011',
@@ -102,6 +112,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1071', '1176', '1243', '1302'],
     correctIndex: 0,
     difficulty: 'kolay',
+    aciklama: 'Malazgirt Meydan Muharebesi\'nde (26 Ağustos 1071) Sultan Alparslan, Bizans ordusunu yendi. Anadolu\'nun kapıları Türklere açıldı ve Anadolu\'nun Türkleşme süreci başladı.',
   },
   {
     id: 'h012',
@@ -110,6 +121,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Ocak 1920', 'Nisan 1920', 'Temmuz 1920', 'Ekim 1920'],
     correctIndex: 0,
     difficulty: 'orta',
+    aciklama: 'Misak-ı Millî (Millî Ant), son Osmanlı Mebusan Meclisi tarafından 28 Ocak 1920\'de kabul edildi. Yeni Türk devletinin sınırlarını ve bağımsızlık ilkelerini belirleyen temel belgedir.',
   },
   {
     id: 'h013',
@@ -247,6 +259,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Fırat', 'Dicle', 'Kızılırmak', 'Sakarya'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Kızılırmak (~1355 km), tamamen Türkiye sınırları içinde akan en uzun nehirdir; Sivas yakınlarından doğup Karadeniz\'e dökülür.',
   },
   {
     id: 'c002',
@@ -255,6 +268,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Erciyes', 'Ağrı', 'Kaçkar', 'Uludağ'],
     correctIndex: 1,
     difficulty: 'kolay',
+    aciklama: 'Ağrı Dağı 5137 m ile Türkiye\'nin en yüksek dağıdır; Doğu Anadolu\'da yer alan volkanik kökenli bir dağdır.',
   },
   {
     id: 'c003',
@@ -263,6 +277,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['6', '7', '8', '9'],
     correctIndex: 2,
     difficulty: 'orta',
+    aciklama: 'Türkiye\'nin 8 komşusu vardır: Yunanistan, Bulgaristan, Gürcistan, Ermenistan, Azerbaycan (Nahçıvan), İran, Irak ve Suriye.',
   },
   {
     id: 'c004',
@@ -276,6 +291,7 @@ export const QUESTION_POOL: Question[] = [
     ],
     correctIndex: 1,
     difficulty: 'kolay',
+    aciklama: 'Marmara Denizi, İstanbul ve Çanakkale boğazları aracılığıyla Karadeniz ile Ege Denizi\'ni birbirine bağlar.',
   },
   {
     id: 'c005',
@@ -284,6 +300,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Eğirdir Gölü', 'Van Gölü', 'Tuz Gölü', 'Beyşehir Gölü'],
     correctIndex: 1,
     difficulty: 'kolay',
+    aciklama: 'Van Gölü (~3713 km²), Türkiye\'nin en büyük gölüdür; sodalı (acı) suyuyla bilinir ve Doğu Anadolu\'da yer alır.',
   },
   {
     id: 'c006',
@@ -297,6 +314,7 @@ export const QUESTION_POOL: Question[] = [
     ],
     correctIndex: 1,
     difficulty: 'orta',
+    aciklama: 'Karadeniz ikliminin en belirgin özelliği her mevsim yağış almasıdır; bu nedenle bölge gür ormanlarla kaplıdır.',
   },
   {
     id: 'c007',
@@ -310,6 +328,7 @@ export const QUESTION_POOL: Question[] = [
     ],
     correctIndex: 0,
     difficulty: 'orta',
+    aciklama: 'Türkiye, Ekvator\'un kuzeyinde (Kuzey yarımküre) ve Greenwich meridyeninin doğusunda (Doğu yarımküre) yer alır.',
   },
   {
     id: 'c008',
@@ -318,6 +337,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Ankara', 'İzmir', 'İstanbul', 'Bursa'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Boğaziçi (15 Temmuz Şehitler) Köprüsü İstanbul\'dadır ve Asya ile Avrupa yakalarını birbirine bağlar.',
   },
   {
     id: 'c009',
@@ -326,6 +346,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['İstanbul', 'İzmir', 'Bursa', 'Ankara'],
     correctIndex: 3,
     difficulty: 'kolay',
+    aciklama: 'Türkiye\'nin başkenti Ankara\'dır; 13 Ekim 1923\'te başkent ilan edilmiştir.',
   },
   {
     id: 'c010',
@@ -334,6 +355,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Karadeniz', 'Hazar Denizi', 'Pers Körfezi', 'Kızıldeniz'],
     correctIndex: 2,
     difficulty: 'orta',
+    aciklama: 'Fırat ve Dicle nehirleri Şattülarap\'ta birleşerek Basra (Pers) Körfezi\'ne dökülür.',
   },
   {
     id: 'c011',
@@ -342,6 +364,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['580.000', '680.000', '780.000', '880.000'],
     correctIndex: 2,
     difficulty: 'zor',
+    aciklama: 'Türkiye\'nin yüzölçümü yaklaşık 780.000 km²\'dir (göller dahil ~783.562 km²).',
   },
   {
     id: 'c012',
@@ -350,6 +373,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Çanakkale Boğazı', 'İstanbul Boğazı', 'Hürmüz Boğazı', 'Kıbrıs Boğazı'],
     correctIndex: 1,
     difficulty: 'kolay',
+    aciklama: 'İstanbul Boğazı, Anadolu (Asya) yakasını Avrupa (Trakya) yakasından ayırır ve Karadeniz\'i Marmara Denizi\'ne bağlar.',
   },
   // VATANDAŞLIK
   {
@@ -359,6 +383,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1. Madde', '2. Madde', '3. Madde', '4. Madde'],
     correctIndex: 1,
     difficulty: 'orta',
+    aciklama: 'Anayasa\'nın 2. maddesi devletin niteliklerini sayar: demokratik, laik, sosyal bir hukuk devleti. (1. madde yönetim şeklinin Cumhuriyet olduğunu belirtir.)',
   },
   {
     id: 'v002',
@@ -367,6 +392,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['450', '500', '550', '600'],
     correctIndex: 3,
     difficulty: 'orta',
+    aciklama: '2017 Anayasa değişikliğiyle TBMM\'nin milletvekili sayısı 550\'den 600\'e çıkarılmıştır.',
   },
   {
     id: 'v003',
@@ -375,6 +401,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['16', '17', '18', '21'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Türkiye\'de seçme (oy kullanma) yaşı 18\'dir.',
   },
   {
     id: 'v004',
@@ -383,6 +410,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['4 yıl', '5 yıl', '6 yıl', '7 yıl'],
     correctIndex: 1,
     difficulty: 'kolay',
+    aciklama: 'Cumhurbaşkanı 5 yıllık dönemler için seçilir ve en fazla iki dönem görev yapabilir.',
   },
   {
     id: 'v005',
@@ -396,6 +424,7 @@ export const QUESTION_POOL: Question[] = [
     ],
     correctIndex: 1,
     difficulty: 'orta',
+    aciklama: 'Anayasa Mahkemesi\'nin temel görevi, kanunların ve bazı düzenlemelerin Anayasa\'ya uygunluğunu denetlemektir.',
   },
   {
     id: 'v006',
@@ -404,6 +433,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1961', '1971', '1980', '1982'],
     correctIndex: 3,
     difficulty: 'kolay',
+    aciklama: 'Türkiye\'nin yürürlükteki anayasası 1982 Anayasası\'dır; 7 Kasım 1982\'de halkoyuyla kabul edilmiştir.',
   },
   {
     id: 'v007',
@@ -412,6 +442,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Yargıtay', 'Danıştay', 'Anayasa Mahkemesi', 'Sayıştay'],
     correctIndex: 1,
     difficulty: 'orta',
+    aciklama: 'İdari davalara bakan yüksek mahkeme Danıştay\'dır. Yargıtay ise adli (hukuk ve ceza) davalara bakar.',
   },
   {
     id: 'v008',
@@ -420,6 +451,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Ocak-Haziran', 'Ekim-Temmuz', 'Mart-Ekim', 'Nisan-Eylül'],
     correctIndex: 1,
     difficulty: 'zor',
+    aciklama: 'TBMM, Anayasa gereği her yıl Ekim ayının ilk günü kendiliğinden toplanır ve genellikle Temmuz başında tatile girer.',
   },
   {
     id: 'v009',
@@ -428,6 +460,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Kürtçe', 'Arapça', 'Türkçe', 'Osmanlıca'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Anayasa\'ya göre Türkiye Cumhuriyeti\'nin resmî dili Türkçedir.',
   },
   {
     id: 'v010',
@@ -436,6 +469,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['1 dönem', '2 dönem', '3 dönem', 'Sınır yok'],
     correctIndex: 1,
     difficulty: 'orta',
+    aciklama: 'Cumhurbaşkanı en fazla iki dönem (her biri 5 yıl) görev yapabilir.',
   },
   {
     id: 'v011',
@@ -444,6 +478,7 @@ export const QUESTION_POOL: Question[] = [
     options: ['Cumhurbaşkanlığı', 'Bakanlar Kurulu', 'TBMM', 'Danıştay'],
     correctIndex: 2,
     difficulty: 'kolay',
+    aciklama: 'Yasama yetkisi, yani kanun yapma yetkisi, Türk Milleti adına Türkiye Büyük Millet Meclisi\'ne aittir ve devredilemez.',
   },
   {
     id: 'v012',
@@ -452,5 +487,6 @@ export const QUESTION_POOL: Question[] = [
     options: ['1945', '1946', '1948', '1952'],
     correctIndex: 0,
     difficulty: 'zor',
+    aciklama: 'Türkiye, Birleşmiş Milletler\'in kurucu üyelerindendir ve 1945\'te BM\'ye üye olmuştur.',
   },
 ];

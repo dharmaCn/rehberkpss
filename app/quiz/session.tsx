@@ -1,6 +1,7 @@
 import {
   View,
   Text,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
@@ -30,6 +31,8 @@ export default function QuizSession() {
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [answers, setAnswers] = useState<number[]>([]); // her sorunun verilen cevabı (-1 = süre doldu)
+  const [openReview, setOpenReview] = useState<number | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
@@ -72,6 +75,7 @@ export default function QuizSession() {
   function handleTimeout() {
     if (selected !== null) return;
     setSelected(-1); // hiçbiri seçilmedi
+    setAnswers((a) => [...a, -1]);
     setTimeout(() => nextQuestion(0, 0), 1000);
   }
 
@@ -79,6 +83,7 @@ export default function QuizSession() {
     if (selected !== null) return;
     clearTimer();
     setSelected(optIndex);
+    setAnswers((a) => [...a, optIndex]);
 
     const isCorrect = optIndex === q.correctIndex;
     const pts = isCorrect ? calculateScore(true, timeLeft, QUESTION_TIME) : 0;
@@ -134,7 +139,11 @@ export default function QuizSession() {
     const emoji = percentage >= 80 ? '🏆' : percentage >= 60 ? '👍' : percentage >= 40 ? '📚' : '💪';
 
     return (
-      <View style={[styles.container, { backgroundColor: c.background }]}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: c.background }}
+        contentContainerStyle={styles.resultScrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.resultCard, { backgroundColor: Colors.primary }]}>
           <Text style={styles.resultEmoji}>{emoji}</Text>
           <Text style={styles.resultTitle}>Quiz Tamamlandı!</Text>
@@ -162,6 +171,74 @@ export default function QuizSession() {
             : 'Yarın daha iyisini yapacaksın!'}
         </Text>
 
+        {/* Cevap inceleme */}
+        <Text style={[styles.reviewTitle, { color: c.text }]}>Cevaplarını İncele</Text>
+        <Text style={[styles.reviewHint, { color: c.textSecondary }]}>
+          Bir soruya dokunarak doğru cevabı ve açıklamasını gör.
+        </Text>
+
+        <View style={styles.reviewList}>
+          {questions.map((rq, i) => {
+            const userAns = answers[i] ?? -1;
+            const isCorrect = userAns === rq.correctIndex;
+            const open = openReview === i;
+            return (
+              <View key={rq.id} style={[styles.reviewItem, { backgroundColor: c.card, borderColor: c.border }]}>
+                <TouchableOpacity
+                  style={styles.reviewHeader}
+                  onPress={() => setOpenReview(open ? null : i)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.reviewBadge, { backgroundColor: isCorrect ? Colors.success : Colors.error }]}>
+                    <Text style={styles.reviewBadgeText}>{isCorrect ? '✓' : '✗'}</Text>
+                  </View>
+                  <Text style={[styles.reviewQ, { color: c.text }]} numberOfLines={open ? undefined : 1}>
+                    {i + 1}. {rq.question}
+                  </Text>
+                  <Text style={[styles.reviewChevron, { color: c.textSecondary }]}>{open ? '▲' : '▼'}</Text>
+                </TouchableOpacity>
+
+                {open && (
+                  <View style={styles.reviewBody}>
+                    {rq.options.map((opt, j) => {
+                      const correctOpt = j === rq.correctIndex;
+                      const wrongPick = j === userAns && userAns !== rq.correctIndex;
+                      return (
+                        <View
+                          key={j}
+                          style={[
+                            styles.reviewOpt,
+                            { borderColor: c.border },
+                            correctOpt && { backgroundColor: Colors.success + '1A', borderColor: Colors.success },
+                            wrongPick && { backgroundColor: Colors.error + '1A', borderColor: Colors.error },
+                          ]}
+                        >
+                          <Text style={[styles.reviewOptText, { color: c.text }]}>
+                            {String.fromCharCode(65 + j)}) {opt}
+                          </Text>
+                          {correctOpt && <Text style={[styles.reviewTag, { color: Colors.success }]}>✓ Doğru cevap</Text>}
+                          {wrongPick && <Text style={[styles.reviewTag, { color: Colors.error }]}>Senin cevabın</Text>}
+                        </View>
+                      );
+                    })}
+
+                    {userAns === -1 && (
+                      <Text style={[styles.reviewTimeout, { color: c.textSecondary }]}>⏱ Süre doldu — bu soruyu cevaplamadın.</Text>
+                    )}
+
+                    {rq.aciklama && (
+                      <View style={[styles.reviewAciklama, { backgroundColor: Colors.primary + '12', borderColor: Colors.primary + '33' }]}>
+                        <Text style={[styles.reviewAciklamaLabel, { color: Colors.primary }]}>💡 Açıklama</Text>
+                        <Text style={[styles.reviewAciklamaText, { color: c.text }]}>{rq.aciklama}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+
         <TouchableOpacity
           style={[styles.homeBtn, { backgroundColor: Colors.primary }]}
           onPress={() => router.replace('/(tabs)')}
@@ -177,7 +254,7 @@ export default function QuizSession() {
         >
           <Text style={[styles.leaderBtnText, { color: c.text }]}>Sıralamayı Gör 🏆</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     );
   }
 
@@ -360,4 +437,24 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   leaderBtnText: { fontSize: 15, fontWeight: '600' },
+
+  // Sonuç ekranı scroll + cevap inceleme
+  resultScrollContent: { paddingTop: 56, paddingBottom: 40 },
+  reviewTitle: { fontSize: 18, fontWeight: '800', marginHorizontal: 20, marginTop: 24 },
+  reviewHint: { fontSize: 13, marginHorizontal: 20, marginTop: 4, marginBottom: 12 },
+  reviewList: { marginHorizontal: 20, gap: 10 },
+  reviewItem: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
+  reviewBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  reviewBadgeText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  reviewQ: { flex: 1, fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  reviewChevron: { fontSize: 12, marginLeft: 4 },
+  reviewBody: { paddingHorizontal: 14, paddingBottom: 14, gap: 8 },
+  reviewOpt: { borderWidth: 1.5, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, gap: 4 },
+  reviewOptText: { fontSize: 14, fontWeight: '500', lineHeight: 20 },
+  reviewTag: { fontSize: 12, fontWeight: '700' },
+  reviewTimeout: { fontSize: 13, fontStyle: 'italic', marginTop: 2 },
+  reviewAciklama: { borderRadius: 12, borderWidth: 1, padding: 12, gap: 6, marginTop: 4 },
+  reviewAciklamaLabel: { fontSize: 13, fontWeight: '800' },
+  reviewAciklamaText: { fontSize: 13, lineHeight: 20 },
 });
