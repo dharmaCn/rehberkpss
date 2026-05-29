@@ -26,6 +26,14 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# firebase
+firebase-debug.log*
+firestore-debug.log*
+.firebase/
+
+# unused legacy mocks (removed)
+__mocks__/
+
 # macOS
 .DS_Store
 *.pem
