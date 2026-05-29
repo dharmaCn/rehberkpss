@@ -74,7 +74,7 @@ export default function LoginScreen() {
         <View style={[styles.logoBox, { backgroundColor: Colors.primary }]}>
           <Text style={styles.logoText}>K</Text>
         </View>
-        <Text style={[styles.appName, { color: c.text }]}>RehberKPSS</Text>
+        <Text style={[styles.appName, { color: c.text }]}>KPSS Quiz</Text>
         <Text style={[styles.tagline, { color: c.textSecondary }]}>
           Her gün 10 soru,{'\n'}her gün bir adım öne çık.
         </Text>
@@ -84,7 +84,7 @@ export default function LoginScreen() {
         {[
           { icon: '🏆', label: 'Günlük sıralama' },
           { icon: '📊', label: 'Haftalık & tüm zamanlar' },
-          { icon: '⚡', label: 'Hız bonusu ile puan kazan' },
+          { icon: '⚡', label: 'Hızlı cevapla ekstra puan kazan' },
         ].map((f) => (
           <View key={f.label} style={[styles.featureRow, { borderColor: c.border, backgroundColor: c.card }]}>
             <Text style={styles.featureIcon}>{f.icon}</Text>

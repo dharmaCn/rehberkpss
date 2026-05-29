@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "RehberKPSS",
+    "name": "KPSS Quiz",
     "slug": "rehberkpss",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,7 +11,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.rehberkpss.app",
       "infoPlist": {
-        "CFBundleDisplayName": "RehberKPSS",
+        "CFBundleDisplayName": "KPSS Quiz",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
