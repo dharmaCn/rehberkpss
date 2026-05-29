@@ -1,0 +1,43 @@
+import { QUESTION_POOL, Question } from '../constants/questions';
+
+export function getDailyQuestions(): Question[] {
+  const today = new Date();
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+
+  // Deterministik shuffle — aynı gün herkes aynı 10 soruyu görür
+  const shuffled = [...QUESTION_POOL];
+  let s = seed;
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.slice(0, 10);
+}
+
+export function getTodayKey(): string {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+export function calculateScore(
+  correct: boolean,
+  timeRemaining: number,
+  totalTime: number
+): number {
+  if (!correct) return 0;
+  const base = 100;
+  const speedBonus = Math.floor((timeRemaining / totalTime) * 50);
+  return base + speedBonus;
+}
+
+export function getCategoryLabel(cat: Question['category']): string {
+  const map = { tarih: 'Tarih', cografya: 'Coğrafya', vatandaslik: 'Vatandaşlık' };
+  return map[cat];
+}
+
+export function getCategoryColor(cat: Question['category']): string {
+  const map = { tarih: '#EF4444', cografya: '#10B981', vatandaslik: '#4F46E5' };
+  return map[cat];
+}
