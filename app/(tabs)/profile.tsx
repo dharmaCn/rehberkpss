@@ -184,7 +184,9 @@ export default function ProfileScreen() {
         <Text style={[styles.signOutText, { color: Colors.error }]}>Çıkış Yap</Text>
       </TouchableOpacity>
 
-      {/* Hesabımı Sil */}
+      {/* Hesabımı Sil — yalnızca gerçek (Google) hesaplarda; misafirde gösterilmez */}
+      {!user?.isAnonymous && (
+      <>
       <TouchableOpacity
         style={styles.deleteLink}
         onPress={() => { setConfirmText(''); setDelVisible(true); }}
@@ -243,6 +245,8 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+      </>
+      )}
     </ScrollView>
   );
 }

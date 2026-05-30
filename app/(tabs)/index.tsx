@@ -7,13 +7,23 @@ import {
   Image,
   useColorScheme,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
 import { hasCompletedTodayQuiz } from '../../lib/firestore';
 import { getDailyQuestions, getTodayKey } from '../../lib/quiz';
+import { QUESTION_POOL } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
+
+// KPSS Genel Kültür sınavında yaklaşık soru dağılımı (toplam ~60 soru)
+const CATEGORIES = [
+  { key: 'tarih', label: 'Tarih', color: '#EF4444', icon: '📜', exam: 27 },
+  { key: 'cografya', label: 'Coğrafya', color: '#10B981', icon: '🌍', exam: 18 },
+  { key: 'vatandaslik', label: 'Vatandaşlık', color: Colors.primary, icon: '🏛️', exam: 9 },
+  { key: 'guncel', label: 'Güncel', color: '#F59E0B', icon: '📰', exam: 6 },
+] as const;
 
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -40,6 +50,14 @@ export default function HomeScreen() {
     if (h < 18) return 'İyi günler';
     return 'İyi akşamlar';
   };
+
+  function showCategoryInfo(cat: (typeof CATEGORIES)[number]) {
+    const count = QUESTION_POOL.filter((q) => q.category === cat.key).length;
+    Alert.alert(
+      `${cat.icon}  ${cat.label}`,
+      `KPSS Genel Kültür sınavında bu konudan yaklaşık ${cat.exam} soru çıkmaktadır.\n\nUygulamada ${cat.label} kategorisinde toplam ${count} soru bulunuyor.`
+    );
+  }
 
   return (
     <ScrollView
@@ -70,7 +88,7 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.cardLabel}>Günlük Quiz</Text>
             <Text style={styles.cardTitle}>Bugünün Soruları</Text>
-            <Text style={styles.cardSub}>{questionCount} soru • Tarih, Coğrafya, Vatandaşlık</Text>
+            <Text style={styles.cardSub}>{questionCount} soru • 4 kategori</Text>
           </View>
           <View style={styles.cardBadge}>
             <Text style={styles.cardBadgeText}>{questionCount}</Text>
@@ -113,18 +131,22 @@ export default function HomeScreen() {
       </View>
 
       {/* Konu dağılımı */}
-      <Text style={[styles.sectionTitle, { color: c.text }]}>Konu Dağılımı</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: c.text }]}>Konu Dağılımı</Text>
+        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>detay için dokun</Text>
+      </View>
       <View style={styles.categories}>
-        {[
-          { label: 'Tarih', color: '#EF4444', icon: '📜' },
-          { label: 'Coğrafya', color: '#10B981', icon: '🌍' },
-          { label: 'Vatandaşlık', color: Colors.primary, icon: '🏛️' },
-        ].map((cat) => (
-          <View key={cat.label} style={[styles.catCard, { backgroundColor: c.card, borderColor: c.border }]}>
+        {CATEGORIES.map((cat) => (
+          <TouchableOpacity
+            key={cat.key}
+            style={[styles.catCard, { backgroundColor: c.card, borderColor: c.border }]}
+            onPress={() => showCategoryInfo(cat)}
+            activeOpacity={0.8}
+          >
             <Text style={styles.catIcon}>{cat.icon}</Text>
             <Text style={[styles.catLabel, { color: c.text }]}>{cat.label}</Text>
             <View style={[styles.catDot, { backgroundColor: cat.color }]} />
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -201,10 +223,13 @@ const styles = StyleSheet.create({
   },
   startBtnText: { color: Colors.primary, fontSize: 16, fontWeight: '800' },
 
+  sectionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   sectionTitle: { fontSize: 18, fontWeight: '700' },
-  categories: { flexDirection: 'row', gap: 12 },
+  sectionHint: { fontSize: 12, fontWeight: '500' },
+  categories: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   catCard: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '44%',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
