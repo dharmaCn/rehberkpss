@@ -41,3 +41,25 @@ export function getCategoryColor(cat: Question['category']): string {
   const map = { tarih: '#EF4444', cografya: '#10B981', vatandaslik: '#4F46E5', guncel: '#F59E0B' };
   return map[cat];
 }
+
+export function getDailyCategoryQuestions(category: Question['category'], count = 5): Question[] {
+  const today = new Date();
+  // Category seed değişkeni ana quizden farklı olsun
+  const catOffset = { tarih: 1, cografya: 2, vatandaslik: 3, guncel: 4 }[category];
+  const seed =
+    (today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()) * 10 +
+    catOffset;
+
+  const pool = QUESTION_POOL.filter((q) => q.category === category);
+  const shuffled = [...pool];
+  let s = seed;
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.slice(0, count);
+}
+
+export const CATEGORY_SCORE_MULTIPLIER = 0.2;

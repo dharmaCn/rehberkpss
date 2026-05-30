@@ -165,6 +165,59 @@ export async function fetchUserProfile(uid: string): Promise<UserProfile | null>
   return snap.exists() ? (snap.data() as UserProfile) : null;
 }
 
+export async function hasCompletedTodayCategoryQuiz(uid: string, category: string): Promise<boolean> {
+  const today = getTodayKey();
+  const ref = doc(db, 'categoryResults', `${uid}_${today}_${category}`);
+  const snap = await getDoc(ref);
+  return snap.exists();
+}
+
+export async function saveCategoryQuizResult(
+  user: { uid: string; displayName: string | null; photoURL: string | null },
+  category: string,
+  score: number,
+  correct: number
+): Promise<void> {
+  const today = getTodayKey();
+  const week = getWeekKey();
+
+  // Kategori quiz kaydı
+  const catRef = doc(db, 'categoryResults', `${user.uid}_${today}_${category}`);
+  await setDoc(catRef, {
+    uid: user.uid,
+    displayName: user.displayName ?? 'Anonim',
+    photoURL: user.photoURL ?? '',
+    score,
+    correct,
+    category,
+    date: today,
+    completedAt: serverTimestamp(),
+  });
+
+  // Günlük results dokümanını güncelle veya oluştur (liderboard için)
+  const dailyRef = doc(db, 'results', `${user.uid}_${today}`);
+  const dailySnap = await getDoc(dailyRef);
+  if (dailySnap.exists()) {
+    await updateDoc(dailyRef, { score: increment(score) });
+  } else {
+    // Ana quiz yapılmamışsa stub oluştur
+    await setDoc(dailyRef, {
+      uid: user.uid,
+      displayName: user.displayName ?? 'Anonim',
+      photoURL: user.photoURL ?? '',
+      score,
+      correct: 0,
+      date: today,
+      week,
+      completedAt: serverTimestamp(),
+    });
+  }
+
+  // Kullanıcı toplam puanı
+  const userRef = doc(db, 'users', user.uid);
+  await updateDoc(userRef, { totalScore: increment(score) });
+}
+
 export async function fetchUserRank(uid: string, period: 'daily' | 'weekly' | 'alltime'): Promise<number> {
   const board = await fetchLeaderboard(period, 200);
   const idx = board.findIndex((e) => e.uid === uid);

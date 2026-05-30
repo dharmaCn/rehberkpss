@@ -7,13 +7,12 @@ import {
   Image,
   useColorScheme,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
-import { hasCompletedTodayQuiz } from '../../lib/firestore';
-import { getDailyQuestions, getTodayKey } from '../../lib/quiz';
+import { hasCompletedTodayQuiz, hasCompletedTodayCategoryQuiz } from '../../lib/firestore';
+import { getDailyQuestions, getDailyCategoryQuestions, getTodayKey } from '../../lib/quiz';
 import { QUESTION_POOL } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
 
@@ -32,16 +31,26 @@ export default function HomeScreen() {
   const user = getAuthSync()?.currentUser ?? null;
 
   const [completed, setCompleted] = useState<boolean | null>(null);
-  const [todayScore, setTodayScore] = useState<number | null>(null);
+  const [catCompleted, setCatCompleted] = useState<Record<string, boolean>>({});
   const questionCount = getDailyQuestions().length;
   const today = getTodayKey();
 
   useEffect(() => {
     if (!user) {
       setCompleted(false);
+      setCatCompleted({});
       return;
     }
     hasCompletedTodayQuiz(user.uid).then(setCompleted);
+    Promise.all(
+      CATEGORIES.map((cat) =>
+        hasCompletedTodayCategoryQuiz(user.uid, cat.key).then((done) => ({ key: cat.key, done }))
+      )
+    ).then((results) => {
+      const map: Record<string, boolean> = {};
+      results.forEach(({ key, done }) => { map[key] = done; });
+      setCatCompleted(map);
+    });
   }, [user]);
 
   const greeting = () => {
@@ -50,14 +59,6 @@ export default function HomeScreen() {
     if (h < 18) return 'İyi günler';
     return 'İyi akşamlar';
   };
-
-  function showCategoryInfo(cat: (typeof CATEGORIES)[number]) {
-    const count = QUESTION_POOL.filter((q) => q.category === cat.key).length;
-    Alert.alert(
-      `${cat.icon}  ${cat.label}`,
-      `Sınavda bu konudan ${cat.exam} soru çıkmaktadır.`
-    );
-  }
 
   return (
     <ScrollView
@@ -130,24 +131,41 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Konu dağılımı */}
+      {/* Ders Quizleri */}
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: c.text }]}>Konu Dağılımı</Text>
-        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>detay için dokun</Text>
+        <Text style={[styles.sectionTitle, { color: c.text }]}>Ders Quizleri</Text>
+        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>%20 puan • 5 soru</Text>
       </View>
-      <View style={styles.categories}>
-        {CATEGORIES.map((cat) => (
-          <TouchableOpacity
-            key={cat.key}
-            style={[styles.catCard, { backgroundColor: c.card, borderColor: c.border }]}
-            onPress={() => showCategoryInfo(cat)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.catIcon}>{cat.icon}</Text>
-            <Text style={[styles.catLabel, { color: c.text }]}>{cat.label}</Text>
-            <View style={[styles.catDot, { backgroundColor: cat.color }]} />
-          </TouchableOpacity>
-        ))}
+      <View style={styles.lessonGrid}>
+        {CATEGORIES.map((cat) => {
+          const done = catCompleted[cat.key] ?? false;
+          const qCount = getDailyCategoryQuestions(cat.key).length;
+          return (
+            <TouchableOpacity
+              key={cat.key}
+              style={[styles.lessonCard, { backgroundColor: c.card, borderColor: done ? cat.color : c.border }]}
+              onPress={() =>
+                done
+                  ? undefined
+                  : router.push({ pathname: '/quiz/category' as never, params: { cat: cat.key } })
+              }
+              activeOpacity={0.8}
+            >
+              <Text style={styles.lessonIcon}>{cat.icon}</Text>
+              <Text style={[styles.lessonLabel, { color: c.text }]}>{cat.label}</Text>
+              <Text style={[styles.lessonCount, { color: c.textSecondary }]}>{qCount} soru</Text>
+              {done ? (
+                <View style={[styles.lessonDoneBadge, { backgroundColor: cat.color + '22' }]}>
+                  <Text style={[styles.lessonDoneText, { color: cat.color }]}>✓ Tamamlandı</Text>
+                </View>
+              ) : (
+                <View style={[styles.lessonStartBadge, { backgroundColor: cat.color }]}>
+                  <Text style={styles.lessonStartText}>Başla</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* İpucu */}
@@ -226,21 +244,26 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   sectionTitle: { fontSize: 18, fontWeight: '700' },
   sectionHint: { fontSize: 12, fontWeight: '500' },
-  categories: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  catCard: {
+
+  tipCard: { borderRadius: 16, padding: 16, borderWidth: 1, gap: 8 },
+  tipTitle: { fontSize: 14, fontWeight: '700' },
+  tipText: { fontSize: 13, lineHeight: 20 },
+
+  lessonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  lessonCard: {
     flexGrow: 1,
     flexBasis: '44%',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
+    gap: 6,
+    borderWidth: 1.5,
   },
-  catIcon: { fontSize: 28 },
-  catLabel: { fontSize: 12, fontWeight: '600', textAlign: 'center' },
-  catDot: { width: 8, height: 8, borderRadius: 4 },
-
-  tipCard: { borderRadius: 16, padding: 16, borderWidth: 1, gap: 8 },
-  tipTitle: { fontSize: 14, fontWeight: '700' },
-  tipText: { fontSize: 13, lineHeight: 20 },
+  lessonIcon: { fontSize: 28 },
+  lessonLabel: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  lessonCount: { fontSize: 11, fontWeight: '500' },
+  lessonDoneBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginTop: 2 },
+  lessonDoneText: { fontSize: 11, fontWeight: '700' },
+  lessonStartBadge: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginTop: 2 },
+  lessonStartText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 });
