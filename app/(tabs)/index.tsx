@@ -55,7 +55,7 @@ export default function HomeScreen() {
     const count = QUESTION_POOL.filter((q) => q.category === cat.key).length;
     Alert.alert(
       `${cat.icon}  ${cat.label}`,
-      `KPSS Genel Kültür sınavında bu konudan yaklaşık ${cat.exam} soru çıkmaktadır.\n\nUygulamada ${cat.label} kategorisinde toplam ${count} soru bulunuyor.`
+      `Sınavda bu konudan ${cat.exam} soru çıkmaktadır.`
     );
   }
 
