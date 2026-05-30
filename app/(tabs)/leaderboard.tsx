@@ -37,6 +37,7 @@ export default function LeaderboardScreen() {
   }, [period]);
 
   async function load() {
+
     setLoading(true);
     try {
       const result = await fetchLeaderboard(period);

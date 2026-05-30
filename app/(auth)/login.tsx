@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { enableDemo } from '../../lib/demoMode';
 import { signInGuestAsync, signInWithGoogleAsync } from '../../lib/firebase';
 import { ensureUserProfile } from '../../lib/firestore';
 import { Colors } from '../../constants/colors';
@@ -62,11 +61,6 @@ export default function LoginScreen() {
     } finally {
       setGoogleLoading(false);
     }
-  }
-
-  function handleDemo() {
-    enableDemo();
-    router.replace('/(tabs)');
   }
 
   return (
@@ -128,10 +122,6 @@ export default function LoginScreen() {
             <Text style={[styles.googleBtnText, { color: c.text }]}>Google ile Giriş Yap</Text>
           </>
         )}
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={handleDemo} activeOpacity={0.6}>
-        <Text style={[styles.demoText, { color: c.textSecondary }]}>Demo Modu</Text>
       </TouchableOpacity>
 
       <Text style={[styles.legal, { color: c.textSecondary }]}>
@@ -212,6 +202,5 @@ const styles = StyleSheet.create({
   },
   googleIcon: { fontSize: 13, fontWeight: '800', color: '#fff' },
   googleBtnText: { fontSize: 15, fontWeight: '600' },
-  demoText: { textAlign: 'center', fontSize: 13, fontWeight: '500' },
   legal: { fontSize: 12, textAlign: 'center' },
 });
