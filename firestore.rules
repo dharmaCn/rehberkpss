@@ -18,7 +18,8 @@ service cloud.firestore {
                     && request.auth.uid == uid
                     && validUserUpdate(request.resource.data, resource.data);
 
-      allow delete: if false;
+      // Kullanıcı yalnızca kendi profilini silebilir (hesap silme)
+      allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
     // Günlük quiz sonuçları
@@ -34,7 +35,8 @@ service cloud.firestore {
 
       // Sonuç bir kez yazıldıktan sonra değiştirilemez
       allow update: if false;
-      allow delete: if false;
+      // Kullanıcı yalnızca kendi sonuçlarını silebilir (hesap silme)
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
   }
 

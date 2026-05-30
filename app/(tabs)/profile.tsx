@@ -8,10 +8,12 @@ import {
   useColorScheme,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
-import { getAuthSync } from '../../lib/firebase';
+import { getAuthSync, deleteAccountAsync } from '../../lib/firebase';
 import { fetchUserProfile, fetchUserRank, UserProfile } from '../../lib/firestore';
 import { Colors } from '../../constants/colors';
 
@@ -23,6 +25,11 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [ranks, setRanks] = useState({ daily: 0, weekly: 0, alltime: 0 });
   const [loading, setLoading] = useState(true);
+  const [delVisible, setDelVisible] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  const canDelete = confirmText.trim().toLowerCase() === 'hesapsil';
 
   useEffect(() => {
     if (!user) return;
@@ -49,6 +56,30 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  }
+
+  async function handleDeleteAccount() {
+    if (!canDelete || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteAccountAsync();
+      // Hesap silinince onAuthStateChanged tetiklenir, _layout giriş ekranına yönlendirir
+      setDelVisible(false);
+      setConfirmText('');
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code ?? '';
+      const msg = e instanceof Error ? e.message : String(e);
+      if (code === 'auth/requires-recent-login') {
+        Alert.alert(
+          'Yeniden Giriş Gerekli',
+          'Güvenlik nedeniyle hesabı silmeden önce çıkış yapıp tekrar giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yapın, ardından yeniden deneyin.'
+        );
+      } else {
+        Alert.alert('Hata', 'Hesap silinemedi: ' + msg);
+      }
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (loading) {
@@ -152,6 +183,66 @@ export default function ProfileScreen() {
       >
         <Text style={[styles.signOutText, { color: Colors.error }]}>Çıkış Yap</Text>
       </TouchableOpacity>
+
+      {/* Hesabımı Sil */}
+      <TouchableOpacity
+        style={styles.deleteLink}
+        onPress={() => { setConfirmText(''); setDelVisible(true); }}
+        activeOpacity={0.7}
+      >
+        <Text style={[styles.deleteLinkText, { color: Colors.error }]}>Hesabımı Sil</Text>
+      </TouchableOpacity>
+
+      {/* Hesap silme onay modalı */}
+      <Modal
+        visible={delVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !deleting && setDelVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: c.card }]}>
+            <Text style={[styles.modalTitle, { color: c.text }]}>Hesabını Sil</Text>
+            <Text style={[styles.modalDesc, { color: c.textSecondary }]}>
+              Bu işlem geri alınamaz. Tüm verilerin (puanların, sıralaman ve quiz geçmişin) kalıcı olarak silinir.
+              {'\n\n'}Onaylamak için aşağıya{' '}
+              <Text style={{ fontWeight: '800', color: c.text }}>hesapsil</Text> yaz.
+            </Text>
+            <TextInput
+              value={confirmText}
+              onChangeText={setConfirmText}
+              placeholder="hesapsil"
+              placeholderTextColor={c.textSecondary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!deleting}
+              style={[styles.modalInput, { borderColor: c.border, color: c.text, backgroundColor: c.background }]}
+            />
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { borderColor: c.border, borderWidth: 1.5 }]}
+                onPress={() => { setDelVisible(false); setConfirmText(''); }}
+                disabled={deleting}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.modalBtnText, { color: c.text }]}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: Colors.error, opacity: canDelete && !deleting ? 1 : 0.5 }]}
+                onPress={handleDeleteAccount}
+                disabled={!canDelete || deleting}
+                activeOpacity={0.85}
+              >
+                {deleting ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={[styles.modalBtnText, { color: '#fff' }]}>Hesabı Sil</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -207,4 +298,16 @@ const styles = StyleSheet.create({
 
   signOutBtn: { borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5 },
   signOutText: { fontSize: 15, fontWeight: '700' },
+
+  deleteLink: { alignItems: 'center', paddingVertical: 4 },
+  deleteLinkText: { fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', paddingHorizontal: 28 },
+  modalCard: { borderRadius: 20, padding: 22, gap: 14 },
+  modalTitle: { fontSize: 20, fontWeight: '800' },
+  modalDesc: { fontSize: 14, lineHeight: 21 },
+  modalInput: { borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16 },
+  modalBtns: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  modalBtn: { flex: 1, borderRadius: 12, paddingVertical: 13, alignItems: 'center', justifyContent: 'center' },
+  modalBtnText: { fontSize: 15, fontWeight: '700' },
 });

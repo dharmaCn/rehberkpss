@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 // Static import — modül yüklenirken auth component'i kaydeder
-import { initializeAuth, getAuth, GoogleAuthProvider, signInWithCredential, signInAnonymously, updateProfile } from 'firebase/auth';
+import { initializeAuth, getAuth, GoogleAuthProvider, signInWithCredential, signInAnonymously, updateProfile, deleteUser } from 'firebase/auth';
 // getReactNativePersistence yalnızca RN build'inde mevcut; tipi 'firebase/auth' altında bildirilmemiş.
 // @ts-expect-error - RN-only export, type tanımı eksik
 import { getReactNativePersistence } from 'firebase/auth';
@@ -76,4 +76,30 @@ export async function signInWithGoogleAsync(): Promise<import('firebase/auth').U
   const credential = GoogleAuthProvider.credential(response.data.idToken);
   const result = await signInWithCredential(auth, credential);
   return result.user;
+}
+
+// Hesabı kalıcı olarak siler: Firestore verisi (profil + tüm sonuçlar) + Auth hesabı
+export async function deleteAccountAsync(): Promise<void> {
+  const auth = getFirebaseAuth();
+  const user = auth?.currentUser;
+  if (!user) throw new Error('Oturum bulunamadı');
+
+  // 1) Kullanıcının tüm quiz sonuçlarını sil
+  const resultsSnap = await getDocs(query(collection(db, 'results'), where('uid', '==', user.uid)));
+  await Promise.all(resultsSnap.docs.map((d) => deleteDoc(d.ref)));
+
+  // 2) Profil belgesini sil
+  await deleteDoc(doc(db, 'users', user.uid));
+
+  // 3) Google oturumu varsa yerel olarak da çıkış yap
+  try {
+    if (!user.isAnonymous) {
+      await GoogleSignin.signOut();
+    }
+  } catch {
+    // önemli değil
+  }
+
+  // 4) Firebase Auth hesabını kalıcı olarak sil
+  await deleteUser(user);
 }

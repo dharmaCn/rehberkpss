@@ -1,6 +1,6 @@
 export interface Question {
   id: string;
-  category: 'tarih' | 'cografya' | 'vatandaslik';
+  category: 'tarih' | 'cografya' | 'vatandaslik' | 'guncel';
   question: string;
   options: string[];
   correctIndex: number;
@@ -251,6 +251,216 @@ export const QUESTION_POOL: Question[] = [
     difficulty: 'kolay',
     aciklama: '30 Ağustos 1922 Başkomutanlık Meydan Muharebesi (Büyük Taarruz) ile Yunan ordusu kesin yenilgiye uğratıldı ve savaşın askerî safhası sona erdi. Ardından Mudanya Ateşkesi (11 Ekim 1922) imzalandı. 30 Ağustos bugün Zafer Bayramı olarak kutlanır.',
   },
+  {
+  id: 'h025',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi I. TBMM döneminde kabul edilen kanunlardan biri değildir?',
+  options: [
+    'Hıyanet-i Vataniye Kanunu',
+    'Men-i Müskirat Kanunu',
+    'Tevhid-i Tedrisat Kanunu',
+    'İstiklal Mahkemeleri Kanunu'
+  ],
+  correctIndex: 2,
+  difficulty: 'orta',
+  aciklama: 'Tevhid-i Tedrisat Kanunu 3 Mart 1924 tarihinde, yani Cumhuriyet döneminde kabul edilmiştir. Hıyanet-i Vataniye Kanunu, Men-i Müskirat Kanunu ve İstiklal Mahkemeleri Kanunu ise I. TBMM döneminde çıkarılan kanunlardandır.',
+},
+{
+  id: 'h026',
+  category: 'tarih',
+  question: 'Amasya Genelgesi’nde yer alan “Milletin bağımsızlığını yine milletin azim ve kararı kurtaracaktır.” maddesi aşağıdaki ilkelerden hangisini doğrudan vurgular?',
+  options: [
+    'Ulusal egemenlik',
+    'Laiklik',
+    'Devletçilik',
+    'İnkılapçılık'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Bu madde, kurtuluşun padişah ya da manda yönetimiyle değil, doğrudan milletin iradesiyle gerçekleşeceğini ifade eder. Bu nedenle ulusal egemenlik anlayışını vurgular.',
+},
+{
+  id: 'h027',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Erzurum Kongresi’nde alınan kararlardan biri değildir?',
+  options: [
+    'Manda ve himaye kabul edilemez.',
+    'Millî sınırlar içinde vatan bir bütündür, parçalanamaz.',
+    'Temsil Heyeti tüm yurdu temsil eder hâle getirilmiştir.',
+    'Kuva-yı Milliye’yi etkin, millî iradeyi hâkim kılmak esastır.'
+  ],
+  correctIndex: 2,
+  difficulty: 'orta',
+  aciklama: 'Temsil Heyeti’nin tüm yurdu temsil eder hâle getirilmesi Sivas Kongresi’nde gerçekleşmiştir. Erzurum Kongresi’nde ise Temsil Heyeti doğu illerini temsil etmek üzere oluşturulmuştur.',
+},
+{
+  id: 'h028',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Osmanlı Devleti’nde padişahın yetkilerini ilk kez sınırlayan belge olarak kabul edilir?',
+  options: [
+    'Sened-i İttifak',
+    'Tanzimat Fermanı',
+    'Islahat Fermanı',
+    'Kanun-ı Esasi'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '1808 Sened-i İttifak, Osmanlı tarihinde padişahın yetkilerini ilk kez sınırlayan belge olarak kabul edilir. Bu belge padişah ile ayanlar arasında imzalanmıştır. Tanzimat Fermanı hukuk devleti anlayışına, Kanun-ı Esasi ise anayasal düzene geçişe örnektir.',
+},
+{
+  id: 'h029',
+  category: 'tarih',
+  question: 'Osmanlı Devleti’nde ilk Türk matbaasının kurulmasına izin verilen dönem aşağıdakilerden hangisidir?',
+  options: [
+    'Lale Devri',
+    'Tanzimat Dönemi',
+    'I. Meşrutiyet Dönemi',
+    'II. Meşrutiyet Dönemi'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Osmanlı Devleti’nde ilk Türk matbaası, Lale Devri’nde İbrahim Müteferrika ve Sait Efendi tarafından kurulmuştur. Matbaada dinî eserlerin basımına başlangıçta izin verilmemiştir.',
+},
+{
+  id: 'h030',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Osmanlı Devleti’nde askerî alanda yapılan ıslahatlardan biri değildir?',
+  options: [
+    'Nizam-ı Cedit Ordusu’nun kurulması',
+    'Sekban-ı Cedit Ordusu’nun kurulması',
+    'Asakir-i Mansure-i Muhammediye Ordusu’nun kurulması',
+    'Düyun-u Umumiye İdaresi’nin kurulması'
+  ],
+  correctIndex: 3,
+  difficulty: 'orta',
+  aciklama: 'Düyun-u Umumiye İdaresi, Osmanlı dış borçlarının alacaklı devletler tarafından denetlenmesi amacıyla kurulmuş mali bir kurumdur. Diğer seçenekler askerî alanda yapılan ıslahatlara örnektir.',
+},
+{
+  id: 'h031',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Kurtuluş Savaşı Hazırlık Dönemi gelişmelerinden biri değildir?',
+  options: [
+    'Amasya Genelgesi’nin yayımlanması',
+    'Erzurum Kongresi’nin toplanması',
+    'Sivas Kongresi’nin toplanması',
+    'Mudanya Ateşkes Antlaşması’nın imzalanması'
+  ],
+  correctIndex: 3,
+  difficulty: 'orta',
+  aciklama: 'Mudanya Ateşkes Antlaşması 11 Ekim 1922’de imzalanmış olup Kurtuluş Savaşı’nın askerî safhasından sonra gerçekleşmiştir. Amasya Genelgesi, Erzurum Kongresi ve Sivas Kongresi ise Hazırlık Dönemi gelişmeleridir.',
+},
+{
+  id: 'h032',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi I. İnönü Muharebesi’nin sonuçlarından biri değildir?',
+  options: [
+    'Londra Konferansı’nın toplanması',
+    'İstiklal Marşı’nın kabul edilmesi',
+    'Moskova Antlaşması’nın imzalanması',
+    'Tekâlif-i Milliye Emirleri’nin yayımlanması'
+  ],
+  correctIndex: 3,
+  difficulty: 'orta',
+  aciklama: 'Tekâlif-i Milliye Emirleri, Sakarya Meydan Muharebesi öncesinde ordunun ihtiyaçlarını karşılamak amacıyla yayımlanmıştır. Londra Konferansı, İstiklal Marşı’nın kabulü ve Moskova Antlaşması ise I. İnönü Muharebesi sonrasında yaşanan gelişmelerdendir.',
+},
+{
+  id: 'h033',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Tekâlif-i Milliye Emirleri’nin yayımlanma amacını en doğru şekilde ifade eder?',
+  options: [
+    'Ordunun ihtiyaçlarını halk desteğiyle karşılamak',
+    'Saltanat yönetimini hukuken sona erdirmek',
+    'Kapitülasyonları tamamen kaldırmak',
+    'Doğu Cephesi’ndeki savaşı sona erdirmek'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Tekâlif-i Milliye Emirleri, Sakarya Meydan Muharebesi öncesinde ordunun yiyecek, giyecek, taşıt ve silah gibi ihtiyaçlarını karşılamak amacıyla yayımlanmıştır. Bu emirler, topyekûn mücadele anlayışının önemli örneklerindendir.',
+},
+{
+  id: 'h034',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Mudanya Ateşkes Antlaşması’nın sonuçlarından biridir?',
+  options: [
+    'Doğu Trakya’nın savaş yapılmadan Türkiye’ye bırakılması',
+    'Kapitülasyonların tamamen kaldırılması',
+    'Musul Sorunu’nun Türkiye lehine çözülmesi',
+    'Boğazların yönetiminin tamamen Türkiye’ye geçmesi'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Mudanya Ateşkes Antlaşması ile Doğu Trakya savaş yapılmadan Türkiye’ye bırakılmıştır. Kapitülasyonların kaldırılması Lozan Antlaşması’yla, Boğazların tam egemenliğinin sağlanması ise 1936 Montrö Boğazlar Sözleşmesi’yle gerçekleşmiştir.',
+},
+{
+  id: 'h035',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Atatürk Dönemi dış politika gelişmelerinden biri değildir?',
+  options: [
+    'Balkan Antantı’nın imzalanması',
+    'Sadabat Paktı’nın imzalanması',
+    'Montrö Boğazlar Sözleşmesi’nin imzalanması',
+    'Türkiye’nin NATO’ya üye olması'
+  ],
+  correctIndex: 3,
+  difficulty: 'orta',
+  aciklama: 'Türkiye’nin NATO’ya üyeliği 1952 yılında gerçekleşmiştir ve Atatürk Dönemi gelişmesi değildir. Balkan Antantı 1934, Montrö Boğazlar Sözleşmesi 1936, Sadabat Paktı ise 1937’de imzalanmıştır.',
+},
+{
+  id: 'h036',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Cumhuriyetçilik ilkesiyle doğrudan ilişkilidir?',
+  options: [
+    'Egemenliğin millete ait olması',
+    'Devletin ekonomiye yön vermesi',
+    'Din ve devlet işlerinin ayrılması',
+    'Çağın gereklerine göre yenilik yapılması'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Cumhuriyetçilik ilkesi, egemenliğin bir kişi veya hanedana değil millete ait olmasını ifade eder. Devletçilik ekonomiyle, laiklik din-devlet ayrımıyla, inkılapçılık ise çağdaşlaşma ve yenilik anlayışıyla ilgilidir.',
+},
+{
+  id: 'h037',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Halkçılık ilkesinin temel amaçlarından biridir?',
+  options: [
+    'Sınıf ayrımını reddederek toplumda eşitliği sağlamak',
+    'Devletin ekonomik yatırımları bizzat yürütmesi',
+    'Devlet yönetiminde din kurallarını esas almak',
+    'Saltanat yönetimini güçlendirmek'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Halkçılık ilkesi, toplumda ayrıcalıklı sınıfların bulunmamasını ve herkesin kanun önünde eşit olmasını savunur. Devletin ekonomik yatırımları yürütmesi devletçilikle, din kurallarının devlet yönetiminde esas alınmaması ise laiklikle ilgilidir.',
+},
+{
+  id: 'h038',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Laiklik ilkesinin doğrudan sonuçlarından biridir?',
+  options: [
+    'Halifeliğin kaldırılması',
+    'Aşar vergisinin kaldırılması',
+    'Kabotaj Kanunu’nun kabul edilmesi',
+    'Soyadı Kanunu’nun çıkarılması'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Halifeliğin kaldırılması, devlet yönetiminde dinî otoritenin etkisini sona erdirmeye yönelik bir gelişmedir ve laiklik ilkesiyle doğrudan ilişkilidir. Aşar vergisinin kaldırılması ekonomik, Kabotaj Kanunu milliyetçilik, Soyadı Kanunu ise toplumsal düzenlemeyle ilgilidir.',
+},
+{
+  id: 'h039',
+  category: 'tarih',
+  question: 'Aşağıdakilerden hangisi Cumhuriyet Dönemi’nde eğitim ve kültür alanında yapılan inkılaplardan biri değildir?',
+  options: [
+    'Millet Mekteplerinin açılması',
+    'Türk Dil Kurumu’nun kurulması',
+    'Tevhid-i Tedrisat Kanunu’nun kabul edilmesi',
+    'Kabotaj Kanunu’nun kabul edilmesi'
+  ],
+  correctIndex: 3,
+  difficulty: 'orta',
+  aciklama: 'Kabotaj Kanunu, Türkiye’nin kendi kara sularında yolcu ve yük taşıma hakkını Türk vatandaşlarına bırakmasıyla ilgilidir ve ekonomi/bağımsızlık alanında değerlendirilir. Millet Mektepleri, Türk Dil Kurumu ve Tevhid-i Tedrisat ise eğitim-kültür alanındaki gelişmelerdendir.',
+},
   // COĞRAFYA
   {
     id: 'c001',
@@ -375,6 +585,146 @@ export const QUESTION_POOL: Question[] = [
     difficulty: 'kolay',
     aciklama: 'İstanbul Boğazı, Anadolu (Asya) yakasını Avrupa (Trakya) yakasından ayırır ve Karadeniz\'i Marmara Denizi\'ne bağlar.',
   },
+  {
+  id: 'c013',
+  category: 'cografya',
+  question: 'Türkiye’de gerçek alan ile izdüşüm alan arasındaki farkın fazla olması aşağıdakilerden hangisinin sonucudur?',
+  options: [
+    'Dağlık ve engebeli arazinin fazla olması',
+    'Üç tarafının denizlerle çevrili olması',
+    'Orta kuşakta yer alması',
+    'Doğu-batı yönünde geniş yer kaplaması'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Gerçek alan, yer şekillerinin engebesi dikkate alınarak hesaplanan alandır. İzdüşüm alan ise arazi düz kabul edilerek hesaplanır. Türkiye’de dağlık ve engebeli alanlar fazla olduğu için gerçek alan ile izdüşüm alan arasındaki fark fazladır.',
+},
+{
+  id: 'c014',
+  category: 'cografya',
+  question: 'Türkiye’de dağların kuzey-güney yönlü ulaşımı zorlaştırmasının temel nedeni aşağıdakilerden hangisidir?',
+  options: [
+    'Dağların genel olarak doğu-batı doğrultusunda uzanması',
+    'Türkiye’nin orta kuşakta yer alması',
+    'Akarsuların denge profiline ulaşmamış olması',
+    'Kıyı uzunluğunun fazla olması'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Türkiye’de özellikle Kuzey Anadolu ve Toros Dağları genel olarak doğu-batı doğrultusunda uzanır. Bu durum kuzey-güney yönlü ulaşımı zorlaştırır, kıyı ile iç kesimler arasındaki bağlantıyı sınırlar.',
+},
+{
+  id: 'c015',
+  category: 'cografya',
+  question: 'Türkiye’de kıyı ile iç kesimler arasındaki sıcaklık ve yağış farkının Karadeniz ve Akdeniz kıyılarında belirgin olmasının temel nedeni aşağıdakilerden hangisidir?',
+  options: [
+    'Dağların kıyıya paralel uzanması',
+    'Akarsuların kısa boylu olması',
+    'Kıyılarda nüfus yoğunluğunun fazla olması',
+    'Türkiye’nin doğu-batı yönünde geniş olması'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Karadeniz ve Akdeniz kıyılarında dağlar kıyıya paralel uzandığı için deniz etkisi iç kesimlere fazla sokulamaz. Bu nedenle kıyı ile iç kesimler arasında sıcaklık ve yağış farkı belirginleşir.',
+},
+{
+  id: 'c016',
+  category: 'cografya',
+  question: 'Türkiye’de Ege kıyılarında girinti ve çıkıntının fazla olmasının temel nedeni aşağıdakilerden hangisidir?',
+  options: [
+    'Dağların kıyıya dik uzanması',
+    'Karstik arazilerin geniş yer kaplaması',
+    'Volkanik dağların yaygın olması',
+    'Akarsu rejimlerinin düzensiz olması'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Ege Bölgesi’nde dağlar kıyıya dik uzandığı için deniz iç kesimlere sokulmuş, kıyıda girinti ve çıkıntı artmıştır. Bu durum doğal limanların fazla olmasına ve deniz etkisinin iç kesimlere daha kolay ulaşmasına neden olur.',
+},
+{
+  id: 'c017',
+  category: 'cografya',
+  question: 'Türkiye’de yaz kuraklığının en belirgin görüldüğü iklim tipi aşağıdakilerden hangisidir?',
+  options: [
+    'Akdeniz iklimi',
+    'Karadeniz iklimi',
+    'Sert karasal iklim',
+    'Ilıman okyanusal iklim'
+  ],
+  correctIndex: 0,
+  difficulty: 'kolay',
+  aciklama: 'Akdeniz ikliminde yazlar sıcak ve kurak, kışlar ılık ve yağışlı geçer. Bu nedenle Türkiye’de yaz kuraklığının en belirgin görüldüğü iklim tipi Akdeniz iklimidir.',
+},
+{
+  id: 'c018',
+  category: 'cografya',
+  question: 'Türkiye’de akarsuların hidroelektrik enerji potansiyelinin yüksek olmasında aşağıdakilerden hangisi daha çok etkilidir?',
+  options: [
+    'Yatak eğimlerinin fazla olması',
+    'Rejimlerinin düzenli olması',
+    'Boylarının çok uzun olması',
+    'Denge profiline ulaşmış olmaları'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Türkiye’de yer şekilleri engebeli olduğu için akarsuların yatak eğimleri fazladır. Bu durum akış hızını ve hidroelektrik enerji potansiyelini artırır. Ancak akarsu rejimlerinin düzensiz olması enerji üretimini yıl içinde dalgalandırabilir.',
+},
+{
+  id: 'c019',
+  category: 'cografya',
+  question: 'Türkiye’de karstik şekillerin en yaygın görüldüğü bölge aşağıdakilerden hangisidir?',
+  options: [
+    'Akdeniz Bölgesi',
+    'Karadeniz Bölgesi',
+    'Marmara Bölgesi',
+    'Güneydoğu Anadolu Bölgesi'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Karstik şekiller, kalker, jips ve kaya tuzu gibi kolay çözünebilen kayaçların bulunduğu alanlarda oluşur. Türkiye’de karstik şekiller en yaygın olarak Akdeniz Bölgesi’nde, özellikle Toroslar çevresinde görülür.',
+},
+{
+  id: 'c020',
+  category: 'cografya',
+  question: 'Türkiye’de delta ovalarının oluşabilmesi için aşağıdakilerden hangisi gerekli koşullardan biri değildir?',
+  options: [
+    'Akarsuyun bol miktarda alüvyon taşıması',
+    'Kıyıda gelgit etkisinin az olması',
+    'Kıta sahanlığının geniş olması',
+    'Kıyıda dağların denize paralel uzanması'
+  ],
+  correctIndex: 3,
+  difficulty: 'orta',
+  aciklama: 'Delta ovalarının oluşması için akarsuyun bol alüvyon taşıması, kıta sahanlığının geniş olması ve kıyıda gelgit etkisinin az olması gerekir. Dağların denize paralel uzanması delta oluşumu için zorunlu bir koşul değildir.',
+},
+{
+  id: 'c021',
+  category: 'cografya',
+  question: 'Türkiye’de nüfusun kıyı kesimlerde iç kesimlere göre daha yoğun olmasında aşağıdakilerden hangisi daha çok etkilidir?',
+  options: [
+    'İklim koşullarının daha elverişli olması',
+    'Yükseltinin fazla olması',
+    'Karasal iklimin yaygın olması',
+    'Tarım alanlarının tamamen düz olması'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Türkiye’de kıyı kesimlerde iklim daha ılıman, ulaşım ve ekonomik faaliyetler daha gelişmiştir. Bu nedenle nüfus yoğunluğu iç kesimlere göre genellikle daha fazladır.',
+},
+{
+  id: 'c022',
+  category: 'cografya',
+  question: 'Türkiye’de tarımda sulama ihtiyacının en fazla olduğu bölgelerden biri aşağıdakilerden hangisidir?',
+  options: [
+    'Güneydoğu Anadolu Bölgesi',
+    'Karadeniz Bölgesi',
+    'Marmara Bölgesi',
+    'Doğu Karadeniz Bölümü'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Güneydoğu Anadolu Bölgesi’nde yaz kuraklığı belirgindir ve buharlaşma fazladır. Bu nedenle tarımda sulama ihtiyacı yüksektir. GAP ile bölgede sulama imkânlarının artırılması amaçlanmıştır.',
+},
   // VATANDAŞLIK
   {
     id: 'v001',
@@ -489,4 +839,494 @@ export const QUESTION_POOL: Question[] = [
     difficulty: 'zor',
     aciklama: 'Türkiye, Birleşmiş Milletler\'in kurucu üyelerindendir ve 1945\'te BM\'ye üye olmuştur.',
   },
+  {
+  id: 'v013',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre yasama yetkisi aşağıdakilerden hangisine aittir?',
+  options: [
+    'Cumhurbaşkanına',
+    'Türkiye Büyük Millet Meclisine',
+    'Anayasa Mahkemesine',
+    'Danıştaya'
+  ],
+  correctIndex: 1,
+  difficulty: 'kolay',
+  aciklama: '1982 Anayasası’na göre yasama yetkisi Türk Milleti adına Türkiye Büyük Millet Meclisine aittir. Bu yetki devredilemez.',
+},
+{
+  id: 'v014',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre yürütme yetkisi ve görevi aşağıdakilerden hangisine aittir?',
+  options: [
+    'Türkiye Büyük Millet Meclisine',
+    'Cumhurbaşkanına',
+    'Anayasa Mahkemesine',
+    'Danıştaya'
+  ],
+  correctIndex: 1,
+  difficulty: 'kolay',
+  aciklama: '1982 Anayasası’na göre yürütme yetkisi ve görevi Cumhurbaşkanı tarafından, Anayasa’ya ve kanunlara uygun olarak kullanılır ve yerine getirilir.',
+},
+{
+  id: 'v015',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre yargı yetkisi aşağıdakilerden hangisi tarafından kullanılır?',
+  options: [
+    'Bağımsız ve tarafsız mahkemeler',
+    'Türkiye Büyük Millet Meclisi',
+    'Cumhurbaşkanlığı Kabinesi',
+    'Hâkimler ve Savcılar Kurulu'
+  ],
+  correctIndex: 0,
+  difficulty: 'kolay',
+  aciklama: '1982 Anayasası’na göre yargı yetkisi, Türk Milleti adına bağımsız ve tarafsız mahkemeler tarafından kullanılır.',
+},{
+  id: 'v016',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre kanun koymak, değiştirmek ve kaldırmak aşağıdakilerden hangisinin görev ve yetkilerindendir?',
+  options: [
+    'Cumhurbaşkanı',
+    'Türkiye Büyük Millet Meclisi',
+    'Anayasa Mahkemesi',
+    'Danıştay'
+  ],
+  correctIndex: 1,
+  difficulty: 'kolay',
+  aciklama: 'Kanun koymak, değiştirmek ve kaldırmak TBMM’nin görev ve yetkileri arasındadır. Bu durum yasama yetkisinin TBMM’ye ait olmasının doğal sonucudur.',
+},
+{
+  id: 'v017',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre Cumhurbaşkanlığı kararnameleriyle ilgili aşağıdakilerden hangisi doğrudur?',
+  options: [
+    'Temel haklar, kişi hakları ve siyasi haklar Cumhurbaşkanlığı kararnamesiyle düzenlenebilir.',
+    'Kanunda açıkça düzenlenen konularda Cumhurbaşkanlığı kararnamesi çıkarılamaz.',
+    'Cumhurbaşkanlığı kararnameleri kanunlardan üstündür.',
+    'TBMM onayı olmadan hiçbir konuda Cumhurbaşkanlığı kararnamesi çıkarılamaz.'
+  ],
+  correctIndex: 1,
+  difficulty: 'zor',
+  aciklama: 'Cumhurbaşkanlığı kararnamesi, yürütme yetkisine ilişkin konularda çıkarılabilir. Ancak kanunda açıkça düzenlenen konularda Cumhurbaşkanlığı kararnamesi çıkarılamaz. Ayrıca temel haklar, kişi hakları ve siyasi haklar bu yolla düzenlenemez.',
+},
+{
+  id: 'v018',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre milletvekili seçilebilmek için en az kaç yaşını doldurmuş olmak gerekir?',
+  options: [
+    '18',
+    '21',
+    '25',
+    '30'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2017 Anayasa değişikliğiyle milletvekili seçilme yaşı 25’ten 18’e indirilmiştir. Bu nedenle milletvekili seçilebilmek için en az 18 yaşını doldurmuş olmak gerekir.',
+},
+{
+  id: 'v019',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre TBMM, Anayasa’da başka bir hüküm yoksa en az kaç milletvekili ile toplanır?',
+  options: [
+    '151',
+    '184',
+    '200',
+    '301'
+  ],
+  correctIndex: 2,
+  difficulty: 'orta',
+  aciklama: 'TBMM üye tamsayısının en az üçte biri ile toplanır. TBMM 600 milletvekilinden oluştuğu için toplantı yeter sayısı 200’dür. Karar yeter sayısı ise hiçbir durumda üye tamsayısının dörtte birinin bir fazlasından az olamaz; bu sayı 151’dir.',
+},
+{
+  id: 'v020',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre Anayasa değişikliği teklifinin TBMM üye tamsayısının en az kaçta biri tarafından yazılı olarak yapılması gerekir?',
+  options: [
+    'Üçte biri',
+    'Beşte biri',
+    'Dörtte biri',
+    'Salt çoğunluğu'
+  ],
+  correctIndex: 0,
+  difficulty: 'zor',
+  aciklama: '1982 Anayasası’na göre Anayasa değişikliği teklifi, TBMM üye tamsayısının en az üçte biri tarafından yazılı olarak yapılabilir. TBMM 600 üyeden oluştuğu için bu sayı en az 200 milletvekilidir.',
+},
+{
+  id: 'v021',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre olağanüstü hâl ilan etme yetkisi aşağıdakilerden hangisine aittir?',
+  options: [
+    'Türkiye Büyük Millet Meclisine',
+    'Cumhurbaşkanına',
+    'Anayasa Mahkemesine',
+    'Hâkimler ve Savcılar Kuruluna'
+  ],
+  correctIndex: 1,
+  difficulty: 'orta',
+  aciklama: '1982 Anayasası’na göre olağanüstü hâl ilan etme yetkisi Cumhurbaşkanına aittir. Ancak bu karar aynı gün Resmî Gazete’de yayımlanır ve TBMM’nin onayına sunulur.',
+},
+{
+  id: 'v022',
+  category: 'vatandaslik',
+  question: '1982 Anayasası’na göre Anayasa Mahkemesi üyeleri kaç kişiden oluşur?',
+  options: [
+    '11',
+    '13',
+    '15',
+    '17'
+  ],
+  correctIndex: 2,
+  difficulty: 'orta',
+  aciklama: '1982 Anayasası’na göre Anayasa Mahkemesi 15 üyeden oluşur. Üyelerin bir kısmı Cumhurbaşkanı, bir kısmı ise TBMM tarafından seçilir.',
+},
+//GENEL KÜLTÜR
+{
+  id: 'g001',
+  category: 'guncel',
+  question: '2025 Nobel Barış Ödülü aşağıdaki isimlerden hangisine verilmiştir?',
+  options: [
+    'Maria Corina Machado',
+    'Narges Mohammadi',
+    'Dmitry Muratov',
+    'Abiy Ahmed Ali'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2025 Nobel Barış Ödülü, Venezuela’da demokratik haklar için yürüttüğü çalışmalar nedeniyle Maria Corina Machado’ya verilmiştir.',
+},
+{
+  id: 'g002',
+  category: 'guncel',
+  question: '2025 yılında UNESCO Dünya Miras Listesi’ne Türkiye’den eklenen kültürel miras alanı aşağıdakilerden hangisidir?',
+  options: [
+    'Sardes Antik Kenti ve Bin Tepe Lidya Tümülüsleri',
+    'Göbeklitepe',
+    'Arslantepe Höyüğü',
+    'Gordion'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Sardes Antik Kenti ve Bin Tepe Lidya Tümülüsleri, 2025 yılında UNESCO Dünya Miras Listesi’ne kaydedilmiştir. Göbeklitepe 2018’de, Arslantepe Höyüğü 2021’de, Gordion ise 2023’te listeye alınmıştır.',
+},
+{
+  id: 'g003',
+  category: 'guncel',
+  question: '2025 Nobel Edebiyat Ödülü aşağıdaki yazarlardan hangisine verilmiştir?',
+  options: [
+    'László Krasznahorkai',
+    'Jon Fosse',
+    'Annie Ernaux',
+    'Abdulrazak Gurnah'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2025 Nobel Edebiyat Ödülü, Macar yazar László Krasznahorkai’ye verilmiştir. Jon Fosse 2023, Annie Ernaux 2022, Abdulrazak Gurnah ise 2021 Nobel Edebiyat Ödülü sahibidir.',
+},
+{
+  id: 'g004',
+  category: 'guncel',
+  question: '2025 Nobel Kimya Ödülü aşağıdaki çalışmalardan hangisi nedeniyle verilmiştir?',
+  options: [
+    'Metal-organik kafeslerin geliştirilmesi',
+    'mRNA aşı teknolojisinin geliştirilmesi',
+    'Kuantum noktalarının keşfi ve sentezi',
+    'Protein yapılarının hesaplamalı olarak tahmin edilmesi'
+  ],
+  correctIndex: 0,
+  difficulty: 'zor',
+  aciklama: '2025 Nobel Kimya Ödülü, Susumu Kitagawa, Richard Robson ve Omar M. Yaghi’ye metal-organik kafeslerin geliştirilmesi çalışmaları nedeniyle verilmiştir. Bu yapılar gaz depolama, su toplama ve çevresel arıtma gibi alanlarda kullanılabilmektedir.',
+},
+{
+  id: 'g005',
+  category: 'guncel',
+  question: '2025 Nobel Fizik Ödülü aşağıdaki çalışmalardan hangisi nedeniyle verilmiştir?',
+  options: [
+    'Elektrik devresinde makroskobik kuantum tünelleme ve enerji kuantizasyonunun keşfi',
+    'Kuantum noktalarının keşfi ve sentezi',
+    'Kara deliklerin evrimsel yapısının açıklanması',
+    'Grafenin iki boyutlu yapısının deneysel olarak elde edilmesi'
+  ],
+  correctIndex: 0,
+  difficulty: 'zor',
+  aciklama: '2025 Nobel Fizik Ödülü, John Clarke, Michel H. Devoret ve John M. Martinis’e elektrik devresinde makroskobik kuantum mekaniksel tünelleme ve enerji kuantizasyonu keşifleri nedeniyle verilmiştir.',
+},
+{
+  id: 'g006',
+  category: 'guncel',
+  question: '2025 Nobel Fizyoloji veya Tıp Ödülü aşağıdaki çalışmalardan hangisi nedeniyle verilmiştir?',
+  options: [
+    'Periferik bağışıklık toleransı konusundaki keşifler',
+    'mRNA aşı teknolojisinin geliştirilmesi',
+    'Hepatit C virüsünün keşfi',
+    'İnsan genom diziliminin tamamlanması'
+  ],
+  correctIndex: 0,
+  difficulty: 'zor',
+  aciklama: '2025 Nobel Fizyoloji veya Tıp Ödülü, Mary E. Brunkow, Frederick J. Ramsdell ve Shimon Sakaguchi’ye periferik bağışıklık toleransı konusundaki keşifleri nedeniyle verilmiştir. Bu çalışmalar, bağışıklık sisteminin vücudun kendi dokularına saldırmasını engelleyen mekanizmaların anlaşılmasını sağlamıştır.',
+},
+{
+  id: 'g007',
+  category: 'guncel',
+  question: '2025 Nobel Ekonomi Ödülü aşağıdaki isimlerden hangilerine verilmiştir?',
+  options: [
+    'Joel Mokyr, Philippe Aghion ve Peter Howitt',
+    'Daron Acemoğlu, Simon Johnson ve James A. Robinson',
+    'Ben Bernanke, Douglas Diamond ve Philip Dybvig',
+    'Paul Milgrom ve Robert Wilson'
+  ],
+  correctIndex: 0,
+  difficulty: 'zor',
+  aciklama: '2025 Nobel Ekonomi Ödülü, yenilik odaklı ekonomik büyümeyi açıklayan çalışmaları nedeniyle Joel Mokyr, Philippe Aghion ve Peter Howitt’e verilmiştir. Daron Acemoğlu, Simon Johnson ve James A. Robinson 2024 Nobel Ekonomi Ödülü’nü almıştır.',
+},
+{
+  id: 'g008',
+  category: 'guncel',
+  question: '2025 yılı itibarıyla UNESCO Dünya Miras Listesi’nde Türkiye’den kayıtlı miras alanı sayısı kaç olmuştur?',
+  options: [
+    '20',
+    '21',
+    '22',
+    '23'
+  ],
+  correctIndex: 2,
+  difficulty: 'orta',
+  aciklama: 'Sardes Antik Kenti ve Bin Tepe Lidya Tümülüsleri’nin 2025 yılında listeye alınmasıyla UNESCO Dünya Miras Listesi’nde Türkiye’den kayıtlı miras alanı sayısı 22’ye yükselmiştir.',
+},
+{
+  id: 'g009',
+  category: 'guncel',
+  question: 'Expo 2025 Dünya Fuarı aşağıdaki şehirlerden hangisinde düzenlenmiştir?',
+  options: [
+    'Osaka',
+    'Dubai',
+    'Paris',
+    'Roma'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Expo 2025 Dünya Fuarı, Japonya’nın Osaka kentinde düzenlenmiştir. Fuarın teması “Designing Future Society for Our Lives” olarak belirlenmiştir.'
+},
+{
+  id: 'g010',
+  category: 'guncel',
+  question: 'Birleşmiş Milletler tarafından 2025 yılı hangi tema ile ilan edilmiştir?',
+  options: [
+    'Uluslararası Kooperatifler Yılı',
+    'Uluslararası Barış ve Güvenlik Yılı',
+    'Uluslararası Su Verimliliği Yılı',
+    'Uluslararası Biyoçeşitlilik Yılı'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Birleşmiş Milletler Genel Kurulu, 2025 yılını “Uluslararası Kooperatifler Yılı” ilan etmiştir. Teması “Kooperatifler Daha İyi Bir Dünya Kurar” olarak belirlenmiştir.',
+},
+{
+  id: 'g011',
+  category: 'guncel',
+  question: '2025 Avrupa Kültür Başkentleri aşağıdakilerden hangileridir?',
+  options: [
+    'Chemnitz ve Nova Gorica',
+    'Oulu ve Trenčín',
+    'Tartu ve Bad Ischl',
+    'Elefsina ve Timișoara'
+  ],
+  correctIndex: 0,
+  difficulty: 'zor',
+  aciklama: '2025 Avrupa Kültür Başkentleri Almanya’dan Chemnitz ve Slovenya’dan Nova Gorica’dır. Nova Gorica, İtalya’daki Gorizia ile sınır ötesi ortak kültür programı yürütmüştür.'
+},
+{
+  id: 'g012',
+  category: 'guncel',
+  question: '2025 Dünya Oyunları aşağıdaki şehirlerden hangisinde düzenlenmiştir?',
+  options: [
+    'Chengdu',
+    'Tokyo',
+    'Seul',
+    'Bangkok'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2025 Dünya Oyunları, Çin’in Chengdu kentinde düzenlenmiştir. Dünya Oyunları, olimpik programda yer almayan veya olimpiyatlarda sınırlı yer alan spor dallarını içeren çok sporlu bir organizasyondur.'
+},
+{
+  id: 'g013',
+  category: 'guncel',
+  question: '2025 İslami Dayanışma Oyunları aşağıdaki şehirlerden hangisinde düzenlenmiştir?',
+  options: [
+    'Riyad',
+    'Konya',
+    'Doha',
+    'Bakü'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2025 İslami Dayanışma Oyunları, Suudi Arabistan’ın başkenti Riyad’da düzenlenmiştir. Organizasyonun 6. edisyonu 7-21 Kasım 2025 tarihleri arasında yapılmıştır.'
+},
+{
+  id: 'g014',
+  category: 'guncel',
+  question: '2025 Dünya Atletizm Şampiyonası aşağıdaki şehirlerden hangisinde düzenlenmiştir?',
+  options: [
+    'Tokyo',
+    'Budapeşte',
+    'Pekin',
+    'Doha'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2025 Dünya Atletizm Şampiyonası, Japonya’nın Tokyo kentinde 13-21 Eylül 2025 tarihleri arasında düzenlenmiştir.'
+},
+{
+  id: 'g015',
+  category: 'guncel',
+  question: '2026 Kış Olimpiyatları aşağıdaki yerlerden hangisinde düzenlenmiştir?',
+  options: [
+    'Milano-Cortina',
+    'Pekin',
+    'PyeongChang',
+    'Soçi'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2026 Kış Olimpiyatları, İtalya’nın Milano ve Cortina d’Ampezzo merkezli ev sahipliğinde düzenlenmiştir. Oyunlar 6-22 Şubat 2026 tarihleri arasında yapılmıştır.'
+},
+{
+  id: 'g016',
+  category: 'guncel',
+  question: '2025 Akademi Ödülleri’nde “En İyi Film” ödülünü kazanan yapım aşağıdakilerden hangisidir?',
+  options: [
+    'Anora',
+    'The Brutalist',
+    'Conclave',
+    'Dune: Part Two'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: '2025 Akademi Ödülleri’nde En İyi Film ödülünü Anora kazanmıştır. Film ayrıca yönetmen, özgün senaryo ve kurgu gibi önemli dallarda da ödül almıştır.',
+},
+{
+  id: 'g017',
+  category: 'guncel',
+  question: '“Suç ve Ceza” adlı romanın başkahramanı aşağıdakilerden hangisidir?',
+  options: [
+    'Raskolnikov',
+    'Prens Mışkin',
+    'Jean Valjean',
+    'Gregor Samsa'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Suç ve Ceza, Fyodor Dostoyevski’nin en bilinen romanlarından biridir. Romanın başkahramanı Rodion Romanoviç Raskolnikov’dur. Prens Mışkin, Dostoyevski’nin Budala romanının; Jean Valjean, Victor Hugo’nun Sefiller romanının; Gregor Samsa ise Kafka’nın Dönüşüm adlı eserinin karakteridir.',
+},
+{
+  id: 'g018',
+  category: 'guncel',
+  question: '“Guernica” adlı ünlü tablo aşağıdaki ressamlardan hangisine aittir?',
+  options: [
+    'Pablo Picasso',
+    'Salvador Dalí',
+    'Vincent van Gogh',
+    'Claude Monet'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Guernica, Pablo Picasso’nun en bilinen eserlerinden biridir. Tablo, İspanya İç Savaşı sırasında Guernica kentinin bombalanmasını konu alır ve savaş karşıtı güçlü bir sembol olarak kabul edilir.',
+},
+{
+  id: 'g019',
+  category: 'guncel',
+  question: '“1984” adlı distopik romanda her şeyi gözetleyen totaliter otoriteyi temsil eden ifade aşağıdakilerden hangisidir?',
+  options: [
+    'Büyük Birader',
+    'Kaptan Nemo',
+    'Don Kişot',
+    'Dr. Jekyll'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'George Orwell’in 1984 adlı romanında “Büyük Birader”, toplumun sürekli gözetim altında tutulmasını ve totaliter devlet otoritesini temsil eder. Kaptan Nemo, Jules Verne’in; Don Kişot, Cervantes’in; Dr. Jekyll ise Robert Louis Stevenson’ın karakteridir.',
+},
+{
+  id: 'g020',
+  category: 'guncel',
+  question: '“Yüzüklerin Efendisi” serisinde “Tek Yüzük”ü yok etmek için Mordor’a götüren karakter aşağıdakilerden hangisidir?',
+  options: [
+    'Frodo Baggins',
+    'Aragorn',
+    'Gandalf',
+    'Legolas'
+  ],
+  correctIndex: 0,
+  difficulty: 'kolay',
+  aciklama: 'J. R. R. Tolkien’in Yüzüklerin Efendisi serisinde Tek Yüzük’ü yok etmek üzere Mordor’a götürme görevini Frodo Baggins üstlenir. Samwise Gamgee bu yolculukta ona eşlik eden en önemli karakterlerden biridir.',
+},
+{
+  id: 'g021',
+  category: 'guncel',
+  question: '“Sefiller” adlı romanın yazarı aşağıdakilerden hangisidir?',
+  options: [
+    'Victor Hugo',
+    'Lev Tolstoy',
+    'Charles Dickens',
+    'Fyodor Dostoyevski'
+  ],
+  correctIndex: 0,
+  difficulty: 'kolay',
+  aciklama: 'Sefiller, Fransız yazar Victor Hugo’nun en önemli eserlerinden biridir. Romanın en bilinen karakterlerinden biri Jean Valjean’dır.',
+},
+{
+  id: 'g022',
+  category: 'guncel',
+  question: '“İnci Küpeli Kız” adlı ünlü tablo aşağıdaki ressamlardan hangisine aittir?',
+  options: [
+    'Johannes Vermeer',
+    'Rembrandt',
+    'Leonardo da Vinci',
+    'Michelangelo'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'İnci Küpeli Kız, Hollandalı ressam Johannes Vermeer’in en bilinen eserlerinden biridir. Tablo, ışık kullanımı ve figürün etkileyici bakışıyla sanat tarihinde önemli bir yere sahiptir.',
+},
+{
+  id: 'g023',
+  category: 'guncel',
+  question: '“Don Kişot” adlı eserde Don Kişot’un sadık yardımcısı aşağıdakilerden hangisidir?',
+  options: [
+    'Sancho Panza',
+    'Dorian Gray',
+    'Robinson Crusoe',
+    'Monte Cristo'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Miguel de Cervantes’in Don Kişot adlı eserinde Don Kişot’un sadık yardımcısı Sancho Panza’dır. Dorian Gray, Oscar Wilde’ın; Robinson Crusoe, Daniel Defoe’nun; Monte Cristo ise Alexandre Dumas’nın eserlerindeki karakterlerle ilişkilidir.',
+},
+{
+  id: 'g024',
+  category: 'guncel',
+  question: '“Kaplumbağa Terbiyecisi” adlı ünlü tablo aşağıdaki sanatçılardan hangisine aittir?',
+  options: [
+    'Osman Hamdi Bey',
+    'Şeker Ahmet Paşa',
+    'İbrahim Çallı',
+    'Fikret Mualla'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Kaplumbağa Terbiyecisi, Osman Hamdi Bey’in en bilinen eserlerinden biridir. Osmanlı resim sanatının sembol eserleri arasında kabul edilir.',
+},
+{
+  id: 'g025',
+  category: 'guncel',
+  question: 'İran ile ABD arasındaki gerilimlerde sıkça gündeme gelen Hürmüz Boğazı, aşağıdaki su yollarından hangilerini birbirine bağlar?',
+  options: [
+    'Basra Körfezi ile Umman Körfezi',
+    'Kızıldeniz ile Aden Körfezi',
+    'Akdeniz ile Kızıldeniz',
+    'Karadeniz ile Marmara Denizi'
+  ],
+  correctIndex: 0,
+  difficulty: 'orta',
+  aciklama: 'Hürmüz Boğazı, İran ile Umman arasında yer alan stratejik bir su yoludur. Basra Körfezi’ni Umman Körfezi ve dolayısıyla Arap Denizi’ne bağlar. Petrol ve doğal gaz taşımacılığı açısından dünyanın en kritik geçiş noktalarından biridir.',
+}
 ];

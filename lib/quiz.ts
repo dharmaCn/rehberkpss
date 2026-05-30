@@ -33,11 +33,11 @@ export function calculateScore(
 }
 
 export function getCategoryLabel(cat: Question['category']): string {
-  const map = { tarih: 'Tarih', cografya: 'Coğrafya', vatandaslik: 'Vatandaşlık' };
+  const map = { tarih: 'Tarih', cografya: 'Coğrafya', vatandaslik: 'Vatandaşlık', guncel: 'Güncel' };
   return map[cat];
 }
 
 export function getCategoryColor(cat: Question['category']): string {
-  const map = { tarih: '#EF4444', cografya: '#10B981', vatandaslik: '#4F46E5' };
+  const map = { tarih: '#EF4444', cografya: '#10B981', vatandaslik: '#4F46E5', guncel: '#F59E0B' };
   return map[cat];
 }
