@@ -8,6 +8,7 @@
     "userInterfaceStyle": "automatic",
     "scheme": "rehberkpss",
     "ios": {
+      "deploymentTarget": "16.0",
       "supportsTablet": false,
       "bundleIdentifier": "com.rehberkpss.app",
       "infoPlist": {
