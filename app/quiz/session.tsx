@@ -11,10 +11,12 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
-import { saveQuizResult } from '../../lib/firestore';
+import { saveQuizResult, recordQuizStats, AnsweredItem } from '../../lib/firestore';
 import { getDailyQuestions, calculateScore, getCategoryLabel, getCategoryColor } from '../../lib/quiz';
 import { Question } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
+import Confetti from '../../components/Confetti';
+import { hapticError, hapticLight, hapticSuccess } from '../../lib/haptics';
 
 const QUESTION_TIME = 30;
 
@@ -33,9 +35,11 @@ export default function QuizSession() {
   const [saving, setSaving] = useState(false);
   const [answers, setAnswers] = useState<number[]>([]); // her sorunun verilen cevabı (-1 = süre doldu)
   const [openReview, setOpenReview] = useState<number | null>(null);
+  const [streak, setStreak] = useState<{ currentStreak: number; isNewDay: boolean } | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
+  const answeredRef = useRef<AnsweredItem[]>([]); // istatistik için soru-bazlı sonuç
 
   const q: Question = questions[index];
 
@@ -44,6 +48,10 @@ export default function QuizSession() {
     animateProgress();
     return () => clearTimer();
   }, [index]);
+
+  useEffect(() => {
+    if (finished) hapticSuccess();
+  }, [finished]);
 
   function startTimer() {
     setTimeLeft(QUESTION_TIME);
@@ -76,6 +84,7 @@ export default function QuizSession() {
     if (selected !== null) return;
     setSelected(-1); // hiçbiri seçilmedi
     setAnswers((a) => [...a, -1]);
+    answeredRef.current.push({ id: q.id, category: q.category, correct: false });
     setTimeout(() => nextQuestion(0, 0), 1000);
   }
 
@@ -86,6 +95,8 @@ export default function QuizSession() {
     setAnswers((a) => [...a, optIndex]);
 
     const isCorrect = optIndex === q.correctIndex;
+    answeredRef.current.push({ id: q.id, category: q.category, correct: isCorrect });
+    if (isCorrect) hapticLight(); else hapticError();
     const pts = isCorrect ? calculateScore(true, timeLeft, QUESTION_TIME) : 0;
     const newCorrect = isCorrect ? correctCount + 1 : correctCount;
     const newScore = totalScore + pts;
@@ -113,6 +124,8 @@ export default function QuizSession() {
     setSaving(true);
     try {
       await saveQuizResult(user, score, corrects);
+      const s = await recordQuizStats(user.uid, answeredRef.current, corrects === questions.length);
+      setStreak({ currentStreak: s.currentStreak, isNewDay: s.isNewDay });
     } catch {
       // Sonuç kaydedilemese de ekran gösterilir
     } finally {
@@ -139,6 +152,7 @@ export default function QuizSession() {
     const emoji = percentage >= 80 ? '🏆' : percentage >= 60 ? '👍' : percentage >= 40 ? '📚' : '💪';
 
     return (
+      <View style={{ flex: 1, backgroundColor: c.background }}>
       <ScrollView
         style={{ flex: 1, backgroundColor: c.background }}
         contentContainerStyle={styles.resultScrollContent}
@@ -161,6 +175,14 @@ export default function QuizSession() {
               <Text style={styles.resultStatLabel}>Başarı</Text>
             </View>
           </View>
+
+          {streak && streak.currentStreak > 0 && (
+            <View style={styles.streakPill}>
+              <Text style={styles.streakPillText}>
+                🔥 {streak.currentStreak} günlük seri{streak.isNewDay ? ' — devam et!' : ''}
+              </Text>
+            </View>
+          )}
         </View>
 
         <Text style={[styles.resultMsg, { color: c.textSecondary }]}>
@@ -255,6 +277,8 @@ export default function QuizSession() {
           <Text style={[styles.leaderBtnText, { color: c.text }]}>Sıralamayı Gör 🏆</Text>
         </TouchableOpacity>
       </ScrollView>
+      {percentage >= 50 && <Confetti />}
+      </View>
     );
   }
 
@@ -417,6 +441,15 @@ const styles = StyleSheet.create({
   resultStatValue: { fontSize: 20, fontWeight: '800', color: '#fff' },
   resultStatLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)' },
   resultStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
+
+  streakPill: {
+    marginTop: 16,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+  },
+  streakPillText: { color: '#fff', fontSize: 14, fontWeight: '800' },
 
   resultMsg: { textAlign: 'center', fontSize: 15, paddingHorizontal: 32, lineHeight: 22 },
 

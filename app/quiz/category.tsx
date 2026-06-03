@@ -11,7 +11,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
-import { saveCategoryQuizResult } from '../../lib/firestore';
+import { saveCategoryQuizResult, recordQuizStats, AnsweredItem } from '../../lib/firestore';
 import {
   getDailyCategoryQuestions,
   calculateScore,
@@ -21,6 +21,8 @@ import {
 } from '../../lib/quiz';
 import { Question } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
+import Confetti from '../../components/Confetti';
+import { hapticError, hapticLight, hapticSuccess } from '../../lib/haptics';
 
 const QUESTION_TIME = 30;
 
@@ -45,6 +47,7 @@ export default function CategoryQuizSession() {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
+  const answeredRef = useRef<AnsweredItem[]>([]);
 
   const q: Question = questions[index];
 
@@ -53,6 +56,10 @@ export default function CategoryQuizSession() {
     animateProgress();
     return () => clearTimer();
   }, [index]);
+
+  useEffect(() => {
+    if (finished) hapticSuccess();
+  }, [finished]);
 
   function startTimer() {
     setTimeLeft(QUESTION_TIME);
@@ -85,6 +92,7 @@ export default function CategoryQuizSession() {
     if (selected !== null) return;
     setSelected(-1);
     setAnswers((a) => [...a, -1]);
+    answeredRef.current.push({ id: q.id, category: q.category, correct: false });
     setTimeout(() => nextQuestion(0, 0), 1000);
   }
 
@@ -95,6 +103,8 @@ export default function CategoryQuizSession() {
     setAnswers((a) => [...a, optIndex]);
 
     const isCorrect = optIndex === q.correctIndex;
+    answeredRef.current.push({ id: q.id, category: q.category, correct: isCorrect });
+    if (isCorrect) hapticLight(); else hapticError();
     const rawPts = isCorrect ? calculateScore(true, timeLeft, QUESTION_TIME) : 0;
     const pts = Math.round(rawPts * CATEGORY_SCORE_MULTIPLIER);
     const newCorrect = isCorrect ? correctCount + 1 : correctCount;
@@ -123,6 +133,7 @@ export default function CategoryQuizSession() {
     setSaving(true);
     try {
       await saveCategoryQuizResult(user, category, score, corrects);
+      await recordQuizStats(user.uid, answeredRef.current, corrects === questions.length);
     } catch {
       // Sonuç kaydedilemese de ekran gösterilir
     } finally {
@@ -150,6 +161,7 @@ export default function CategoryQuizSession() {
     const catColor = getCategoryColor(category);
 
     return (
+      <View style={{ flex: 1, backgroundColor: c.background }}>
       <ScrollView
         style={{ flex: 1, backgroundColor: c.background }}
         contentContainerStyle={styles.resultScrollContent}
@@ -258,6 +270,8 @@ export default function CategoryQuizSession() {
           <Text style={styles.homeBtnText}>Ana Sayfaya Dön</Text>
         </TouchableOpacity>
       </ScrollView>
+      {percentage >= 50 && <Confetti />}
+      </View>
     );
   }
 

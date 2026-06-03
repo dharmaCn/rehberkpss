@@ -10,10 +10,17 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
+  deleteField,
   where,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { getTodayKey } from './quiz';
+import { getTodayKey, getYesterdayKey } from './quiz';
+
+export type CategoryKey = 'tarih' | 'cografya' | 'vatandaslik' | 'guncel';
+
+export interface CategoryStat { correct: number; total: number }
+
+export interface AnsweredItem { id: string; category: CategoryKey; correct: boolean }
 
 export interface UserProfile {
   uid: string;
@@ -25,6 +32,13 @@ export interface UserProfile {
   bestDayScore: number;
   isGuest?: boolean;
   createdAt: unknown;
+  // Engagement alanları (profil dokümanında map olarak tutulur)
+  currentStreak?: number;
+  longestStreak?: number;
+  lastActiveDate?: string;
+  perfectCount?: number;
+  categoryStats?: Partial<Record<CategoryKey, CategoryStat>>;
+  wrongQuestions?: Record<string, { category: CategoryKey; addedAt: unknown }>;
 }
 
 export interface QuizResult {
@@ -222,4 +236,70 @@ export async function fetchUserRank(uid: string, period: 'daily' | 'weekly' | 'a
   const board = await fetchLeaderboard(period, 200);
   const idx = board.findIndex((e) => e.uid === uid);
   return idx === -1 ? 999 : idx + 1;
+}
+
+/**
+ * Bir quiz tamamlandığında çağrılır. Tek atomik updateDoc ile:
+ * - Gün serisini (streak) günceller
+ * - Kategori bazlı doğru/toplam istatistiğini artırır
+ * - Yanlış yapılan soruları "wrongQuestions" havuzuna ekler, doğru yapılanları çıkarır
+ * - Kusursuz quiz sayısını artırır
+ * Tüm veri kullanıcı profili dokümanında map alanları olarak tutulur (ek güvenlik kuralı gerekmez).
+ */
+export async function recordQuizStats(
+  uid: string,
+  answered: AnsweredItem[],
+  isPerfect: boolean
+): Promise<{ currentStreak: number; longestStreak: number; isNewDay: boolean }> {
+  const ref = doc(db, 'users', uid);
+  const snap = await getDoc(ref);
+  const data = (snap.exists() ? snap.data() : {}) as UserProfile;
+
+  const today = getTodayKey();
+  const updates: Record<string, unknown> = {};
+
+  // --- Gün serisi ---
+  let currentStreak = data.currentStreak ?? 0;
+  let longestStreak = data.longestStreak ?? 0;
+  const isNewDay = data.lastActiveDate !== today;
+  if (isNewDay) {
+    currentStreak = data.lastActiveDate === getYesterdayKey() ? currentStreak + 1 : 1;
+    longestStreak = Math.max(longestStreak, currentStreak);
+    updates.lastActiveDate = today;
+    updates.currentStreak = currentStreak;
+    updates.longestStreak = longestStreak;
+  } else {
+    currentStreak = data.currentStreak ?? 1;
+    longestStreak = data.longestStreak ?? currentStreak;
+  }
+
+  // --- Kategori istatistiği + yanlış soru havuzu ---
+  for (const a of answered) {
+    updates[`categoryStats.${a.category}.total`] = increment(1);
+    if (a.correct) {
+      updates[`categoryStats.${a.category}.correct`] = increment(1);
+      updates[`wrongQuestions.${a.id}`] = deleteField();
+    } else {
+      updates[`wrongQuestions.${a.id}`] = { category: a.category, addedAt: serverTimestamp() };
+    }
+  }
+
+  if (isPerfect) updates.perfectCount = increment(1);
+
+  try {
+    await updateDoc(ref, updates);
+  } catch {
+    // istatistik kaydı başarısız olsa da quiz akışı bozulmamalı
+  }
+
+  return { currentStreak, longestStreak, isNewDay };
+}
+
+/** Yanlışlarım modunda bir soru doğru cevaplanınca havuzdan çıkarır. */
+export async function removeWrongQuestion(uid: string, questionId: string): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'users', uid), { [`wrongQuestions.${questionId}`]: deleteField() });
+  } catch {
+    // sessizce geç
+  }
 }

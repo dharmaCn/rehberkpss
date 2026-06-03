@@ -14,8 +14,13 @@ import {
 import { useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import { getAuthSync, deleteAccountAsync } from '../../lib/firebase';
-import { fetchUserProfile, fetchUserRank, UserProfile } from '../../lib/firestore';
+import { fetchUserProfile, fetchUserRank, UserProfile, CategoryKey } from '../../lib/firestore';
+import { getCategoryLabel, getCategoryColor } from '../../lib/quiz';
+import { ACHIEVEMENTS, buildAchievementCtx } from '../../lib/achievements';
+import { getLeague } from '../../lib/league';
 import { Colors } from '../../constants/colors';
+
+const CATS: CategoryKey[] = ['tarih', 'cografya', 'vatandaslik', 'guncel'];
 
 export default function ProfileScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -94,6 +99,22 @@ export default function ProfileScreen() {
   const quizCount = profile?.quizCount ?? 0;
   const bestScore = profile?.bestDayScore ?? 0;
 
+  // Konu performansı — en zayıf ders en üstte, verisi olmayanlar en altta
+  const catStats = profile?.categoryStats ?? {};
+  const catPerf = CATS.map((key) => {
+    const s = catStats[key];
+    const total = s?.total ?? 0;
+    const correct = s?.correct ?? 0;
+    return { key, total, correct, acc: total > 0 ? Math.round((correct / total) * 100) : null };
+  }).sort((a, b) => (a.acc ?? 101) - (b.acc ?? 101));
+
+  // Rozetler
+  const achCtx = buildAchievementCtx(profile);
+  const earnedCount = ACHIEVEMENTS.filter((a) => a.earned(achCtx)).length;
+
+  // Lig
+  const lg = getLeague(totalScore);
+
   return (
     <ScrollView
       style={[styles.scroll, { backgroundColor: c.background }]}
@@ -160,19 +181,79 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      {/* Seviye */}
-      <View style={[styles.levelCard, { backgroundColor: Colors.primary }]}>
-        <View style={styles.levelLeft}>
-          <Text style={styles.levelBadge}>
-            {totalScore >= 5000 ? '🌟 Uzman' : totalScore >= 2000 ? '🎓 İleri Seviye' : totalScore >= 500 ? '📚 Orta Seviye' : '🌱 Başlangıç'}
-          </Text>
-          <Text style={styles.levelSub}>
-            {totalScore >= 5000
-              ? 'KPSS konularına hâkimsin!'
-              : `Bir üst seviye için ${totalScore >= 2000 ? 5000 - totalScore : totalScore >= 500 ? 2000 - totalScore : 500 - totalScore} puan daha`}
-          </Text>
+      {/* Konu Performansı */}
+      <Text style={[styles.sectionTitle, { color: c.text }]}>Konu Performansın</Text>
+      <View style={[styles.perfCard, { backgroundColor: c.card, borderColor: c.border }]}>
+        {catPerf.map((p, i) => (
+          <View
+            key={p.key}
+            style={[styles.perfRow, i < catPerf.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.border }]}
+          >
+            <View style={styles.perfHead}>
+              <Text style={[styles.perfLabel, { color: c.text }]}>{getCategoryLabel(p.key)}</Text>
+              <Text style={[styles.perfPct, { color: p.acc == null ? c.textSecondary : getCategoryColor(p.key) }]}>
+                {p.acc == null ? 'Veri yok' : `%${p.acc}`}
+              </Text>
+            </View>
+            <View style={[styles.perfTrack, { backgroundColor: c.border }]}>
+              <View style={[styles.perfFill, { width: `${p.acc ?? 0}%`, backgroundColor: getCategoryColor(p.key) }]} />
+            </View>
+            {p.total > 0 && (
+              <Text style={[styles.perfSub, { color: c.textSecondary }]}>{p.correct}/{p.total} doğru</Text>
+            )}
+          </View>
+        ))}
+      </View>
+
+      {/* Lig */}
+      <View style={[styles.leagueCard, { backgroundColor: lg.league.color }]}>
+        <View style={styles.leagueTop}>
+          <View style={styles.leagueLeft}>
+            <Text style={styles.leagueIcon}>{lg.league.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.leagueName}>{lg.league.name} Ligi</Text>
+              <Text style={styles.leagueSub}>
+                {lg.next ? `${lg.next.name} ligine ${lg.toNext.toLocaleString('tr-TR')} puan` : 'En üst lig — efsanesin! 👑'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.leagueScore}>{totalScore.toLocaleString('tr-TR')}</Text>
         </View>
-        <Text style={styles.levelScore}>{totalScore}</Text>
+        <View style={styles.leagueTrack}>
+          <View style={[styles.leagueFill, { width: `${lg.progressPct}%` }]} />
+        </View>
+      </View>
+
+      {/* Rozetler */}
+      <View style={styles.achHeader}>
+        <Text style={[styles.sectionTitle, { color: c.text }]}>Rozetler</Text>
+        <Text style={[styles.achCount, { color: c.textSecondary }]}>{earnedCount}/{ACHIEVEMENTS.length}</Text>
+      </View>
+      <View style={styles.achGrid}>
+        {ACHIEVEMENTS.map((a) => {
+          const earned = a.earned(achCtx);
+          const prog = !earned && a.progress ? a.progress(achCtx) : null;
+          return (
+            <View
+              key={a.id}
+              style={[
+                styles.achTile,
+                { backgroundColor: c.card, borderColor: earned ? Colors.primary : c.border },
+                !earned && { opacity: 0.55 },
+              ]}
+            >
+              <Text style={styles.achIcon}>{a.icon}</Text>
+              <Text style={[styles.achTitle, { color: c.text }]} numberOfLines={1}>{a.title}</Text>
+              {earned ? (
+                <Text style={[styles.achState, { color: Colors.success }]}>✓ Kazanıldı</Text>
+              ) : prog ? (
+                <Text style={[styles.achState, { color: c.textSecondary }]}>{prog.current}/{prog.target}</Text>
+              ) : (
+                <Text style={[styles.achState, { color: c.textSecondary }]}>Kilitli</Text>
+              )}
+            </View>
+          );
+        })}
       </View>
 
       {/* Çıkış */}
@@ -281,6 +362,32 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 18, fontWeight: '700' },
 
+  perfCard: { borderRadius: 20, borderWidth: 1, padding: 4 },
+  perfRow: { paddingHorizontal: 14, paddingVertical: 14, gap: 8 },
+  perfHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  perfLabel: { fontSize: 15, fontWeight: '700' },
+  perfPct: { fontSize: 15, fontWeight: '800' },
+  perfTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  perfFill: { height: '100%', borderRadius: 4 },
+  perfSub: { fontSize: 12, fontWeight: '500' },
+
+  achHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  achCount: { fontSize: 14, fontWeight: '700' },
+  achGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  achTile: {
+    flexGrow: 1,
+    flexBasis: '29%',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    gap: 5,
+  },
+  achIcon: { fontSize: 28 },
+  achTitle: { fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  achState: { fontSize: 10, fontWeight: '700', textAlign: 'center' },
+
   statsCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   statRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
   statLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -299,6 +406,16 @@ const styles = StyleSheet.create({
   levelBadge: { fontSize: 16, fontWeight: '800', color: '#fff' },
   levelSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 18 },
   levelScore: { fontSize: 32, fontWeight: '900', color: '#fff' },
+
+  leagueCard: { borderRadius: 20, padding: 20, gap: 14 },
+  leagueTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  leagueLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  leagueIcon: { fontSize: 36 },
+  leagueName: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  leagueSub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  leagueScore: { fontSize: 28, fontWeight: '900', color: '#fff', marginLeft: 8 },
+  leagueTrack: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
+  leagueFill: { height: '100%', borderRadius: 4, backgroundColor: '#fff' },
 
   signOutBtn: { borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5 },
   signOutText: { fontSize: 15, fontWeight: '700' },
