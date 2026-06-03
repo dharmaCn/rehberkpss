@@ -7,10 +7,12 @@ import {
   useColorScheme,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { signInGuestAsync, signInWithGoogleAsync } from '../../lib/firebase';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { signInGuestAsync, signInWithGoogleAsync, signInWithAppleAsync } from '../../lib/firebase';
 import { ensureUserProfile } from '../../lib/firestore';
 import { Colors } from '../../constants/colors';
 
@@ -19,7 +21,36 @@ export default function LoginScreen() {
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
   const [guestLoading, setGuestLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAvailable).catch(() => {});
+    }
+  }, []);
+
+  async function handleApple() {
+    try {
+      const user = await signInWithAppleAsync();
+      if (user) {
+        await ensureUserProfile({
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          isAnonymous: false,
+        });
+        // useAuth onAuthStateChanged tetiklenir, _layout.tsx otomatik yönlendirir
+      }
+    } catch (e) {
+      const code = (e as { code?: string })?.code ?? '';
+      if (code !== 'ERR_REQUEST_CANCELED') {
+        Alert.alert('Apple ile giriş yapılamadı', 'Lütfen tekrar deneyin.');
+      }
+      // iptal edildiyse sessizce geç
+    }
+  }
 
   async function handleGuest() {
     setGuestLoading(true);
@@ -105,6 +136,21 @@ export default function LoginScreen() {
         )}
       </TouchableOpacity>
 
+      {/* Apple ile Giriş - iOS'ta zorunlu (Guideline 4.8) */}
+      {appleAvailable && (
+        <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={
+            scheme === 'dark'
+              ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+              : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+          }
+          cornerRadius={16}
+          style={styles.appleBtn}
+          onPress={handleApple}
+        />
+      )}
+
       {/* Google Giriş - İkincil */}
       <TouchableOpacity
         style={[styles.googleBtn, { borderColor: c.border, backgroundColor: c.card }]}
@@ -184,6 +230,7 @@ const styles = StyleSheet.create({
   },
   guestBtnIcon: { fontSize: 20 },
   guestBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  appleBtn: { width: '100%', height: 52 },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',

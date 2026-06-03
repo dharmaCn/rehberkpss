@@ -1,12 +1,14 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 // Static import — modül yüklenirken auth component'i kaydeder
-import { initializeAuth, getAuth, GoogleAuthProvider, signInWithCredential, signInAnonymously, updateProfile, deleteUser } from 'firebase/auth';
+import { initializeAuth, getAuth, GoogleAuthProvider, OAuthProvider, signInWithCredential, signInAnonymously, updateProfile, deleteUser } from 'firebase/auth';
 // getReactNativePersistence yalnızca RN build'inde mevcut; tipi 'firebase/auth' altında bildirilmemiş.
 // @ts-expect-error - RN-only export, type tanımı eksik
 import { getReactNativePersistence } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
 const firebaseConfig = {
@@ -76,6 +78,45 @@ export async function signInWithGoogleAsync(): Promise<import('firebase/auth').U
   const credential = GoogleAuthProvider.credential(response.data.idToken);
   const result = await signInWithCredential(auth, credential);
   return result.user;
+}
+
+async function makeRawNonce(byteLength = 32): Promise<string> {
+  const bytes = await Crypto.getRandomBytesAsync(byteLength);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function signInWithAppleAsync(): Promise<import('firebase/auth').User | null> {
+  const auth = getFirebaseAuth();
+  if (!auth) throw new Error('Firebase Auth başlatılamadı');
+
+  // Firebase, Apple idToken'ı hashlenmiş nonce ile ister; ham nonce'u credential'a veririz.
+  const rawNonce = await makeRawNonce();
+  const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
+
+  const appleCred = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+    nonce: hashedNonce,
+  });
+
+  if (!appleCred.identityToken) return null;
+
+  const provider = new OAuthProvider('apple.com');
+  const firebaseCred = provider.credential({
+    idToken: appleCred.identityToken,
+    rawNonce,
+  });
+  const result = await signInWithCredential(auth, firebaseCred);
+  const user = result.user;
+
+  // Apple ad-soyadı yalnızca İLK girişte döner; varsa displayName olarak ayarla.
+  const fullName = `${appleCred.fullName?.givenName ?? ''} ${appleCred.fullName?.familyName ?? ''}`.trim();
+  if (fullName && !user.displayName) {
+    try { await updateProfile(user, { displayName: fullName }); } catch {}
+  }
+  return user;
 }
 
 // Hesabı kalıcı olarak siler: Firestore verisi (profil + tüm sonuçlar) + Auth hesabı
