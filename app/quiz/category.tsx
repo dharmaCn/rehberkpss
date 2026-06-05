@@ -19,6 +19,7 @@ import {
   getCategoryColor,
   CATEGORY_SCORE_MULTIPLIER,
 } from '../../lib/quiz';
+import { recordQuizCompletedAndMaybePrompt } from '../../lib/review';
 import { Question } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
 
@@ -128,6 +129,8 @@ export default function CategoryQuizSession() {
     } finally {
       setSaving(false);
     }
+    // Sonuç ekranı görününce kısa gecikmeyle değerlendirme iste
+    setTimeout(() => { recordQuizCompletedAndMaybePrompt(); }, 800);
   }
 
   function getOptionStyle(i: number) {

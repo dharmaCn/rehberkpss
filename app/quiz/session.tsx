@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
 import { saveQuizResult } from '../../lib/firestore';
 import { getDailyQuestions, calculateScore, getCategoryLabel, getCategoryColor } from '../../lib/quiz';
+import { recordQuizCompletedAndMaybePrompt } from '../../lib/review';
 import { Question } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
 
@@ -118,6 +119,8 @@ export default function QuizSession() {
     } finally {
       setSaving(false);
     }
+    // Sonuç ekranı görününce kısa gecikmeyle değerlendirme iste
+    setTimeout(() => { recordQuizCompletedAndMaybePrompt(); }, 800);
   }
 
   function getOptionStyle(i: number) {

@@ -14,6 +14,8 @@ import { getAuthSync } from '../../lib/firebase';
 import { hasCompletedTodayQuiz, hasCompletedTodayCategoryQuiz } from '../../lib/firestore';
 import { getDailyQuestions, getDailyCategoryQuestions, getTodayKey } from '../../lib/quiz';
 import { QUESTION_POOL } from '../../constants/questions';
+import { TOPICS } from '../../constants/topics';
+import { openStoreReview } from '../../lib/review';
 import { Colors } from '../../constants/colors';
 
 // KPSS Genel Kültür sınavında yaklaşık soru dağılımı (toplam ~60 soru)
@@ -168,6 +170,44 @@ export default function HomeScreen() {
         })}
       </View>
 
+      {/* Konu Anlatımı */}
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: c.text }]}>Konu Anlatımı</Text>
+        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>KPSS Tarih</Text>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.topicRow}
+      >
+        {TOPICS.map((t) => {
+          const soon = t.sections.length === 0;
+          return (
+            <TouchableOpacity
+              key={t.id}
+              style={[styles.topicCard, { backgroundColor: c.card, borderColor: c.border }]}
+              onPress={() => router.push({ pathname: '/topic/[id]' as never, params: { id: t.id } })}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.topicIcon}>{t.icon}</Text>
+              <Text style={[styles.topicTitle, { color: c.text }]} numberOfLines={2}>{t.title}</Text>
+              <Text style={[styles.topicSummary, { color: c.textSecondary }]} numberOfLines={2}>
+                {t.summary}
+              </Text>
+              {soon ? (
+                <View style={[styles.topicBadge, { backgroundColor: c.border }]}>
+                  <Text style={[styles.topicBadgeText, { color: c.textSecondary }]}>Yakında</Text>
+                </View>
+              ) : (
+                <View style={[styles.topicBadge, { backgroundColor: Colors.primary + '1A' }]}>
+                  <Text style={[styles.topicBadgeText, { color: Colors.primary }]}>⏱ {t.readMinutes} dk</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       {/* İpucu */}
       <View style={[styles.tipCard, { backgroundColor: c.card, borderColor: c.border }]}>
         <Text style={[styles.tipTitle, { color: c.text }]}>💡 Bugünün İpucu</Text>
@@ -175,6 +215,17 @@ export default function HomeScreen() {
           Hız bonusu için soruları hızlı yanıtla! İlk 15 saniyede doğru cevaplar daha yüksek puan kazandırır.
         </Text>
       </View>
+
+      {/* Bizi Değerlendir */}
+      <TouchableOpacity
+        style={styles.rateRow}
+        onPress={openStoreReview}
+        activeOpacity={0.7}
+      >
+        <Text style={[styles.rateText, { color: c.textSecondary }]}>
+          ⭐ Uygulamayı beğendin mi? Bizi değerlendir →
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -266,4 +317,21 @@ const styles = StyleSheet.create({
   lessonDoneText: { fontSize: 11, fontWeight: '700' },
   lessonStartBadge: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginTop: 2 },
   lessonStartText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+
+  topicRow: { gap: 12, paddingRight: 4 },
+  topicCard: {
+    width: 160,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    gap: 6,
+  },
+  topicIcon: { fontSize: 28 },
+  topicTitle: { fontSize: 14, fontWeight: '700', lineHeight: 19 },
+  topicSummary: { fontSize: 12, lineHeight: 17 },
+  topicBadge: { alignSelf: 'flex-start', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginTop: 4 },
+  topicBadgeText: { fontSize: 11, fontWeight: '700' },
+
+  rateRow: { alignItems: 'center', paddingVertical: 8 },
+  rateText: { fontSize: 13, fontWeight: '600' },
 });

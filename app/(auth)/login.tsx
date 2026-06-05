@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { signInGuestAsync, signInWithGoogleAsync, signInWithAppleAsync } from '../../lib/firebase';
 import { ensureUserProfile } from '../../lib/firestore';
+import { openStoreReview } from '../../lib/review';
 import { Colors } from '../../constants/colors';
 
 export default function LoginScreen() {
@@ -173,6 +174,12 @@ export default function LoginScreen() {
       <Text style={[styles.legal, { color: c.textSecondary }]}>
         Giriş yaparak gizlilik politikamızı kabul etmiş olursunuz.
       </Text>
+
+      <TouchableOpacity style={styles.rateRow} onPress={openStoreReview} activeOpacity={0.7}>
+        <Text style={[styles.rateText, { color: c.textSecondary }]}>
+          ⭐ Bizi değerlendir
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -250,4 +257,6 @@ const styles = StyleSheet.create({
   googleIcon: { fontSize: 13, fontWeight: '800', color: '#fff' },
   googleBtnText: { fontSize: 15, fontWeight: '600' },
   legal: { fontSize: 12, textAlign: 'center' },
+  rateRow: { alignItems: 'center', paddingVertical: 4 },
+  rateText: { fontSize: 13, fontWeight: '600' },
 });
