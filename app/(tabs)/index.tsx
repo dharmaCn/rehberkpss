@@ -13,8 +13,6 @@ import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
 import { hasCompletedTodayQuiz, hasCompletedTodayCategoryQuiz } from '../../lib/firestore';
 import { getDailyQuestions, getDailyCategoryQuestions, getTodayKey } from '../../lib/quiz';
-import { QUESTION_POOL } from '../../constants/questions';
-import { TOPICS } from '../../constants/topics';
 import { openStoreReview } from '../../lib/review';
 import { Colors } from '../../constants/colors';
 
@@ -173,40 +171,23 @@ export default function HomeScreen() {
       {/* Konu Anlatımı */}
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: c.text }]}>Konu Anlatımı</Text>
-        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>KPSS Tarih</Text>
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.topicRow}
+      <TouchableOpacity
+        style={[styles.topicHero, { backgroundColor: c.card, borderColor: c.border }]}
+        onPress={() => router.push('/topic' as never)}
+        activeOpacity={0.85}
       >
-        {TOPICS.map((t) => {
-          const soon = t.sections.length === 0;
-          return (
-            <TouchableOpacity
-              key={t.id}
-              style={[styles.topicCard, { backgroundColor: c.card, borderColor: c.border }]}
-              onPress={() => router.push({ pathname: '/topic/[id]' as never, params: { id: t.id } })}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.topicIcon}>{t.icon}</Text>
-              <Text style={[styles.topicTitle, { color: c.text }]} numberOfLines={2}>{t.title}</Text>
-              <Text style={[styles.topicSummary, { color: c.textSecondary }]} numberOfLines={2}>
-                {t.summary}
-              </Text>
-              {soon ? (
-                <View style={[styles.topicBadge, { backgroundColor: c.border }]}>
-                  <Text style={[styles.topicBadgeText, { color: c.textSecondary }]}>Yakında</Text>
-                </View>
-              ) : (
-                <View style={[styles.topicBadge, { backgroundColor: Colors.primary + '1A' }]}>
-                  <Text style={[styles.topicBadgeText, { color: Colors.primary }]}>⏱ {t.readMinutes} dk</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+        <View style={[styles.topicHeroIcon, { backgroundColor: '#EF4444' + '1A' }]}>
+          <Text style={styles.topicHeroEmoji}>📜</Text>
+        </View>
+        <View style={styles.topicHeroBody}>
+          <Text style={[styles.topicHeroTitle, { color: c.text }]}>Tarih Konu Anlatımı</Text>
+          <Text style={[styles.topicHeroSub, { color: c.textSecondary }]}>
+            13 ünite • Hap bilgi kartları + mini quiz
+          </Text>
+        </View>
+        <Text style={[styles.topicHeroChevron, { color: c.textSecondary }]}>›</Text>
+      </TouchableOpacity>
 
       {/* İpucu */}
       <View style={[styles.tipCard, { backgroundColor: c.card, borderColor: c.border }]}>
@@ -318,19 +299,26 @@ const styles = StyleSheet.create({
   lessonStartBadge: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginTop: 2 },
   lessonStartText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
-  topicRow: { gap: 12, paddingRight: 4 },
-  topicCard: {
-    width: 160,
-    borderRadius: 16,
+  topicHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
     padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
-    gap: 6,
   },
-  topicIcon: { fontSize: 28 },
-  topicTitle: { fontSize: 14, fontWeight: '700', lineHeight: 19 },
-  topicSummary: { fontSize: 12, lineHeight: 17 },
-  topicBadge: { alignSelf: 'flex-start', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginTop: 4 },
-  topicBadgeText: { fontSize: 11, fontWeight: '700' },
+  topicHeroIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topicHeroEmoji: { fontSize: 28 },
+  topicHeroBody: { flex: 1, gap: 3 },
+  topicHeroTitle: { fontSize: 16, fontWeight: '800' },
+  topicHeroSub: { fontSize: 12, fontWeight: '500' },
+  topicHeroChevron: { fontSize: 28, fontWeight: '300' },
 
   rateRow: { alignItems: 'center', paddingVertical: 8 },
   rateText: { fontSize: 13, fontWeight: '600' },

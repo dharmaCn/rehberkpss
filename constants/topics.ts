@@ -1,9 +1,11 @@
-// KPSS Genel Kültür - Tarih konu anlatımları
-// İlk 4 ünite tam içeriklidir; kalanlar yapı hazır olacak şekilde "yakında" durumundadır.
+// KPSS Genel Kültür - Tarih konu anlatımları (kart formatı)
+// Her ünite: hap bilgi kartları + kendi soru havuzu (her quiz oturumunda 5 rastgele).
 
-export interface TopicSection {
-  heading: string;
-  body: string;
+export interface TopicQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  aciklama?: string;
 }
 
 export interface Topic {
@@ -12,151 +14,593 @@ export interface Topic {
   title: string;
   icon: string;
   summary: string;
-  readMinutes: number;
-  sections: TopicSection[]; // boş ise "yakında" kabul edilir
+  cards: string[]; // hap bilgi metinleri (boş => "Yakında")
+  questions: TopicQuestion[]; // 5'ten fazlaysa her seferinde 5 rastgele seçilir
 }
 
 export const TOPICS: Topic[] = [
+  // ───────────────────────────────────────────────────────────────────
   {
     id: 't01',
     subject: 'tarih',
     title: 'İslamiyet Öncesi Türk Tarihi',
     icon: '🏹',
     summary: 'Hunlar, Göktürkler, Uygurlar ve ilk Türk devletlerinin kültürü.',
-    readMinutes: 6,
-    sections: [
+    cards: [
+      'Türklerin ana yurdu Orta Asya\'dır. Sınırları batıda Hazar Denizi, doğuda Kingan Dağları, kuzeyde Sibirya, güneyde Himalaya Dağları ile çevrilidir.',
+      'Türkleri göçe zorlayan başlıca nedenler: kuraklık, nüfus artışı, otlak yetersizliği, salgın hastalıklar ve boylar arası mücadelelerdir.',
+      'Bilinen ilk Türk devleti Asya (Büyük) Hun Devleti\'dir.',
+      'Asya Hun Devleti en güçlü dönemini Mete Han (Mo-tun) zamanında yaşamıştır.',
+      'Mete Han, orduyu onluk sisteme (10\'lu sistem) göre düzenlemiştir; bu sistem sonraki Türk ve dünya ordularına örnek olmuştur.',
+      'Çin Seddi\'nin inşa edilme nedeni Hun akınlarını durdurmaktır; bu durum Hunların gücünü gösteren önemli bir kanıttır.',
+      'Asya Hun Devleti Çin entrikaları ve iç karışıklıklarla zayıflayarak Doğu ve Batı Hunları olarak ikiye ayrılmıştır.',
+      'Kavimler Göçü (375), batıya göç eden Hunların önünden kaçan kavimlerin Avrupa\'ya yayılmasıyla başlamıştır.',
+      'Kavimler Göçü\'nün sonuçları: Roma İmparatorluğu ikiye ayrıldı, Batı Roma yıkıldı, Avrupa\'da feodalite (derebeylik) doğdu.',
+      'Kavimler Göçü, İlk Çağ\'ın sonu ve Orta Çağ\'ın başlangıcı kabul edilir.',
+      'Avrupa Hunları\'nın en ünlü hükümdarı Attila\'dır.',
+      'I. Göktürk Devleti, Bumin Kağan tarafından kurulmuştur ve "Türk" adını devlet ismi olarak kullanan ilk Türk devletidir.',
+      'II. Göktürk (Kutluk) Devleti\'ni Kutluk Kağan kurmuştur; bu dönemde Bilge Kağan, Kül Tigin ve Tonyukuk öne çıkar.',
+      'Orhun (Göktürk) Yazıtları, Türk tarihinin ve edebiyatının ilk yazılı belgeleridir; "Türk" adının geçtiği ilk Türkçe metinlerdir.',
+      'Uygurlar, yerleşik hayata geçen ilk Türk topluluğudur.',
+      'Uygurların Mani ve Buda dinlerini benimsemesi savaşçılık özelliklerini zayıflatmıştır.',
+      'Uygurlar 18 harfli kendi alfabelerini kullanmış; matbaa ve hareketli harf tekniğinde önemli işler yapmıştır.',
+      'Türk minyatür sanatının ilk örnekleri Uygurlara aittir.',
+      'İlk Türklerde "kut" anlayışı: Yönetme yetkisinin Tanrı tarafından hükümdara verildiğine inanılırdı.',
+      'İlk Türklerde ülke hanedanın ortak malı sayılırdı; bu anlayış sık sık taht kavgalarına yol açmıştır.',
+      'İlk Türklerde yazılı hukuk yoktu; sözlü hukuk kurallarına "töre" denirdi.',
+      'İlk Türklerde yaygın inanç Gök Tanrı inancıdır; mezarlara "balbal" denilen taşlar dikilirdi.',
+    ],
+    questions: [
       {
-        heading: 'Türklerin Ana Yurdu ve Göçler',
-        body: 'Türklerin ana yurdu Orta Asya\'dır. Sınırları batıda Hazar Denizi, doğuda Kingan Dağları, kuzeyde Sibirya, güneyde Himalaya Dağları ile çevrilidir. İklim koşullarının ağırlaşması, kuraklık, nüfus artışı, otlak yetersizliği, salgın hastalıklar ve boylar arası mücadeleler Türkleri göçe zorlamıştır. Göçler sonucu Türkler dünyanın birçok bölgesine yayılmış ve gittikleri yerlere kendi kültürlerini taşımışlardır.',
+        question: 'Bilinen ilk Türk devleti aşağıdakilerden hangisidir?',
+        options: ['Göktürkler', 'Asya Hun Devleti', 'Uygurlar', 'Avrupa Hunları'],
+        correctIndex: 1,
+        aciklama: 'Bilinen ilk Türk devleti Asya (Büyük) Hun Devleti\'dir; en güçlü dönemini Mete Han zamanında yaşamıştır.',
       },
       {
-        heading: 'Asya (Büyük) Hun Devleti',
-        body: 'Bilinen ilk Türk devleti Asya Hun Devleti\'dir. En güçlü dönemini Mete Han (Mo-tun) zamanında yaşamıştır. Mete Han, orduyu onluk sisteme göre düzenlemiş (10\'lu sistem), bu sistem sonraki Türk ve dünya ordularına örnek olmuştur. Çinlilerin Türk akınlarına karşı Çin Seddi\'ni inşa etmesi Hunların gücünü gösterir. Devlet daha sonra Çin entrikaları ve iç karışıklıklarla zayıflayarak Doğu ve Batı Hunları olarak ikiye ayrılmıştır.',
+        question: 'Orduyu onluk sisteme göre düzenleyen Türk hükümdarı aşağıdakilerden hangisidir?',
+        options: ['Bilge Kağan', 'Bumin Kağan', 'Mete Han', 'Attila'],
+        correctIndex: 2,
+        aciklama: 'Mete Han\'ın kurduğu 10\'lu (onluk) sistem sonraki Türk ve dünya ordularına örnek olmuştur.',
       },
       {
-        heading: 'Kavimler Göçü ve Avrupa Hunları',
-        body: 'Batıya göç eden Hunların önünden kaçan kavimlerin Avrupa\'ya yayılması Kavimler Göçü\'ne (375) yol açtı. Bu göç, Roma İmparatorluğu\'nun ikiye ayrılmasına, ilerleyen süreçte Batı Roma\'nın yıkılmasına ve Avrupa\'da feodalite (derebeylik) düzeninin doğmasına neden oldu. Kavimler Göçü, İlk Çağ\'ın sonu, Orta Çağ\'ın başlangıcı kabul edilir. Avrupa Hunları\'nın en ünlü hükümdarı Attila\'dır.',
+        question: 'Çin Seddi\'nin inşa edilme nedeni aşağıdakilerden hangisidir?',
+        options: ['Ticaret yollarını korumak', 'Hun akınlarını durdurmak', 'Moğol istilasını önlemek', 'Roma saldırılarına karşı savunma'],
+        correctIndex: 1,
+        aciklama: 'Çin Seddi, Türk (Hun) akınlarını durdurmak için inşa edilmiştir; bu Hunların gücünün kanıtıdır.',
       },
       {
-        heading: 'Göktürk (Kök Türk) Devleti',
-        body: 'Bumin Kağan tarafından kurulan I. Göktürk Devleti, "Türk" adını devlet ismi olarak kullanan ilk Türk devletidir. Bir süre Çin egemenliğinde kaldıktan sonra Kutluk Kağan I I. Göktürk (Kutluk) Devleti\'ni kurmuştur. Bu dönemde Bilge Kağan, kardeşi Kül Tigin ve vezir Tonyukuk öne çıkar. Türk tarihinin ve edebiyatının ilk yazılı belgeleri olan Orhun (Göktürk) Yazıtları bu dönemde dikilmiştir; bu kitabeler Türk adının geçtiği ilk Türkçe metinlerdir.',
+        question: 'Kavimler Göçü\'nün (375) sonuçları arasında aşağıdakilerden hangisi yer almaz?',
+        options: ['Roma İmparatorluğu ikiye ayrıldı', 'Avrupa\'da feodalite doğdu', 'Orta Çağ başladı', 'İslamiyet Avrupa\'ya yayıldı'],
+        correctIndex: 3,
+        aciklama: 'İslamiyet, Kavimler Göçü\'nden sonra (7. yüzyılda) doğmuştur. Diğer üç sonuç doğrudan göçle ilgilidir.',
       },
       {
-        heading: 'Uygurlar',
-        body: 'Göktürklerin yıkılmasıyla Uygur Devleti kuruldu. Uygurlar yerleşik hayata geçen ilk Türk topluluğudur. Mani ve Buda dinlerini benimsemeleri savaşçılık özelliklerini zayıflatmıştır. 18 harfli Uygur alfabesini kullanmışlar, matbaa ve hareketli harf tekniğinde önemli işler yapmışlardır. Türk minyatür sanatının ilk örnekleri Uygurlara aittir.',
+        question: '"Türk" adını devlet ismi olarak kullanan ilk Türk devleti aşağıdakilerden hangisidir?',
+        options: ['Asya Hunları', 'I. Göktürk Devleti', 'Uygurlar', 'Avrupa Hunları'],
+        correctIndex: 1,
+        aciklama: 'I. Göktürk (Kök Türk) Devleti, Bumin Kağan tarafından kurulmuş ve "Türk" adını devlet adı olarak kullanan ilk Türk devletidir.',
       },
       {
-        heading: 'İlk Türklerde Kültür ve Medeniyet',
-        body: 'Devlet yönetiminde "kut" anlayışı vardı: yönetme yetkisinin Tanrı tarafından hükümdara verildiğine inanılırdı. Ülke hanedanın ortak malı sayılırdı (bu anlayış taht kavgalarına yol açmıştır). Halk boylar hâlinde örgütlenmişti. Konargöçer (yarı göçebe) yaşam, hayvancılık ve at önemliydi. Yazılı hukuk yoktu; sözlü hukuk kuralları "töre" ile sağlanırdı. Gök Tanrı inancı yaygındı; ölümden sonraki yaşama inanılır, mezarlara "balbal" denilen taşlar dikilirdi.',
+        question: 'Yerleşik hayata geçen ilk Türk topluluğu aşağıdakilerden hangisidir?',
+        options: ['Hunlar', 'Göktürkler', 'Uygurlar', 'Karahanlılar'],
+        correctIndex: 2,
+        aciklama: 'Uygurlar, Mani dinini benimsedikten sonra yerleşik hayata geçen ilk Türk topluluğudur.',
+      },
+      {
+        question: 'Türk tarihinin ilk yazılı belgeleri aşağıdakilerden hangisidir?',
+        options: ['Orhun Yazıtları', 'Divânü Lugâti\'t-Türk', 'Kutadgu Bilig', 'Oğuz Kağan Destanı'],
+        correctIndex: 0,
+        aciklama: 'Orhun (Göktürk) Yazıtları, Türk tarih ve edebiyatının ilk yazılı belgeleridir ve "Türk" adının geçtiği ilk Türkçe metinlerdir.',
+      },
+      {
+        question: 'İlk Türklerde "kut" anlayışı aşağıdakilerden hangisini ifade eder?',
+        options: [
+          'Yazılı hukuk kuralları',
+          'Yönetme yetkisinin Tanrı tarafından hükümdara verildiği inancı',
+          'Toprak mülkiyeti sistemi',
+          'Asker yetiştirme yöntemi',
+        ],
+        correctIndex: 1,
+        aciklama: '"Kut" anlayışı; yönetme yetkisinin (kut\'un) Tanrı tarafından hükümdara verildiğine inanılmasıdır.',
+      },
+      {
+        question: 'İlk Türklerde sözlü hukuk kurallarına ne ad verilir?',
+        options: ['Töre', 'Kut', 'Yargu', 'Kurultay'],
+        correctIndex: 0,
+        aciklama: 'İlk Türklerde yazılı hukuk yoktu; sözlü hukuk kurallarına "töre" denirdi.',
+      },
+      {
+        question: 'Mezarlara "balbal" adı verilen taşların dikilmesi aşağıdaki Türk inançlarından hangisiyle ilgilidir?',
+        options: ['Mani', 'Buda', 'Gök Tanrı', 'İslam'],
+        correctIndex: 2,
+        aciklama: 'Balbal dikme geleneği, Gök Tanrı inancı ve ölümden sonraki yaşama inanışla ilgilidir.',
+      },
+      {
+        question: 'Avrupa Hunları\'nın en ünlü hükümdarı aşağıdakilerden hangisidir?',
+        options: ['Mete Han', 'Attila', 'Bumin Kağan', 'Kutluk Kağan'],
+        correctIndex: 1,
+        aciklama: 'Attila, Avrupa Hunları\'nın en güçlü ve ünlü hükümdarıdır.',
+      },
+      {
+        question: 'Türk minyatür sanatının ilk örnekleri hangi Türk devletine aittir?',
+        options: ['Karahanlılar', 'Uygurlar', 'Selçuklular', 'Göktürkler'],
+        correctIndex: 1,
+        aciklama: 'Türk minyatür sanatının bilinen ilk örnekleri Uygurlara aittir.',
+      },
+      {
+        question: 'İlk Türklerde ülkenin hanedanın ortak malı sayılması anlayışının en önemli sonucu aşağıdakilerden hangisidir?',
+        options: ['Yazılı hukukun gelişmesi', 'Sık sık taht kavgalarının yaşanması', 'Yerleşik hayata geçilmesi', 'Boyların güçlenmesi'],
+        correctIndex: 1,
+        aciklama: 'Ülkenin hanedanın ortak malı sayılması anlayışı, hükümdar ölünce taht kavgalarına yol açmıştır.',
+      },
+      {
+        question: 'I. Göktürk Devleti\'nin kurucusu aşağıdakilerden hangisidir?',
+        options: ['Bumin Kağan', 'Kutluk Kağan', 'Bilge Kağan', 'Tonyukuk'],
+        correctIndex: 0,
+        aciklama: 'I. Göktürk Devleti\'ni Bumin Kağan kurmuştur.',
+      },
+      {
+        question: 'Kavimler Göçü hangi olayın başlangıcı kabul edilir?',
+        options: ['İlk Çağ', 'Orta Çağ', 'Yeni Çağ', 'Yakın Çağ'],
+        correctIndex: 1,
+        aciklama: 'Kavimler Göçü (375), İlk Çağ\'ın sonu ve Orta Çağ\'ın başlangıcı kabul edilir.',
       },
     ],
   },
+  // ───────────────────────────────────────────────────────────────────
   {
     id: 't02',
     subject: 'tarih',
     title: 'İlk Türk-İslam Devletleri',
     icon: '☪️',
     summary: 'Karahanlılar, Gazneliler ve Büyük Selçuklu Devleti.',
-    readMinutes: 6,
-    sections: [
+    cards: [
+      'Türkler ile Araplar ilk kez Hz. Ömer döneminde komşu olmuştur.',
+      '751 Talas Savaşı\'nda Türkler, Çinlilere karşı Müslüman Arapların yanında yer almıştır.',
+      'Talas Savaşı, Orta Asya\'nın Çinlileşmesini engellemiş ve Türklerin İslamiyet\'i kabul sürecini başlatmıştır.',
+      'Kâğıt, Talas Savaşı sonrası Çin dışına yayılmış; İslam dünyası aracılığıyla Avrupa\'ya ulaşmıştır.',
+      'Karahanlılar, İslamiyet\'i kabul eden ilk Türk devletidir.',
+      'Karahanlılarda Satuk Buğra Han döneminde İslamiyet resmî din olmuştur.',
+      'Karahanlılar Türk dilini ve kültürünü korumuş, resmî dil olarak Türkçeyi kullanmıştır.',
+      'Kutadgu Bilig (Yusuf Has Hacib) ve Divânü Lugâti\'t-Türk (Kaşgarlı Mahmud), Karahanlılar döneminde yazılmıştır.',
+      'İlk Türk-İslam medreseleri, kervansaraylar ve ribatlar Karahanlılar tarafından yapılmıştır.',
+      'Gazneliler en parlak dönemini Gazneli Mahmud zamanında yaşamıştır.',
+      'Gazneli Mahmud, Hindistan\'a 17 sefer düzenleyerek İslamiyet\'i bu bölgede yaymıştır.',
+      'Gazneli Mahmud, "Sultan" unvanını kullanan ilk Türk hükümdarıdır.',
+      'Gazneliler farklı milletleri (Türk, Fars, Hint, Arap) bir arada barındırdığı için millî kalamamış; Farsça ve Arapça etkisi artmıştır.',
+      'Gazneliler, Dandanakan Savaşı\'nda (1040) Selçuklulara yenilerek yıkılış sürecine girmiştir.',
+      'Büyük Selçuklu Devleti, Oğuzların Kınık boyundan gelen Tuğrul ve Çağrı Beyler tarafından kurulmuştur.',
+      'Selçuklular, Dandanakan Savaşı\'nda (1040) Gaznelileri yenerek bağımsızlığını ilan etmiştir.',
+      'Tuğrul Bey, Abbasi halifesini Şii Büveyhoğullarına karşı koruyunca halife tarafından "Doğu\'nun ve Batı\'nın Sultanı" ilan edilmiştir.',
+      'Sultan Alparslan, 1071 Malazgirt Savaşı\'nda Bizans\'ı yenmiştir.',
+      'Malazgirt Zaferi (1071) Anadolu\'nun kapılarını Türklere açmıştır ve Anadolu\'nun "tapu senedi" sayılır.',
+      'Büyük Selçuklu Devleti en geniş sınırlarına Melikşah döneminde ulaşmıştır.',
+      'Vezir Nizamülmülk, "Nizamiye Medreseleri"ni kurmuş ve ünlü siyaset kitabı "Siyasetname"yi yazmıştır.',
+      'Büyük Selçuklu Devleti; taht kavgaları, Haçlı Seferleri ve Hasan Sabbah\'ın Batıni faaliyetleri sonucu zayıflayıp Katvan Savaşı yenilgisinin ardından yıkılmıştır.',
+    ],
+    questions: [
       {
-        heading: 'Türklerin İslamiyet\'i Kabulü',
-        body: 'Türkler ile Araplar ilk kez Hz. Ömer döneminde komşu oldu. 751 Talas Savaşı\'nda Türkler, Çinlilere karşı Müslüman Arapların yanında yer aldı. Bu savaş Orta Asya\'nın Çinlileşmesini engellemiş, Türkler ile Müslümanlar arasındaki ilişkileri geliştirmiş ve Türklerin kitleler hâlinde İslamiyet\'i kabul etme sürecini başlatmıştır. Ayrıca kâğıt, savaş sonrası Çin dışına (İslam dünyasına ve oradan Avrupa\'ya) yayılmıştır.',
+        question: 'İslamiyet\'i kabul eden ilk Türk devleti aşağıdakilerden hangisidir?',
+        options: ['Gazneliler', 'Karahanlılar', 'Büyük Selçuklular', 'Uygurlar'],
+        correctIndex: 1,
+        aciklama: 'Karahanlılar, Satuk Buğra Han döneminde İslamiyet\'i resmî din olarak kabul eden ilk Türk devletidir.',
       },
       {
-        heading: 'Karahanlılar',
-        body: 'Karahanlılar, İslamiyet\'i kabul eden ilk Türk devletidir. Satuk Buğra Han döneminde İslamiyet resmî din olmuştur. Halkın büyük çoğunluğu Türk olduğu için Türk dili ve kültürünü korumuşlar, resmî dil olarak Türkçeyi kullanmışlardır. İlk Türk-İslam eserleri bu dönemde yazılmıştır: Yusuf Has Hacib\'in "Kutadgu Bilig"i ve Kaşgarlı Mahmud\'un "Divânü Lugâti\'t-Türk"ü. Ayrıca ilk Türk-İslam medreseleri, kervansaraylar ve ribatlar Karahanlılarca yapılmıştır.',
+        question: '751 Talas Savaşı\'nın en önemli sonucu aşağıdakilerden hangisidir?',
+        options: [
+          'Anadolu\'nun fethi başladı',
+          'Türklerin kitleler hâlinde İslamiyet\'e geçişi başladı',
+          'Karahanlılar yıkıldı',
+          'Çin İslam dünyasına dâhil oldu',
+        ],
+        correctIndex: 1,
+        aciklama: 'Talas Savaşı (751) Türklerin Müslüman Araplarla yakınlaşmasını ve İslamiyet\'i kabul sürecinin başlamasını sağlamıştır.',
       },
       {
-        heading: 'Gazneliler',
-        body: 'Gazneliler en parlak dönemini Gazneli Mahmud zamanında yaşamıştır. Gazneli Mahmud, Hindistan\'a 17 sefer düzenleyerek İslamiyet\'in bu bölgede yayılmasını sağlamış ve "Sultan" unvanını kullanan ilk Türk hükümdarı olmuştur. Farklı milletleri (Türk, Fars, Hint, Arap) bir arada barındırdıkları için Karahanlılar kadar millî kalamamış, sarayda Farsça ve Arapçanın etkisi artmıştır. Dandanakan Savaşı\'nda (1040) Selçuklulara yenilerek yıkılış sürecine girmişlerdir.',
+        question: '"Sultan" unvanını kullanan ilk Türk hükümdarı aşağıdakilerden hangisidir?',
+        options: ['Tuğrul Bey', 'Mete Han', 'Gazneli Mahmud', 'Alparslan'],
+        correctIndex: 2,
+        aciklama: 'Gazneli Mahmud, "Sultan" unvanını kullanan ilk Türk hükümdarıdır.',
       },
       {
-        heading: 'Büyük Selçuklu Devleti\'nin Kuruluşu',
-        body: 'Oğuzların Kınık boyundan gelen Selçuklular, Tuğrul ve Çağrı Beyler önderliğinde Gaznelileri Dandanakan Savaşı\'nda (1040) yenerek bağımsız devlet kurmuşlardır. Tuğrul Bey, Abbasi halifesini Şii Büveyhoğullarına karşı koruyunca halife tarafından "Doğu\'nun ve Batı\'nın Sultanı" ilan edilmiştir. Böylece siyasi güç sultana, dini otorite halifeye ait olacak şekilde bir denge kurulmuştur.',
+        question: 'Aşağıdakilerden hangisi Karahanlılar dönemine ait bir eser değildir?',
+        options: ['Kutadgu Bilig', 'Divânü Lugâti\'t-Türk', 'Atabetü\'l-Hakayık', 'Siyasetname'],
+        correctIndex: 3,
+        aciklama: 'Siyasetname, Büyük Selçuklu veziri Nizamülmülk tarafından yazılmıştır. Diğerleri Karahanlılar dönemi eseridir.',
       },
       {
-        heading: 'Malazgirt Savaşı ve Anadolu\'nun Kapıları',
-        body: 'Sultan Alparslan döneminde 1071 Malazgirt Savaşı\'nda Bizans yenilgiye uğratıldı. Bu zafer Anadolu\'nun kapılarını Türklere açmış, Türkleşme ve İslamlaşma sürecini başlatmıştır. Bu nedenle Malazgirt Zaferi (1071), Anadolu\'nun "tapu senedi" olarak da nitelendirilir. Savaştan sonra Anadolu\'da ilk Türk beylikleri kurulmaya başlamıştır.',
+        question: 'Selçukluların Gaznelileri yenerek bağımsızlığını kazandığı savaş aşağıdakilerden hangisidir?',
+        options: ['Pasinler Savaşı', 'Malazgirt Savaşı', 'Dandanakan Savaşı', 'Talas Savaşı'],
+        correctIndex: 2,
+        aciklama: 'Dandanakan Savaşı (1040) sonunda Selçuklular Gaznelileri yenip bağımsız devlet kurmuşlardır.',
       },
       {
-        heading: 'Melikşah, Nizamülmülk ve Yıkılış',
-        body: 'Devlet en geniş sınırlarına Melikşah döneminde ulaştı. Ünlü vezir Nizamülmülk, "Nizamiye Medreseleri"ni kurarak eğitime büyük katkı sağlamış, "Siyasetname" adlı ünlü siyaset kitabını yazmıştır. Melikşah\'ın ölümünden sonra taht kavgaları, Haçlı Seferleri ve Batınilerin (Hasan Sabbah) faaliyetleri devleti zayıflattı. Katvan Savaşı\'ndaki yenilginin ardından Büyük Selçuklu Devleti dağılmıştır.',
+        question: 'Malazgirt Savaşı\'nın (1071) en önemli sonucu aşağıdakilerden hangisidir?',
+        options: [
+          'İstanbul fethedildi',
+          'Anadolu\'nun kapıları Türklere açıldı',
+          'Haçlı Seferleri sona erdi',
+          'Bizans İmparatorluğu yıkıldı',
+        ],
+        correctIndex: 1,
+        aciklama: 'Malazgirt Zaferi, Anadolu\'nun Türklere açılmasını sağlamış ve Anadolu\'nun "tapu senedi" sayılmıştır.',
+      },
+      {
+        question: 'Nizamiye Medreselerini kuran Büyük Selçuklu veziri aşağıdakilerden hangisidir?',
+        options: ['Alparslan', 'Melikşah', 'Nizamülmülk', 'Tuğrul Bey'],
+        correctIndex: 2,
+        aciklama: 'Vezir Nizamülmülk, Nizamiye Medreselerini kurmuş ve Siyasetname adlı eseri yazmıştır.',
+      },
+      {
+        question: 'Büyük Selçuklu Devleti en geniş sınırlarına hangi hükümdar döneminde ulaşmıştır?',
+        options: ['Tuğrul Bey', 'Alparslan', 'Melikşah', 'Sencer'],
+        correctIndex: 2,
+        aciklama: 'Büyük Selçuklu Devleti en parlak ve geniş dönemini Melikşah zamanında yaşamıştır.',
+      },
+      {
+        question: 'Talas Savaşı\'ndan sonra Çin dışına yayılan ve İslam dünyası aracılığıyla Avrupa\'ya ulaşan önemli buluş aşağıdakilerden hangisidir?',
+        options: ['Barut', 'Pusula', 'Kâğıt', 'Matbaa'],
+        correctIndex: 2,
+        aciklama: 'Kâğıt, Talas Savaşı sonrası Çinlilerden öğrenilerek İslam dünyasına ve oradan Avrupa\'ya yayılmıştır.',
+      },
+      {
+        question: 'Tuğrul Bey\'in halife tarafından "Doğu\'nun ve Batı\'nın Sultanı" ilan edilmesinin nedeni aşağıdakilerden hangisidir?',
+        options: [
+          'Bizans\'ı yenmesi',
+          'Hindistan\'a sefer düzenlemesi',
+          'Halifeyi Şii Büveyhoğullarına karşı koruması',
+          'Anadolu\'yu fethetmesi',
+        ],
+        correctIndex: 2,
+        aciklama: 'Tuğrul Bey, Abbasi halifesini Şii Büveyhoğullarından kurtarmış ve bu nedenle "Doğu\'nun ve Batı\'nın Sultanı" ilan edilmiştir.',
+      },
+      {
+        question: 'Gazneliler\'in Karahanlılar kadar millî kalamamasının temel nedeni aşağıdakilerden hangisidir?',
+        options: [
+          'Türk dilinin yasaklanması',
+          'Sınırlarının dar olması',
+          'Farklı milletlerden oluşan karma bir yapıya sahip olması',
+          'Müslüman olmamaları',
+        ],
+        correctIndex: 2,
+        aciklama: 'Gazneliler Türk, Fars, Hint ve Arap unsurlarını bir arada barındırdığı için millî karakterini koruyamamıştır.',
+      },
+      {
+        question: 'Karahanlıların Türk-İslam tarihindeki en önemli özelliği aşağıdakilerden hangisidir?',
+        options: [
+          'İlk Türk-İslam devleti olmaları',
+          'Anadolu\'yu fethetmeleri',
+          'İstanbul\'u kuşatmaları',
+          'Bizans\'ı yenmeleri',
+        ],
+        correctIndex: 0,
+        aciklama: 'Karahanlılar İslamiyet\'i kabul eden ilk Türk devletidir; bu nedenle ilk Türk-İslam devleti sayılır.',
+      },
+      {
+        question: 'Hindistan\'a 17 sefer düzenleyerek İslamiyet\'i bu bölgede yayan Türk hükümdarı aşağıdakilerden hangisidir?',
+        options: ['Alparslan', 'Melikşah', 'Gazneli Mahmud', 'Tuğrul Bey'],
+        correctIndex: 2,
+        aciklama: 'Gazneli Mahmud, Hindistan\'a 17 sefer düzenleyerek İslamiyet\'in bu bölgede yayılmasını sağlamıştır.',
+      },
+      {
+        question: 'Büyük Selçukluları kuran Türk boyu aşağıdakilerden hangisidir?',
+        options: ['Kayı', 'Kınık', 'Bayat', 'Avşar'],
+        correctIndex: 1,
+        aciklama: 'Büyük Selçuklu Devleti, Oğuzların Kınık boyundan gelen Tuğrul ve Çağrı Beyler tarafından kurulmuştur.',
+      },
+      {
+        question: 'Aşağıdakilerden hangisi Büyük Selçuklu Devleti\'nin yıkılmasında etkili değildir?',
+        options: ['Haçlı Seferleri', 'Taht kavgaları', 'Batıni (Hasan Sabbah) faaliyetleri', 'Kavimler Göçü'],
+        correctIndex: 3,
+        aciklama: 'Kavimler Göçü (375), Selçuklulardan çok önce gerçekleşen bir olaydır; Selçukluların yıkılışıyla ilgisi yoktur.',
       },
     ],
   },
+  // ───────────────────────────────────────────────────────────────────
   {
     id: 't03',
     subject: 'tarih',
     title: 'Türkiye (Anadolu) Selçuklu Devleti ve Beylikler',
     icon: '🏰',
     summary: 'Anadolu\'nun Türkleşmesi, Anadolu Selçukluları ve beylikler.',
-    readMinutes: 5,
-    sections: [
+    cards: [
+      'Malazgirt Zaferi\'nden (1071) sonra Anadolu\'da ilk Türk beylikleri kurulmuştur.',
+      'İlk Türk beylikleri: Danişmentliler, Saltuklular, Mengücekliler ve Artuklular\'dır.',
+      'İlk Türk beylikleri Anadolu\'yu cami, medrese, han ve köprülerle imar ederek Türkleşmesini sağlamıştır.',
+      'Türkiye Selçuklu Devleti Süleyman Şah tarafından kurulmuş, ilk başkenti İznik olmuştur.',
+      'Türkiye Selçuklu Devleti başkenti Haçlı Seferleri nedeniyle İznik\'ten Konya\'ya taşımıştır.',
+      'II. Kılıç Arslan, Bizans\'ı 1176 Miryokefalon Savaşı\'nda yenmiştir.',
+      'Miryokefalon Savaşı\'ndan sonra Anadolu kesin olarak Türk yurdu hâline gelmiş, Bizans\'ın Anadolu\'yu geri alma umudu sona ermiştir.',
+      'I. Alâeddin Keykubad döneminde Alanya ve Sinop alınarak Akdeniz ve Karadeniz ticareti geliştirilmiştir.',
+      'Türkiye Selçukluları kervan yolları üzerine kervansaraylar (hanlar) yapmıştır.',
+      'Türkiye Selçukluları, tüccarın zararını karşılayan bir tür devlet sigortası uygulamıştır (ilk devlet sigortası).',
+      'İlk Türk denizciliği ve donanması Türkiye Selçukluları döneminde Antalya, Alanya ve Sinop alınarak geliştirilmiştir.',
+      '1243 Kösedağ Savaşı\'nda Türkiye Selçuklu Devleti, Moğollara (İlhanlılara) yenilmiştir.',
+      'Kösedağ Savaşı sonrası Anadolu\'da Türk siyasi birliği bozulmuş ve ikinci kez beylikler kurulmuştur.',
+      'İkinci dönem Anadolu beylikleri: Osmanoğulları, Karamanoğulları, Germiyanoğulları, Aydınoğulları, Karesioğulları vb.',
+      'Karamanoğlu Mehmet Bey, 1277\'de Türkçeyi resmî dil ilan etmiştir.',
+      'İkinci dönem beyliklerinden Osmanoğulları, zamanla büyüyerek Osmanlı Devleti\'ne dönüşmüştür.',
+      'Türkiye Selçukluları, ticarete önem vererek Anadolu\'yu uluslararası ticaret merkezi hâline getirmiştir.',
+      'Türkiye Selçukluları, kervansaraylar sayesinde tüccarların güvenli konaklamasını ve İpek Yolu ticaretinin canlanmasını sağlamıştır.',
+    ],
+    questions: [
       {
-        heading: 'İlk Türk Beylikleri',
-        body: 'Malazgirt Zaferi\'nden sonra Anadolu\'da Danişmentliler, Saltuklular, Mengücekliler, Artuklular gibi ilk Türk beylikleri kuruldu. Bu beylikler Anadolu\'nun Türkleşmesinde ve imar edilmesinde önemli rol oynadı; cami, medrese, han ve köprülerle Anadolu\'yu bayındır hâle getirdiler. Bölgeyi Bizans ve Haçlılara karşı savunarak Türklüğün Anadolu\'da kalıcı olmasını sağladılar.',
+        question: 'Türkiye Selçuklu Devleti\'nin kurucusu aşağıdakilerden hangisidir?',
+        options: ['Tuğrul Bey', 'Süleyman Şah', 'II. Kılıç Arslan', 'I. Alâeddin Keykubad'],
+        correctIndex: 1,
+        aciklama: 'Türkiye Selçuklu Devleti, Süleyman Şah tarafından İznik başkent yapılarak kurulmuştur.',
       },
       {
-        heading: 'Türkiye Selçuklu Devleti\'nin Kuruluşu',
-        body: 'Süleyman Şah tarafından İznik başkent yapılarak kurulan Türkiye Selçuklu Devleti, Haçlı Seferleri nedeniyle başkentini Konya\'ya taşımıştır. Devlet, Anadolu\'daki Türk birliğini sağlamayı ve ticaret yollarını denetlemeyi hedeflemiştir.',
+        question: 'Anadolu\'nun kesin olarak Türk yurdu olduğunun belgesi sayılan savaş aşağıdakilerden hangisidir?',
+        options: ['Malazgirt Savaşı', 'Miryokefalon Savaşı', 'Kösedağ Savaşı', 'Dandanakan Savaşı'],
+        correctIndex: 1,
+        aciklama: '1176 Miryokefalon Savaşı, Anadolu\'nun Türk yurdu olduğunun kesin kanıtı sayılır; bu savaşta II. Kılıç Arslan Bizans\'ı yenmiştir.',
       },
       {
-        heading: 'Yükselme Dönemi',
-        body: 'I. Mesut, II. Kılıç Arslan, I. Gıyaseddin Keyhüsrev, I. İzzeddin Keykavus ve I. Alâeddin Keykubad dönemleri devletin en parlak yıllarıdır. II. Kılıç Arslan, Bizans\'ı 1176 Miryokefalon Savaşı\'nda yenmiştir; bu zaferle Anadolu kesin olarak Türk yurdu hâline gelmiş, Bizans\'ın Anadolu\'yu geri alma umudu sona ermiştir. I. Alâeddin Keykubad döneminde Alanya ve Sinop alınarak Akdeniz ve Karadeniz ticareti geliştirilmiştir.',
+        question: 'Aşağıdakilerden hangisi Anadolu\'da kurulan ilk Türk beyliklerinden biri değildir?',
+        options: ['Danişmentliler', 'Saltuklular', 'Mengücekliler', 'Karamanoğulları'],
+        correctIndex: 3,
+        aciklama: 'Karamanoğulları, Kösedağ Savaşı sonrası kurulan ikinci dönem beyliklerdendir.',
       },
       {
-        heading: 'Ticaret ve Ekonomi',
-        body: 'Türkiye Selçukluları ticarete büyük önem verdi. Kervan yolları üzerine kervansaraylar (hanlar) yapıldı, tüccarların zararını karşılayan bir tür devlet sigortası uygulandı. Antalya, Alanya ve Sinop gibi limanlar alınarak deniz ticareti canlandırıldı. İlk Türk denizciliği ve donanması bu dönemde gelişmiştir.',
+        question: '1243 Kösedağ Savaşı\'nda Türkiye Selçukluları kime yenilmiştir?',
+        options: ['Bizans', 'Moğollar (İlhanlılar)', 'Haçlılar', 'Memlükler'],
+        correctIndex: 1,
+        aciklama: 'Kösedağ Savaşı\'nda Türkiye Selçukluları, Moğollara (İlhanlılara) yenilmiş; bu yenilgi devletin yıkılış sürecini başlatmıştır.',
       },
       {
-        heading: 'Kösedağ Savaşı ve Beylikler Dönemi',
-        body: '1243 Kösedağ Savaşı\'nda Moğollara (İlhanlılar) yenilen Türkiye Selçuklu Devleti yıkılış sürecine girdi ve Anadolu\'da Türk siyasi birliği bozuldu. Bu ortamda Anadolu\'da ikinci kez beylikler kuruldu: Osmanoğulları, Karamanoğulları, Germiyanoğulları, Aydınoğulları, Karesioğulları ve diğerleri. Karamanoğulları, Türkçeyi resmî dil ilan etmesiyle (1277, Karamanoğlu Mehmet Bey) tanınır. Bu beyliklerden Osmanoğulları zamanla büyüyerek Osmanlı Devleti\'ne dönüşecektir.',
+        question: 'Türkçeyi 1277\'de resmî dil ilan eden Türk beyi aşağıdakilerden hangisidir?',
+        options: ['Osman Bey', 'Karamanoğlu Mehmet Bey', 'Germiyanoğlu', 'Aydınoğlu'],
+        correctIndex: 1,
+        aciklama: 'Karamanoğlu Mehmet Bey, 13 Mayıs 1277\'de Türkçeyi devlet dili olarak ilan etmiştir.',
+      },
+      {
+        question: 'Türkiye Selçuklu Devleti\'nin başkenti İznik\'ten Konya\'ya taşımasının nedeni aşağıdakilerden hangisidir?',
+        options: ['Moğol istilası', 'Haçlı Seferleri', 'Bizans saldırıları', 'İç karışıklıklar'],
+        correctIndex: 1,
+        aciklama: 'Türkiye Selçukluları, Haçlı Seferleri nedeniyle güvenli olan Konya\'yı başkent yapmıştır.',
+      },
+      {
+        question: 'I. Alâeddin Keykubad döneminde Türkiye Selçukluları\'nın aldığı liman şehirleri arasında aşağıdakilerden hangisi yer alır?',
+        options: ['İzmir ve Bursa', 'Alanya ve Sinop', 'Edirne ve Selanik', 'Trabzon ve Samsun'],
+        correctIndex: 1,
+        aciklama: 'I. Alâeddin Keykubad döneminde Alanya (Akdeniz) ve Sinop (Karadeniz) alınarak deniz ticareti geliştirilmiştir.',
+      },
+      {
+        question: 'Türkiye Selçuklularının tüccarın zararını karşılaması aşağıdakilerden hangisinin ilk örneği sayılır?',
+        options: ['Devlet sigortası', 'Vakıf sistemi', 'Tımar sistemi', 'Lonca teşkilatı'],
+        correctIndex: 0,
+        aciklama: 'Türkiye Selçuklularının uyguladığı tüccarın zararının karşılanması uygulaması, ilk devlet sigortası kabul edilir.',
+      },
+      {
+        question: 'Aşağıdakilerden hangisi Kösedağ Savaşı sonrası kurulan beyliklerden biri değildir?',
+        options: ['Osmanoğulları', 'Germiyanoğulları', 'Aydınoğulları', 'Artuklular'],
+        correctIndex: 3,
+        aciklama: 'Artuklular, ilk dönem (Malazgirt sonrası) Türk beyliklerindendir.',
+      },
+      {
+        question: 'Türkiye Selçukluları\'nın deniz ticaretine önem verdiğini gösteren en önemli kanıt aşağıdakilerden hangisidir?',
+        options: [
+          'Kervansaraylar yapması',
+          'Antalya, Alanya ve Sinop limanlarını alması',
+          'Medreseler kurması',
+          'Bizans\'la antlaşmalar yapması',
+        ],
+        correctIndex: 1,
+        aciklama: 'Antalya, Alanya ve Sinop\'un alınması Türkiye Selçuklularının deniz ticaretine ve donanmaya önem verdiğinin göstergesidir.',
+      },
+      {
+        question: 'İlk Türk beyliklerinin Anadolu tarihindeki en önemli işlevi aşağıdakilerden hangisidir?',
+        options: [
+          'Bizans\'ı yıkmaları',
+          'Anadolu\'yu cami, medrese ve hanlarla imar ederek Türkleştirmeleri',
+          'Haçlı Seferlerini başlatmaları',
+          'Selçukluları kurmaları',
+        ],
+        correctIndex: 1,
+        aciklama: 'İlk Türk beylikleri, Anadolu\'yu mimari eserlerle imar ederek Türkleşmesini sağlamıştır.',
+      },
+      {
+        question: 'Kösedağ Savaşı\'nın en önemli sonucu aşağıdakilerden hangisidir?',
+        options: [
+          'Anadolu Türk birliği bozuldu',
+          'İstanbul fethedildi',
+          'Karahanlılar yıkıldı',
+          'Bizans güçlendi',
+        ],
+        correctIndex: 0,
+        aciklama: 'Kösedağ Savaşı sonrası Türkiye Selçukluları zayıflamış, Anadolu\'da Türk siyasi birliği bozulmuş ve beylikler dönemi başlamıştır.',
+      },
+      {
+        question: 'Aşağıdakilerden hangisi Türkiye Selçukluları döneminin özelliklerinden değildir?',
+        options: [
+          'Kervansaraylar yapılması',
+          'Donanmanın geliştirilmesi',
+          'İstanbul\'un fethedilmesi',
+          'Ticaret yollarının denetlenmesi',
+        ],
+        correctIndex: 2,
+        aciklama: 'İstanbul\'un fethi, 1453\'te Osmanlı Devleti döneminde Fatih Sultan Mehmed tarafından gerçekleştirilmiştir.',
+      },
+      {
+        question: 'Aşağıdaki beyliklerden hangisi büyüyerek Osmanlı Devleti\'ne dönüşmüştür?',
+        options: ['Karamanoğulları', 'Osmanoğulları', 'Aydınoğulları', 'Germiyanoğulları'],
+        correctIndex: 1,
+        aciklama: 'Osmanoğulları, ikinci dönem beyliklerinden biriyken zamanla büyüyerek Osmanlı Devleti\'ne dönüşmüştür.',
+      },
+      {
+        question: 'II. Kılıç Arslan\'ın Bizans\'a karşı kazandığı önemli savaş aşağıdakilerden hangisidir?',
+        options: ['Malazgirt', 'Miryokefalon', 'Pasinler', 'Dandanakan'],
+        correctIndex: 1,
+        aciklama: '1176 Miryokefalon Savaşı, II. Kılıç Arslan\'ın Bizans\'a karşı kazandığı zaferdir.',
       },
     ],
   },
+  // ───────────────────────────────────────────────────────────────────
   {
     id: 't04',
     subject: 'tarih',
     title: 'Osmanlı Kuruluş Dönemi',
     icon: '⚔️',
     summary: 'Osmanlı\'nın kuruluşu, ilk padişahlar ve devletleşme süreci.',
-    readMinutes: 6,
-    sections: [
+    cards: [
+      'Osmanlı Devleti, Oğuzların Kayı boyuna mensuptur.',
+      'Osmanlı Devleti, Söğüt ve Domaniç dolaylarına yerleşen aşiretin Osman Bey önderliğinde bağımsızlığını ilan etmesiyle kurulmuştur.',
+      'Osmanlı Beyliği\'nin Bizans sınırında uç bölgede olması, Türkmen göçlerini ve gazileri kendisine çekmiştir.',
+      'Osman Bey döneminde Koyunhisar Savaşı\'nda Bizans yenilmiştir.',
+      'Orhan Bey döneminde Bursa alınarak başkent yapılmıştır.',
+      'İlk Osmanlı medresesi, ilk düzenli ordu (yaya ve müsellem) ve ilk vakıf teşkilatı Orhan Bey döneminde kurulmuştur.',
+      'Karesioğulları Beyliği\'nin alınmasıyla Osmanlı ilk kez donanmaya sahip olmuş ve Rumeli\'ye geçiş zemini hazırlanmıştır.',
+      'Osmanlılar, Çimpe Kalesi\'nin alınmasıyla (1353) Rumeli\'ye (Balkanlara) ilk kez ayak basmıştır.',
+      'Osmanlıların fethedilen yerlerde uyguladığı "iskân (şenlendirme) politikası" Balkanların Türkleşmesini sağlamıştır.',
+      'I. Murad (Hüdavendigâr) döneminde Yeniçeri Ocağı ve Acemi Oğlanlar Ocağı kurulmuştur.',
+      'I. Murad döneminde "Pençik Sistemi" uygulanarak savaş esirlerinden asker yetiştirilmiştir.',
+      'I. Murad, Sırpsındığı ve 1389 I. Kosova Savaşlarında Balkan Haçlı ittifaklarını yenmiştir.',
+      'I. Murad, I. Kosova Savaşı\'nın ardından şehit edilen ilk Osmanlı padişahıdır.',
+      'I. Murad döneminde "ülke hanedanın ortak malıdır" anlayışından "ülke padişah ve oğullarının malıdır" anlayışına geçilmiştir.',
+      'Yıldırım Bayezid, Anadolu Türk birliğini büyük ölçüde sağlamış ve İstanbul\'u kuşatmıştır.',
+      'Yıldırım Bayezid, 1396 Niğbolu Savaşı\'nda Haçlıları büyük bir yenilgiye uğratmıştır.',
+      'Yıldırım Bayezid, 1402 Ankara Savaşı\'nda Timur\'a yenilerek esir düşmüştür.',
+      'Ankara Savaşı\'nın sonuçları: Anadolu Türk birliği bozuldu, İstanbul\'un fethi gecikti, Fetret Devri başladı.',
+      'Fetret Devri, 1402-1413 yılları arası Yıldırım Bayezid\'in oğulları arasındaki 11 yıllık taht mücadelesi dönemidir.',
+      'Fetret Devri\'ni I. Mehmed (Çelebi Mehmed) kazanmış; devleti yeniden birleştirdiği için "Osmanlı\'nın ikinci kurucusu" sayılmıştır.',
+      'II. Murad döneminde 1444 Varna ve 1448 II. Kosova Savaşlarında Haçlı tehlikesi bertaraf edilmiştir.',
+      'Kuruluş dönemi 1299-1453 yılları arasını kapsar ve İstanbul\'un fethi ile sona erer.',
+    ],
+    questions: [
       {
-        heading: 'Kuruluş ve Coğrafi Konum',
-        body: 'Osmanlı Devleti, Oğuzların Kayı boyuna mensup olup, Söğüt ve Domaniç dolaylarına yerleşen aşiretin Osman Bey önderliğinde bağımsızlığını ilan etmesiyle kuruldu. Bizans\'a komşu uç bölgede yer alması, gaza ve cihat anlayışıyla genişlemesini kolaylaştırdı. Beyliğin Bizans sınırında olması Türkmen göçlerini ve gazileri kendisine çekmiş, hızla büyümesini sağlamıştır.',
+        question: 'Osmanlı Devleti hangi Oğuz boyuna mensuptur?',
+        options: ['Kınık', 'Kayı', 'Bayat', 'Avşar'],
+        correctIndex: 1,
+        aciklama: 'Osmanlı Devleti, Oğuzların Kayı boyuna mensuptur.',
       },
       {
-        heading: 'Osman Bey ve Orhan Bey Dönemi',
-        body: 'Osman Bey döneminde Koyunhisar Savaşı\'nda Bizans yenildi ve beylik genişledi. Orhan Bey döneminde Bursa alınarak başkent yapıldı; ilk medrese, ilk düzenli ordu (yaya ve müsellem) ve ilk vakıf teşkilatı bu dönemde kuruldu. Karesioğulları Beyliği\'nin alınmasıyla Osmanlı ilk kez donanmaya sahip oldu ve Rumeli\'ye (Avrupa yakasına) geçiş için zemin hazırlandı.',
+        question: 'Osmanlı Devleti\'nde ilk başkent aşağıdakilerden hangisidir?',
+        options: ['Söğüt', 'Bursa', 'Edirne', 'İstanbul'],
+        correctIndex: 0,
+        aciklama: 'Osmanlı Devleti\'nin ilk merkezi Söğüt\'tür; daha sonra Orhan Bey döneminde Bursa, sonra Edirne, en son İstanbul başkent olmuştur.',
       },
       {
-        heading: 'Rumeli\'ye Geçiş ve İskân Politikası',
-        body: 'Çimpe Kalesi\'nin alınmasıyla (1353) Osmanlı, Rumeli\'ye (Balkanlara) ilk kez ayak bastı. Fethedilen yerlerde uygulanan iskân (şenlendirme) politikasıyla Anadolu\'dan getirilen Türkmenler bölgeye yerleştirildi. Bu sayede fethedilen topraklar kalıcı hâle getirildi ve Balkanlar\'ın Türkleşmesi sağlandı.',
+        question: 'Aşağıdakilerden hangisi Orhan Bey döneminde gerçekleşmemiştir?',
+        options: [
+          'Bursa\'nın alınması',
+          'İlk düzenli ordunun (yaya ve müsellem) kurulması',
+          'İlk Osmanlı medresesinin açılması',
+          'Yeniçeri Ocağı\'nın kurulması',
+        ],
+        correctIndex: 3,
+        aciklama: 'Yeniçeri Ocağı, Orhan Bey döneminde değil, I. Murad döneminde kurulmuştur.',
       },
       {
-        heading: 'I. Murad Dönemi',
-        body: 'I. Murad (Hüdavendigâr) döneminde devlet teşkilatlanmasını güçlendirdi. Yeniçeri Ocağı ve Acemi Oğlanlar Ocağı kuruldu, "Pençik Sistemi" uygulandı. Sırpsındığı ve özellikle 1389 I. Kosova Savaşı ile Balkanlarda Haçlı ittifakları yenildi. I. Murad, I. Kosova Savaşı\'nın ardından şehit edilen ilk Osmanlı padişahı oldu. Bu dönemde "ülke hanedanın ortak malıdır" anlayışından "ülke padişah ve oğullarının malıdır" anlayışına geçilmiştir.',
+        question: 'Osmanlılar Rumeli\'ye (Balkanlara) ilk kez hangi kalenin alınmasıyla geçmiştir?',
+        options: ['Niğbolu Kalesi', 'Çimpe Kalesi', 'Edirne', 'İznik'],
+        correctIndex: 1,
+        aciklama: 'Çimpe Kalesi\'nin 1353\'te alınmasıyla Osmanlılar ilk kez Balkanlara ayak basmıştır.',
       },
       {
-        heading: 'Yıldırım Bayezid ve Ankara Savaşı',
-        body: 'Yıldırım Bayezid, Anadolu Türk birliğini büyük ölçüde sağladı ve İstanbul\'u kuşattı. 1396 Niğbolu Savaşı\'nda Haçlıları büyük bir yenilgiye uğrattı. Ancak doğudan gelen Timur ile yapılan 1402 Ankara Savaşı\'nda yenilerek esir düştü. Bu yenilgi Anadolu Türk birliğinin bozulmasına ve "Fetret Devri" denilen 11 yıllık taht kavgaları dönemine yol açtı; bu dönemde İstanbul\'un fethi gecikti.',
+        question: 'Osmanlı\'nın fethettiği topraklara Anadolu\'dan Türkmenleri yerleştirdiği politikaya ne ad verilir?',
+        options: ['Devşirme', 'İskân (şenlendirme)', 'Pençik', 'Tımar'],
+        correctIndex: 1,
+        aciklama: 'İskân (şenlendirme) politikası, Balkanların Türkleşmesini sağlamıştır.',
       },
       {
-        heading: 'Fetret Devri ve Toparlanma',
-        body: 'Fetret Devri\'nde Yıldırım Bayezid\'in oğulları arasında taht mücadelesi yaşandı; mücadeleyi I. Mehmed (Çelebi Mehmed) kazandı ve devleti yeniden birleştirdiği için "Osmanlı Devleti\'nin ikinci kurucusu" sayıldı. Ardından II. Murad döneminde Balkanlardaki Haçlı tehlikesi 1444 Varna ve 1448 II. Kosova savaşlarıyla bertaraf edildi. Böylece İstanbul\'un fethi için uygun zemin hazırlandı ve kuruluş dönemi tamamlandı.',
+        question: 'Yeniçeri Ocağı ve Acemi Oğlanlar Ocağı hangi padişah döneminde kurulmuştur?',
+        options: ['Osman Bey', 'Orhan Bey', 'I. Murad', 'Yıldırım Bayezid'],
+        correctIndex: 2,
+        aciklama: 'Yeniçeri Ocağı ve Acemi Oğlanlar Ocağı, I. Murad (Hüdavendigâr) döneminde kurulmuştur.',
+      },
+      {
+        question: 'I. Kosova Savaşı\'nın ardından şehit edilen ilk Osmanlı padişahı aşağıdakilerden hangisidir?',
+        options: ['Osman Bey', 'Orhan Bey', 'I. Murad', 'Yıldırım Bayezid'],
+        correctIndex: 2,
+        aciklama: 'I. Murad (Hüdavendigâr), 1389 I. Kosova Savaşı\'ndan sonra savaş alanını dolaşırken şehit edilmiştir.',
+      },
+      {
+        question: '1396 Niğbolu Savaşı\'nı kazanan Osmanlı padişahı aşağıdakilerden hangisidir?',
+        options: ['I. Murad', 'Yıldırım Bayezid', 'I. Mehmed', 'II. Murad'],
+        correctIndex: 1,
+        aciklama: 'Niğbolu Savaşı\'nda (1396) Yıldırım Bayezid, Haçlı ordusunu büyük bir yenilgiye uğratmıştır.',
+      },
+      {
+        question: '1402 Ankara Savaşı\'nın sonuçları arasında aşağıdakilerden hangisi yer almaz?',
+        options: [
+          'Anadolu Türk birliği bozuldu',
+          'İstanbul\'un fethi gecikti',
+          'Fetret Devri başladı',
+          'Yeniçeri Ocağı kapatıldı',
+        ],
+        correctIndex: 3,
+        aciklama: 'Yeniçeri Ocağı, 1826\'da II. Mahmud döneminde kaldırılmıştır. Diğerleri Ankara Savaşı\'nın doğrudan sonucudur.',
+      },
+      {
+        question: 'Fetret Devri\'ni kazanarak Osmanlı\'nın "ikinci kurucusu" sayılan padişah aşağıdakilerden hangisidir?',
+        options: ['I. Mehmed (Çelebi)', 'II. Murad', 'II. Mehmed (Fatih)', 'Yıldırım Bayezid'],
+        correctIndex: 0,
+        aciklama: 'I. Mehmed (Çelebi Mehmed), kardeşleriyle taht mücadelesini kazanıp devleti yeniden birleştirdiği için "Osmanlı\'nın ikinci kurucusu" sayılır.',
+      },
+      {
+        question: 'Osmanlı\'nın ilk donanmaya sahip olduğu olay aşağıdakilerden hangisidir?',
+        options: [
+          'Bursa\'nın alınması',
+          'Karesioğulları Beyliği\'nin alınması',
+          'Çimpe Kalesi\'nin alınması',
+          'Niğbolu Savaşı',
+        ],
+        correctIndex: 1,
+        aciklama: 'Karesioğulları Beyliği\'nin alınmasıyla Osmanlı ilk kez donanmaya sahip olmuş ve Rumeli\'ye geçiş için zemin hazırlanmıştır.',
+      },
+      {
+        question: 'II. Murad döneminde Balkanlardaki Haçlı tehlikesinin bertaraf edildiği savaşlar aşağıdakilerden hangileridir?',
+        options: ['Niğbolu ve Ankara', 'Varna ve II. Kosova', 'Mohaç ve Otranto', 'Çaldıran ve Mercidabık'],
+        correctIndex: 1,
+        aciklama: 'II. Murad döneminde 1444 Varna ve 1448 II. Kosova Savaşlarında Haçlı ittifakları yenilmiştir.',
+      },
+      {
+        question: 'Aşağıdakilerden hangisi Osmanlı Devleti\'nin Bizans sınırında bir uç beyliği olmasının avantajlarından biridir?',
+        options: [
+          'Daha az vergi vermesi',
+          'Türkmen göçlerini ve gazileri çekmesi',
+          'Moğol baskısından korunması',
+          'Karadeniz ticaretine hâkim olması',
+        ],
+        correctIndex: 1,
+        aciklama: 'Bizans sınırında olması Osmanlı\'nın gaza-cihat anlayışıyla genişlemesini ve göç-gazi akınlarını çekmesini kolaylaştırmıştır.',
+      },
+      {
+        question: 'Aşağıdakilerden hangisi I. Murad döneminde gerçekleşmiştir?',
+        options: [
+          '"Ülke padişah ve oğullarının malıdır" anlayışına geçiş',
+          'Bursa\'nın alınması',
+          'İstanbul\'un fethi',
+          'Ankara Savaşı',
+        ],
+        correctIndex: 0,
+        aciklama: 'I. Murad döneminde devlet yönetiminde "ülke hanedanın ortak malıdır" anlayışından "ülke padişah ve oğullarının malıdır" anlayışına geçilmiştir.',
+      },
+      {
+        question: 'Osmanlı Kuruluş Dönemi hangi olayla sona erer?',
+        options: [
+          'Ankara Savaşı (1402)',
+          'I. Kosova Savaşı (1389)',
+          'İstanbul\'un Fethi (1453)',
+          'Niğbolu Savaşı (1396)',
+        ],
+        correctIndex: 2,
+        aciklama: 'Osmanlı Kuruluş Dönemi 1299\'da başlamış, 1453\'te II. Mehmed\'in (Fatih) İstanbul\'u fethetmesiyle sona ermiştir.',
       },
     ],
   },
+  // ───────────────────────────────────────────────────────────────────
+  // Diğer üniteler "Yakında"
   {
     id: 't05',
     subject: 'tarih',
     title: 'Osmanlı Yükselme Dönemi',
     icon: '👑',
     summary: 'İstanbul\'un Fethi\'nden Sokullu\'nun ölümüne kadar yükseliş.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't06',
@@ -164,8 +608,8 @@ export const TOPICS: Topic[] = [
     title: 'Osmanlı Duraklama, Gerileme ve Dağılma',
     icon: '📉',
     summary: 'Duraklama nedenleri, ıslahatlar ve dağılma süreci.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't07',
@@ -173,8 +617,8 @@ export const TOPICS: Topic[] = [
     title: 'Osmanlı Kültür ve Medeniyeti',
     icon: '🕌',
     summary: 'Devlet yönetimi, ordu, toprak sistemi, eğitim ve sanat.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't08',
@@ -182,8 +626,8 @@ export const TOPICS: Topic[] = [
     title: 'I. Dünya Savaşı ve Osmanlı',
     icon: '💣',
     summary: 'Savaşın nedenleri, Osmanlı cepheleri ve sonuçları.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't09',
@@ -191,8 +635,8 @@ export const TOPICS: Topic[] = [
     title: 'Kurtuluş Savaşı Hazırlık Dönemi',
     icon: '📜',
     summary: 'Cemiyetler, genelgeler, kongreler ve TBMM\'nin açılışı.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't10',
@@ -200,8 +644,8 @@ export const TOPICS: Topic[] = [
     title: 'Kurtuluş Savaşı Cepheleri ve Antlaşmalar',
     icon: '🎖️',
     summary: 'Doğu, Güney ve Batı cepheleri; muharebeler ve antlaşmalar.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't11',
@@ -209,8 +653,8 @@ export const TOPICS: Topic[] = [
     title: 'Atatürk İlkeleri ve İnkılapları',
     icon: '🇹🇷',
     summary: 'Siyasi, hukuki, sosyal inkılaplar ve altı ilke.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't12',
@@ -218,8 +662,8 @@ export const TOPICS: Topic[] = [
     title: 'Atatürk Dönemi Türk Dış Politikası',
     icon: '🤝',
     summary: 'Lozan sonrası dış politika, sorunlar ve antlaşmalar.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
   {
     id: 't13',
@@ -227,11 +671,18 @@ export const TOPICS: Topic[] = [
     title: 'Çağdaş Türk ve Dünya Tarihi',
     icon: '🌍',
     summary: 'II. Dünya Savaşı, Soğuk Savaş ve günümüz dünyası.',
-    readMinutes: 0,
-    sections: [],
+    cards: [],
+    questions: [],
   },
 ];
 
 export function getTopic(id: string): Topic | undefined {
   return TOPICS.find((t) => t.id === id);
+}
+
+// Konunun soru havuzundan rastgele N soru seçer (her quiz oturumunda farklı set)
+export function pickRandomTopicQuestions(topic: Topic, count = 5): TopicQuestion[] {
+  if (!topic.questions.length) return [];
+  const shuffled = [...topic.questions].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, shuffled.length));
 }
