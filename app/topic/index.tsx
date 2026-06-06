@@ -7,7 +7,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { TOPICS } from '../../constants/topics';
+import { TOPICS, topicHasContent } from '../../constants/topics';
 import { Colors } from '../../constants/colors';
 
 export default function TopicListScreen() {
@@ -43,7 +43,7 @@ export default function TopicListScreen() {
 
       <View style={styles.list}>
         {TOPICS.map((t, idx) => {
-          const soon = t.cards.length === 0;
+          const soon = !topicHasContent(t);
           return (
             <TouchableOpacity
               key={t.id}
@@ -74,7 +74,7 @@ export default function TopicListScreen() {
                   <Text style={[styles.rowMeta, { color: c.textSecondary }]}>Yakında</Text>
                 ) : (
                   <Text style={[styles.rowMeta, { color: c.textSecondary }]}>
-                    {t.cards.length} kart • {t.questions.length} soru havuzu
+                    3 seviye • Kolay / Orta / Zor
                   </Text>
                 )}
               </View>

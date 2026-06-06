@@ -9,10 +9,19 @@ import {
 } from 'react-native';
 import { useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { getTopic, pickRandomTopicQuestions, TopicQuestion } from '../../constants/topics';
+import {
+  getTopic,
+  topicHasContent,
+  pickRandomLevelQuestions,
+  TopicQuestion,
+  TopicLevel,
+  LEVEL_LABELS,
+  LEVEL_DESCRIPTIONS,
+  LEVEL_COLORS,
+} from '../../constants/topics';
 import { Colors } from '../../constants/colors';
 
-type Mode = 'cards' | 'quiz-intro' | 'quiz' | 'result';
+type Mode = 'level-select' | 'cards' | 'quiz-intro' | 'quiz' | 'result';
 
 const TARIH = '#EF4444';
 
@@ -25,10 +34,10 @@ export default function TopicDetail() {
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)'));
 
-  const [mode, setMode] = useState<Mode>('cards');
+  const [mode, setMode] = useState<Mode>('level-select');
+  const [level, setLevel] = useState<TopicLevel>('kolay');
   const [cardIndex, setCardIndex] = useState(0);
 
-  // Quiz oturumu için 5 rastgele soru — quiz başlarken seçilir
   const [quizSet, setQuizSet] = useState<TopicQuestion[]>([]);
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -36,10 +45,8 @@ export default function TopicDetail() {
   const [correctCount, setCorrectCount] = useState(0);
   const [openReview, setOpenReview] = useState<number | null>(null);
 
-  // Kart geçiş animasyonu
   const fade = useRef(new Animated.Value(1)).current;
 
-  // Topic yoksa erken çıkış
   if (!topic) {
     return (
       <View style={[styles.container, styles.center, { backgroundColor: c.background }]}>
@@ -51,10 +58,10 @@ export default function TopicDetail() {
     );
   }
 
-  const isEmpty = topic.cards.length === 0;
+  const noContent = !topicHasContent(topic);
 
-  // "Yakında" durumu
-  if (isEmpty) {
+  // "Yakında"
+  if (noContent) {
     return (
       <ScrollView
         style={[styles.container, { backgroundColor: c.background }]}
@@ -76,7 +83,7 @@ export default function TopicDetail() {
           <Text style={styles.soonEmoji}>🚧</Text>
           <Text style={[styles.soonTitle, { color: c.text }]}>Bu konu yakında eklenecek</Text>
           <Text style={[styles.soonText, { color: c.textSecondary }]}>
-            Bu ünitenin hap bilgileri ve mini quizi üzerinde çalışıyoruz.
+            Bu ünitenin Kolay / Orta / Zor seviyelerini hazırlıyoruz.
           </Text>
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: Colors.primary, marginTop: 16 }]}
@@ -89,9 +96,12 @@ export default function TopicDetail() {
     );
   }
 
-  // KART AKIŞI
+  const levelContent = topic.levels[level];
+  const levelColor = LEVEL_COLORS[level];
+
+  // ─── Kart akışı ───
   function nextCard() {
-    if (cardIndex + 1 >= topic!.cards.length) {
+    if (cardIndex + 1 >= levelContent.cards.length) {
       setMode('quiz-intro');
       return;
     }
@@ -110,9 +120,16 @@ export default function TopicDetail() {
     setCardIndex((i) => i - 1);
   }
 
-  // QUIZ
+  function selectLevel(lv: TopicLevel) {
+    const lc = topic!.levels[lv];
+    if (!lc.cards.length) return; // bu seviye boşsa giriş yok
+    setLevel(lv);
+    setCardIndex(0);
+    setMode('cards');
+  }
+
   function startQuiz() {
-    const set = pickRandomTopicQuestions(topic!, 5);
+    const set = pickRandomLevelQuestions(levelContent, 5);
     setQuizSet(set);
     setQIndex(0);
     setSelected(null);
@@ -154,44 +171,113 @@ export default function TopicDetail() {
     return c.textSecondary;
   }
 
-  // ────────────────────── MODE: cards ──────────────────────
-  if (mode === 'cards') {
-    const progress = ((cardIndex + 1) / topic.cards.length) * 100;
+  // ────────────────────── MODE: level-select ──────────────────────
+  if (mode === 'level-select') {
+    const levels: TopicLevel[] = ['kolay', 'orta', 'zor'];
     return (
-      <View style={[styles.container, { backgroundColor: c.background }]}>
-        {/* Üst bar */}
-        <View style={styles.cardsTopBar}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.background }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.topBar}>
           <TouchableOpacity onPress={goBack} hitSlop={12}>
-            <Text style={[styles.exitBtn, { color: c.textSecondary }]}>✕</Text>
+            <Text style={[styles.exitBtn, { color: c.textSecondary }]}>←</Text>
           </TouchableOpacity>
-          <View style={[styles.progressTrack, { backgroundColor: c.border }]}>
-            <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: TARIH }]} />
+          <View style={[styles.subjectBadge, { backgroundColor: TARIH + '22' }]}>
+            <Text style={[styles.subjectText, { color: TARIH }]}>Tarih</Text>
           </View>
-          <Text style={[styles.cardCounter, { color: c.textSecondary }]}>
-            {cardIndex + 1}/{topic.cards.length}
+        </View>
+
+        <View style={styles.titleBlock}>
+          <Text style={styles.titleIcon}>{topic.icon}</Text>
+          <Text style={[styles.title, { color: c.text }]}>{topic.title}</Text>
+          <Text style={[styles.summary, { color: c.textSecondary }]}>
+            Seviyeni seç — kartlar ve sorular seçtiğin seviyeye göre değişir.
           </Text>
         </View>
 
-        <View style={[styles.subjectBadge, { backgroundColor: TARIH + '22', alignSelf: 'center', marginTop: 8 }]}>
-          <Text style={[styles.subjectText, { color: TARIH }]}>{topic.title}</Text>
+        <View style={styles.levelList}>
+          {levels.map((lv) => {
+            const lc = topic.levels[lv];
+            const empty = lc.cards.length === 0;
+            const lvColor = LEVEL_COLORS[lv];
+            return (
+              <TouchableOpacity
+                key={lv}
+                style={[
+                  styles.levelCard,
+                  {
+                    backgroundColor: c.card,
+                    borderColor: empty ? c.border : lvColor,
+                  },
+                ]}
+                onPress={() => selectLevel(lv)}
+                disabled={empty}
+                activeOpacity={empty ? 1 : 0.85}
+              >
+                <View style={[styles.levelBadge, { backgroundColor: lvColor + (empty ? '22' : '') }]}>
+                  <Text style={[styles.levelBadgeText, { color: empty ? c.textSecondary : '#fff' }]}>
+                    {LEVEL_LABELS[lv]}
+                  </Text>
+                </View>
+                <View style={styles.levelBody}>
+                  <Text style={[styles.levelDesc, { color: c.text }]}>
+                    {LEVEL_DESCRIPTIONS[lv]}
+                  </Text>
+                  {empty ? (
+                    <Text style={[styles.levelMeta, { color: c.textSecondary }]}>
+                      Yakında
+                    </Text>
+                  ) : (
+                    <Text style={[styles.levelMeta, { color: c.textSecondary }]}>
+                      {lc.cards.length} kart • {lc.questions.length} soru havuzu
+                    </Text>
+                  )}
+                </View>
+                <Text style={[styles.chevron, { color: empty ? c.border : c.textSecondary }]}>
+                  {empty ? '🔒' : '›'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // ────────────────────── MODE: cards ──────────────────────
+  if (mode === 'cards') {
+    const progress = ((cardIndex + 1) / levelContent.cards.length) * 100;
+    return (
+      <View style={[styles.container, { backgroundColor: c.background }]}>
+        <View style={styles.cardsTopBar}>
+          <TouchableOpacity onPress={() => setMode('level-select')} hitSlop={12}>
+            <Text style={[styles.exitBtn, { color: c.textSecondary }]}>✕</Text>
+          </TouchableOpacity>
+          <View style={[styles.progressTrack, { backgroundColor: c.border }]}>
+            <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: levelColor }]} />
+          </View>
+          <Text style={[styles.cardCounter, { color: c.textSecondary }]}>
+            {cardIndex + 1}/{levelContent.cards.length}
+          </Text>
         </View>
 
-        {/* Kart */}
+        <View style={[styles.levelBadgeSmall, { backgroundColor: levelColor }]}>
+          <Text style={styles.levelBadgeSmallText}>
+            {topic.title} • {LEVEL_LABELS[level]}
+          </Text>
+        </View>
+
         <View style={styles.cardArea}>
           <Animated.View
-            style={[
-              styles.bigCard,
-              { backgroundColor: c.card, borderColor: c.border, opacity: fade },
-            ]}
+            style={[styles.bigCard, { backgroundColor: c.card, borderColor: c.border, opacity: fade }]}
           >
             <Text style={styles.cardEmoji}>{topic.icon}</Text>
-            <Text style={[styles.cardText, { color: c.text }]}>
-              {topic.cards[cardIndex]}
-            </Text>
+            <Text style={[styles.cardText, { color: c.text }]}>{levelContent.cards[cardIndex]}</Text>
           </Animated.View>
         </View>
 
-        {/* Alt navigasyon */}
         <View style={styles.navBar}>
           <TouchableOpacity
             style={[
@@ -205,12 +291,12 @@ export default function TopicDetail() {
             <Text style={[styles.navBtnText, { color: c.text }]}>← Önceki</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.navBtnPrimary, { backgroundColor: TARIH }]}
+            style={[styles.navBtnPrimary, { backgroundColor: levelColor }]}
             onPress={nextCard}
             activeOpacity={0.85}
           >
             <Text style={styles.navBtnPrimaryText}>
-              {cardIndex + 1 >= topic.cards.length ? 'Bitir →' : 'Sonraki →'}
+              {cardIndex + 1 >= levelContent.cards.length ? 'Bitir →' : 'Sonraki →'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -227,11 +313,11 @@ export default function TopicDetail() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={goBack} hitSlop={12}>
+          <TouchableOpacity onPress={() => setMode('level-select')} hitSlop={12}>
             <Text style={[styles.exitBtn, { color: c.textSecondary }]}>←</Text>
           </TouchableOpacity>
-          <View style={[styles.subjectBadge, { backgroundColor: TARIH + '22' }]}>
-            <Text style={[styles.subjectText, { color: TARIH }]}>Tarih</Text>
+          <View style={[styles.subjectBadge, { backgroundColor: levelColor + '22' }]}>
+            <Text style={[styles.subjectText, { color: levelColor }]}>{LEVEL_LABELS[level]}</Text>
           </View>
         </View>
 
@@ -239,11 +325,11 @@ export default function TopicDetail() {
           <Text style={styles.introEmoji}>🎯</Text>
           <Text style={[styles.introTitle, { color: c.text }]}>Kartlar Tamamlandı!</Text>
           <Text style={[styles.introText, { color: c.textSecondary }]}>
-            "{topic.title}" konusuyla ilgili 5 soruluk mini quize katılmak ister misin? Sorular her seferinde değişir.
+            "{topic.title}" — {LEVEL_LABELS[level]} seviyesi için 5 soruluk mini quize katılır mısın? Sorular her seferinde değişir.
           </Text>
 
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: TARIH }]}
+            style={[styles.primaryBtn, { backgroundColor: levelColor }]}
             onPress={startQuiz}
             activeOpacity={0.85}
           >
@@ -252,14 +338,14 @@ export default function TopicDetail() {
 
           <TouchableOpacity
             style={[styles.secondaryBtn, { borderColor: c.border }]}
-            onPress={() => setCardIndex(0)}
+            onPress={() => { setCardIndex(0); setMode('cards'); }}
             activeOpacity={0.85}
           >
             <Text style={[styles.secondaryBtnText, { color: c.text }]}>↻ Kartları Tekrar Gör</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={goBack} hitSlop={10}>
-            <Text style={[styles.skipText, { color: c.textSecondary }]}>Şimdi Değil</Text>
+          <TouchableOpacity onPress={() => setMode('level-select')} hitSlop={10}>
+            <Text style={[styles.skipText, { color: c.textSecondary }]}>Seviye Değiştir</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -277,7 +363,7 @@ export default function TopicDetail() {
             <Text style={[styles.exitBtn, { color: c.textSecondary }]}>✕</Text>
           </TouchableOpacity>
           <View style={[styles.progressTrack, { backgroundColor: c.border }]}>
-            <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: TARIH }]} />
+            <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: levelColor }]} />
           </View>
           <Text style={[styles.cardCounter, { color: c.textSecondary }]}>
             {qIndex + 1}/{quizSet.length}
@@ -285,8 +371,10 @@ export default function TopicDetail() {
         </View>
 
         <View style={styles.body}>
-          <View style={[styles.subjectBadge, { backgroundColor: TARIH + '22', alignSelf: 'flex-start' }]}>
-            <Text style={[styles.subjectText, { color: TARIH }]}>{topic.title}</Text>
+          <View style={[styles.subjectBadge, { backgroundColor: levelColor + '22', alignSelf: 'flex-start' }]}>
+            <Text style={[styles.subjectText, { color: levelColor }]}>
+              {topic.title} • {LEVEL_LABELS[level]}
+            </Text>
           </View>
           <Text style={[styles.question, { color: c.text }]}>{q.question}</Text>
           <View style={styles.options}>
@@ -327,7 +415,7 @@ export default function TopicDetail() {
   const emoji = percentage >= 80 ? '🏆' : percentage >= 60 ? '👍' : percentage >= 40 ? '📚' : '💪';
   const msg =
     percentage >= 80
-      ? 'Mükemmel! Bu konuyu çok iyi biliyorsun.'
+      ? 'Mükemmel! Bu seviyede çok başarılısın.'
       : percentage >= 60
       ? 'İyi iş! Biraz daha çalışarak uzmanlaşırsın.'
       : 'Kartları tekrar gözden geçirip yeniden dene!';
@@ -338,9 +426,11 @@ export default function TopicDetail() {
       contentContainerStyle={{ paddingTop: 56, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.resultCard, { backgroundColor: TARIH }]}>
+      <View style={[styles.resultCard, { backgroundColor: levelColor }]}>
         <Text style={styles.resultEmoji}>{emoji}</Text>
-        <Text style={styles.resultLabel}>{topic.title}</Text>
+        <Text style={styles.resultLabel}>
+          {topic.title} • {LEVEL_LABELS[level]}
+        </Text>
         <Text style={styles.resultTitle}>Mini Quiz Tamamlandı!</Text>
         <View style={styles.resultStats}>
           <View style={styles.resultStat}>
@@ -429,10 +519,10 @@ export default function TopicDetail() {
                     <View
                       style={[
                         styles.reviewAciklama,
-                        { backgroundColor: TARIH + '12', borderColor: TARIH + '33' },
+                        { backgroundColor: levelColor + '12', borderColor: levelColor + '33' },
                       ]}
                     >
-                      <Text style={[styles.reviewAciklamaLabel, { color: TARIH }]}>💡 Açıklama</Text>
+                      <Text style={[styles.reviewAciklamaLabel, { color: levelColor }]}>💡 Açıklama</Text>
                       <Text style={[styles.reviewAciklamaText, { color: c.text }]}>
                         {rq.aciklama}
                       </Text>
@@ -454,11 +544,11 @@ export default function TopicDetail() {
           <Text style={[styles.secondaryBtnText, { color: c.text }]}>↻ Yeni 5 Soru</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.primaryBtn, { backgroundColor: TARIH, flex: 1 }]}
-          onPress={goBack}
+          style={[styles.primaryBtn, { backgroundColor: levelColor, flex: 1, marginTop: 0 }]}
+          onPress={() => setMode('level-select')}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryBtnText}>Konulara Dön</Text>
+          <Text style={styles.primaryBtnText}>Seviyeler</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -482,11 +572,35 @@ const styles = StyleSheet.create({
   titleBlock: { gap: 6 },
   titleIcon: { fontSize: 44 },
   title: { fontSize: 24, fontWeight: '800', lineHeight: 30 },
+  summary: { fontSize: 14, lineHeight: 20 },
 
   soonCard: { borderRadius: 20, borderWidth: 1, padding: 28, alignItems: 'center', gap: 8 },
   soonEmoji: { fontSize: 44 },
   soonTitle: { fontSize: 17, fontWeight: '800' },
   soonText: { fontSize: 14, lineHeight: 21, textAlign: 'center' },
+
+  // Seviye seçim
+  levelList: { gap: 12 },
+  levelCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  levelBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    minWidth: 64,
+    alignItems: 'center',
+  },
+  levelBadgeText: { fontSize: 13, fontWeight: '800' },
+  levelBody: { flex: 1, gap: 4 },
+  levelDesc: { fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  levelMeta: { fontSize: 12, fontWeight: '500' },
+  chevron: { fontSize: 22, fontWeight: '300' },
 
   // Kart akışı
   cardsTopBar: {
@@ -500,7 +614,16 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 3 },
   cardCounter: { fontSize: 13, fontWeight: '700', width: 56, textAlign: 'right' },
 
-  cardArea: { flex: 1, paddingHorizontal: 20, paddingTop: 24, justifyContent: 'center' },
+  levelBadgeSmall: {
+    alignSelf: 'center',
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  levelBadgeSmallText: { color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 0.3 },
+
+  cardArea: { flex: 1, paddingHorizontal: 20, paddingTop: 16, justifyContent: 'center' },
   bigCard: {
     borderRadius: 24,
     borderWidth: 1,
@@ -517,12 +640,7 @@ const styles = StyleSheet.create({
   cardEmoji: { fontSize: 36 },
   cardText: { fontSize: 19, lineHeight: 28, fontWeight: '500' },
 
-  navBar: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 20,
-    paddingBottom: 32,
-  },
+  navBar: { flexDirection: 'row', gap: 12, padding: 20, paddingBottom: 32 },
   navBtn: {
     flex: 1,
     paddingVertical: 14,
@@ -531,12 +649,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   navBtnText: { fontSize: 15, fontWeight: '700' },
-  navBtnPrimary: {
-    flex: 1.4,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
+  navBtnPrimary: { flex: 1.4, paddingVertical: 14, borderRadius: 14, alignItems: 'center' },
   navBtnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   // Quiz intro
@@ -605,7 +718,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   resultEmoji: { fontSize: 52, marginBottom: 4 },
-  resultLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)', fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' },
+  resultLabel: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' },
   resultTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
   resultStats: {
     flexDirection: 'row',
@@ -618,7 +731,7 @@ const styles = StyleSheet.create({
   },
   resultStat: { alignItems: 'center', gap: 4, flex: 1 },
   resultStatValue: { fontSize: 22, fontWeight: '800', color: '#fff' },
-  resultStatLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)' },
+  resultStatLabel: { fontSize: 12, color: 'rgba(255,255,255,0.85)' },
   resultStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
   resultMsg: { textAlign: 'center', fontSize: 14, paddingHorizontal: 32, lineHeight: 21 },
 
