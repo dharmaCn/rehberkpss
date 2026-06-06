@@ -8,7 +8,7 @@ import {
   Animated,
   Alert,
 } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
 import { saveQuizResult } from '../../lib/firestore';
@@ -24,7 +24,7 @@ export default function QuizSession() {
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
 
-  const questions = getDailyQuestions();
+  const questions = useMemo(() => getDailyQuestions(), []);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);

@@ -8,7 +8,7 @@ import {
   useColorScheme,
   ActivityIndicator,
 } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
 import { hasCompletedTodayQuiz, hasCompletedTodayCategoryQuiz } from '../../lib/firestore';
@@ -32,7 +32,11 @@ export default function HomeScreen() {
 
   const [completed, setCompleted] = useState<boolean | null>(null);
   const [catCompleted, setCatCompleted] = useState<Record<string, boolean>>({});
-  const questionCount = getDailyQuestions().length;
+  const questionCount = useMemo(() => getDailyQuestions().length, []);
+  const catCounts = useMemo(
+    () => Object.fromEntries(CATEGORIES.map((cat) => [cat.key, getDailyCategoryQuestions(cat.key).length])),
+    []
+  );
   const today = getTodayKey();
 
   useEffect(() => {
@@ -139,7 +143,7 @@ export default function HomeScreen() {
       <View style={styles.lessonGrid}>
         {CATEGORIES.map((cat) => {
           const done = catCompleted[cat.key] ?? false;
-          const qCount = getDailyCategoryQuestions(cat.key).length;
+          const qCount = catCounts[cat.key];
           return (
             <TouchableOpacity
               key={cat.key}

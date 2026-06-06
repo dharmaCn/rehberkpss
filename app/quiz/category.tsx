@@ -8,7 +8,7 @@ import {
   Animated,
   Alert,
 } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
 import { saveCategoryQuizResult } from '../../lib/firestore';
@@ -32,7 +32,7 @@ export default function CategoryQuizSession() {
   const { cat } = useLocalSearchParams<{ cat: Question['category'] }>();
 
   const category = (cat ?? 'tarih') as Question['category'];
-  const questions = getDailyCategoryQuestions(category);
+  const questions = useMemo(() => getDailyCategoryQuestions(category), [category]);
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
