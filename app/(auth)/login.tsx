@@ -146,7 +146,7 @@ export default function LoginScreen() {
               ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
               : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
           }
-          cornerRadius={16}
+          cornerRadius={12}
           style={styles.appleBtn}
           onPress={handleApple}
         />
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 28,
     justifyContent: 'center',
-    gap: 20,
+    gap: 14,
   },
   hero: { alignItems: 'center', gap: 12 },
   logoBox: {
@@ -225,37 +225,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
     backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: 11,
+    borderRadius: 12,
     shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  guestBtnIcon: { fontSize: 20 },
-  guestBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  appleBtn: { width: '100%', height: 52 },
+  guestBtnIcon: { fontSize: 16 },
+  guestBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  appleBtn: { width: '100%', height: 44 },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 14,
-    borderRadius: 16,
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
     borderWidth: 1.5,
   },
   googleIconBox: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  googleIcon: { fontSize: 13, fontWeight: '800', color: '#fff' },
-  googleBtnText: { fontSize: 15, fontWeight: '600' },
+  googleIcon: { fontSize: 11, fontWeight: '800', color: '#fff' },
+  googleBtnText: { fontSize: 14, fontWeight: '600' },
   legal: { fontSize: 12, textAlign: 'center' },
   rateRow: { alignItems: 'center', paddingVertical: 4 },
   rateText: { fontSize: 13, fontWeight: '600' },

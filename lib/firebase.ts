@@ -111,10 +111,18 @@ export async function signInWithAppleAsync(): Promise<import('firebase/auth').Us
   const result = await signInWithCredential(auth, firebaseCred);
   const user = result.user;
 
-  // Apple ad-soyadı yalnızca İLK girişte döner; varsa displayName olarak ayarla.
-  const fullName = `${appleCred.fullName?.givenName ?? ''} ${appleCred.fullName?.familyName ?? ''}`.trim();
-  if (fullName && !user.displayName) {
-    try { await updateProfile(user, { displayName: fullName }); } catch {}
+  // Apple ad-soyadı yalnızca İLK girişte döner.
+  // Sıralı fallback: Apple full name > email kullanıcı adı (private relay değilse) > "Kullanıcı #UID5"
+  if (!user.displayName) {
+    const fullName = `${appleCred.fullName?.givenName ?? ''} ${appleCred.fullName?.familyName ?? ''}`.trim();
+    let candidate = fullName;
+    if (!candidate && user.email && !user.email.toLowerCase().includes('privaterelay.appleid.com')) {
+      candidate = user.email.split('@')[0];
+    }
+    if (!candidate) {
+      candidate = `Kullanıcı #${user.uid.slice(-5).toUpperCase()}`;
+    }
+    try { await updateProfile(user, { displayName: candidate }); } catch {}
   }
   return user;
 }
