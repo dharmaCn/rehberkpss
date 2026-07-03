@@ -20,6 +20,27 @@ service cloud.firestore {
 
       // Kullanıcı yalnızca kendi profilini silebilir (hesap silme)
       allow delete: if request.auth != null && request.auth.uid == uid;
+
+      // Yanlışlarım defteri (kullanıcının kendi alt koleksiyonu)
+      match /wrongQuestions/{questionId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      // Eser sorularına verilen cevaplar (kullanıcının kendi alt koleksiyonu)
+      match /artAnswers/{questionId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Eser sorusu istatistik sayaçları (toplam / doğru). Sosyal kanıt için herkes okur,
+    // giriş yapmış kullanıcı sadece sayaçları artırabilir.
+    match /artStats/{questionId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.data.keys().hasOnly(['total', 'correct'])
+                   && request.resource.data.total is int
+                   && request.resource.data.correct is int
+                   && (!('total' in resource.data) || request.resource.data.total >= resource.data.total);
     }
 
     // Ders bazlı günlük quiz sonuçları
@@ -45,11 +66,12 @@ service cloud.firestore {
                     && request.resource.data.uid == request.auth.uid
                     && validResultData(request.resource.data);
 
-      // Sadece score artırılabilir (kategori quiz puanı ekleme)
+      // Kendi günlük sonucunu güncelleyebilir (kategori puanı ekleme + ana quiz tamamlama).
+      // Kendi dokümanı olduğu sürece serbest; uid değişmez, puan düşmez.
       allow update: if request.auth != null
                     && resource.data.uid == request.auth.uid
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score'])
-                    && request.resource.data.score > resource.data.score;
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.score >= resource.data.score;
       // Kullanıcı yalnızca kendi sonuçlarını silebilir (hesap silme)
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }

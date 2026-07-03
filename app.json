@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "KPSS Quiz",
+    "name": "KPSS AGS Quiz",
     "slug": "rehberkpss",
-    "version": "1.0.1",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,7 +13,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.rehberkpss.app",
       "infoPlist": {
-        "CFBundleDisplayName": "KPSS Quiz",
+        "CFBundleDisplayName": "KPSS AGS Quiz",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
@@ -47,7 +47,13 @@
       "expo-web-browser",
       "@react-native-google-signin/google-signin",
       "expo-font",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "color": "#4F46E5"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -6,17 +6,11 @@ Bu dosya, App Store Connect'te girilecek tüm metadata'yı içerir. Her bölüm�
 
 ## 1. App Name (30 karakter sınırı)
 
-**Şu an:** `KPSS Quiz` (9 karakter — boş alan ziyan oluyor)
+**Şu an:** `KPSS AGS Quiz` (13 karakter — güncellendi, hem KPSS hem AGS arama trafiğine giriyor)
 
-**Yeni (öner):**
+Bu isim App Store Connect → App Information → **Name** alanına birebir girilmeli (uygulama zaten bu isimle build edildi; app.json + CFBundleDisplayName güncellendi).
 
-```
-KPSS Quiz: Soru Bankası 2026
-```
-
-(28 karakter — `KPSS`, `soru`, `bankası`, `2026` kelimelerinin dördü de arama görünürlüğüne katılır)
-
-> Apple kuralı: ürün adına anahtar kelime ekleyebilirsin ama abartı (keyword stuffing) reddedilir. Bu tek tematik tamlama, bu sınırı aşmaz.
+> AGS (Akademik Personel ve Lisansüstü Eğitim Giriş Sınavı) KPSS'den ayrı ama aynı adaylarca aranan bir sınav; isimde ikisini birden barındırmak arama havuzunu genişletir. Apple keyword-stuffing reddi riski yok çünkü ikisi de gerçek, tanınır sınav adları.
 
 ---
 
@@ -26,15 +20,15 @@ KPSS Quiz: Soru Bankası 2026
 Tarih Coğrafya Vatandaşlık
 ```
 
-(26 karakter — üç ders kategorisi yüksek hacimli aramalar)
+(26 karakter — üç ders kategorisi yüksek hacimli aramalar; "KPSS/AGS" isimde zaten var, subtitle'da tekrar etmeye gerek yok)
 
 Alternatif:
 
 ```
-Günlük 10 soru ve hap bilgi
+Soru Bankası ve Konu Anlatımı
 ```
 
-(27 karakter — özellik vurgulu)
+(29 karakter — özellik vurgulu, "soru bankası" yüksek hacimli arama terimi)
 
 > Şu an muhtemelen **boş** ve bu büyük bir kayıp. Subtitle sıralamada app adı kadar yüksek ağırlıklı.
 
@@ -47,7 +41,7 @@ Günlük 10 soru ve hap bilgi
 - Aramada kullanılan ham terimleri sıkıştır
 
 ```
-test,deneme,sınav,hazırlık,çıkmış,güncel,memurluk,ösym,konu,anlatım,2025,sıralama,önlisans
+test,deneme,sınav,hazırlık,çıkmış,güncel,memurluk,ösym,konu,anlatım,2026,sıralama,önlisans,ags
 ```
 
 (96 karakter)
@@ -61,10 +55,10 @@ test,deneme,sınav,hazırlık,çıkmış,güncel,memurluk,ösym,konu,anlatım,20
 Description'ın en üstünde, kalın ve renkli görünür. Buraya **kampanya / yeni özellik / güncel hatırlatma** koy:
 
 ```
-2026 KPSS'e az kaldı! Her gün 10 yeni soru, hap bilgi kartlarıyla 13 ünite, ders bazlı quizler ve canlı Türkiye sıralaması seni bekliyor. Hemen başla!
+2026 KPSS ve AGS'e az kaldı! Her gün 10 yeni soru, günün genel kültür sorusu, hap bilgi kartları ve canlı Türkiye sıralaması seni bekliyor. Hemen başla!
 ```
 
-(149 karakter)
+(153 karakter)
 
 ---
 
@@ -73,7 +67,7 @@ Description'ın en üstünde, kalın ve renkli görünür. Buraya **kampanya / y
 İlk 3 satır kritik — kullanıcı "daha fazla göster"e tıklamadan görünür. Bu yapıyı kullan:
 
 ```
-KPSS Quiz, KPSS Genel Kültür sınavına hazırlananlar için tasarlanmış ücretsiz bir soru bankası ve konu anlatımı uygulamasıdır. Her gün yeni 10 soru, hap bilgi kartları, ders bazlı mini quizler ve canlı Türkiye sıralamasıyla çalışma rutinini eğlenceli hâle getirir.
+KPSS AGS Quiz, KPSS ve AGS sınavlarına hazırlananlar için tasarlanmış ücretsiz bir soru bankası ve konu anlatımı uygulamasıdır. Her gün yeni 10 soru, günün genel kültür sorusu, hap bilgi kartları, ders bazlı mini quizler ve canlı Türkiye sıralamasıyla çalışma rutinini eğlenceli hâle getirir.
 
 Tek bir uygulamada KPSS Tarih, Coğrafya, Vatandaşlık ve Güncel Bilgiler konularını çalış, kendini sınırsız ve ücretsiz dene.
 
@@ -81,6 +75,15 @@ Tek bir uygulamada KPSS Tarih, Coğrafya, Vatandaşlık ve Güncel Bilgiler konu
 • Her gün taze 10 soru, tüm kullanıcılara aynı set
 • Hızlı cevapla ekstra puan, soru başı 30 saniye süre
 • 150 maksimum puan, hız bonusu sistemi
+
+🖼️ GÜNÜN GENEL KÜLTÜR SORUSU
+• Her gün girişte tek bir soru: ünlü tablo, eser, yazar veya kült film
+• Görsel destekli, çözenlerin yüzde kaçının doğru bildiğini gör
+• Altında "Bunu Unutma" bilgi kartıyla kalıcı öğrenme
+
+💡 GÜNÜN BİLGİSİ
+• Tarih, coğrafya ve vatandaşlık üzerine kısa "bunu biliyor muydun?" bilgileri
+• Beğendiğini arkadaşınla tek dokunuşla paylaş
 
 📚 13 ÜNİTE HAP BİLGİ KARTI
 • KPSS Tarih için 13 ünite konu anlatımı
@@ -103,12 +106,12 @@ Tek bir uygulamada KPSS Tarih, Coğrafya, Vatandaşlık ve Güncel Bilgiler konu
 • Misafir, Google veya Apple ile giriş — saniyeler içinde başla
 • Verilerin Firebase ile güvenli şekilde senkronize edilir
 
-KPSS Lisans, Önlisans ve Ortaöğretim adayları için ideal. ÖSYM çıkmış soru mantığına uygun, güncel KPSS müfredatı esas alınarak hazırlanmıştır.
+KPSS Lisans, Önlisans, Ortaöğretim ve AGS adayları için ideal. ÖSYM çıkmış soru mantığına uygun, güncel müfredat esas alınarak hazırlanmıştır.
 
 Hemen ücretsiz indir, her gün bir adım öne çık. 🚀
 
 — Geri bildirimlerin için: canozdar@gmail.com
-— Gizlilik politikası: https://dharmacn.github.io/KpssMobil/privacy.html
+— Gizlilik politikası: https://dharmacn.github.io/rehberkpss/privacy-policy.html
 ```
 
 > Açıklamada keyword stuffing yapma — bu metin doğal okunuyor ve gerçek kullanıcıyı dönüştürmek için yazıldı. Sıralamaya doğrudan etkisi sınırlı; etkili olan **conversion rate** (gören kişilerin indirme oranı).
@@ -117,15 +120,16 @@ Hemen ücretsiz indir, her gün bir adım öne çık. 🚀
 
 ## 6. What's New (sürüm güncelleme notu)
 
-Şu anki sürüm 1.0.1 için:
+Sürüm 1.2.0 için (bkz. `aso/whats-new-v1.2.0.md`):
 
 ```
 Bu güncellemeyle gelen yenilikler:
 
-• Konu Anlatımı: KPSS Tarih için 13 ünite, her birine Kolay/Orta/Zor 3 seviye eklendi
-• Her ünitede onlarca hap bilgi kartı + kendi soru havuzu
-• Mini quiz sonunda detaylı cevap incelemesi ve açıklama
-• Giriş ekranı yenilendi, butonlar sadeleşti
+• Uygulama adı KPSS AGS Quiz oldu — AGS adayları da artık burada
+• Günün Genel Kültür Sorusu: her gün girişte tek soru, görsel destekli
+• Günün Bilgisi: kısa "bunu biliyor muydun?" bilgileri + arkadaşınla paylaş
+• Giriş ve ana sayfa tasarımı tamamen yenilendi
+• Genel kültür soru havuzu 50 soruya çıkarıldı (resim, eser, heykel, yazar, film)
 • Performans ve okunabilirlik iyileştirmeleri
 
 Geri bildirimlerin için teşekkürler! 🚀
@@ -133,33 +137,46 @@ Geri bildirimlerin için teşekkürler! 🚀
 
 ---
 
-## 7. Ekran Görüntüleri (6.5" iPhone — 1284 × 2778)
+## 7. Ekran Görüntüleri
 
-Her ekran görüntüsü iki kısımdan oluşmalı:
-- **Üstte büyük başlık** (pazarlama metni — 4-6 kelime)
-- **Altta** uygulamadan gerçek ekran
+Apple 2025 itibarıyla şunları zorunlu/önerilen kılıyor:
+- **6.9" iPhone** (1320 × 2868 — iPhone 16 Pro Max) — zorunlu, ana set
+- **6.5" iPhone** (1284 × 2778) — Apple otomatik ölçekleyebilir ama ayrı yüklemek daha iyi görünür
+- iPad kullanıyorsan iPad seti de gerekir (bu uygulama iPad'i şu an hedeflemiyor, atlanabilir)
 
-Önerilen 6 sahne (öncelik sırasına göre):
+Final set — 6 görsel, kullanıcı kendi hazırladı (Figma/Canva, cihaz çerçevesi + başlık + gradient arka plan). Sıralama ve başlıklar:
 
-### 1. "Günde 10 Soru, KPSS'e Bir Adım"
-Quiz çözme ekranı — sayaç, A/B/C/D seçenekleri, alt bar görünür. Renkli soru ekranı.
+### 1. `06-login.png` — "KPSS ve AGS'ye hazırlığın en hızlı yolu"
+Giriş ekranı, ilk izlenim — küçük önizlemede görünen en kritik görsel.
 
-### 2. "13 Ünite Hap Bilgi Kartı"
-Kart akışı ekranı — büyük tek kart, "5/22" sayaç, ileri/geri butonları.
+### 2. `02-culture-modal.png` — "Görselli sorularla genel kültürünü test et"
+Günün Genel Kültür Sorusu modalı, en özgün/farklılaştırıcı özellik — merak uyandırıp "hook" görevi görür.
 
-### 3. "3 Seviye: Kolay, Orta, Zor"
-Seviye seçim ekranı — yeşil, turuncu, kırmızı kartlar üst üste.
+### 3. `03-quiz.png` — "10 soru, 30 saniye, günlük pratik"
+Quiz çözme ekranı, ana kullanım — asıl değer önerisi.
 
-### 4. "Canlı Türkiye Sıralaması"
-Leaderboard ekranı — ilk 10 sıralama, avatar, puan.
+### 4. `04-art-levels.png` — "50 soruluk genel kültür havuzu"
+Zorluk seviyesi seçimi, içerik derinliğini gösterir.
 
-### 5. "Hızlı Cevapla, Ekstra Puan"
-Quiz ekranı timer bar dolu, yeşil "doğru" cevap işaretli.
+### 5. `05-leaderboard.png` — "Sıralamada zirveye çık"
+Leaderboard, sosyal kanıt/motivasyon unsuru.
 
-### 6. "Tamamen Ücretsiz, Reklamsız"
-Profil veya ana sayfa, "Ücretsiz" rozet vurgulu.
+### 6. `01-home.png` — "Her gün yeni bir soru, her gün ilerleme"
+Ana sayfa, genel özet — kapanış görseli.
 
-**Hazırlık ipucu:** [shotbot.io](https://shotbot.io), [previewed.app](https://previewed.app), [Figma'da iPhone mockup template](https://www.figma.com) ile 1 saatte hazırlanır.
+**Not:** İlk 3 görsel (login, culture-modal, quiz) App Store'un küçük önizlemesinde görünen kısım — en güçlü mesaj oraya kondu. 6 görsel, maksimum 10 hakkının tamamı kullanılmadı; kullanıcı ilk 2-3 görselde karar verdiği için fazladan görsel eklemenin dönüşüme katkısı düşük.
+
+### 7.1 Ham ekran görüntüleri nasıl alındı
+
+`iPhone 16 Pro Max` simülatöründe (1320×2868, iOS 26.5) uygulama çalıştırılıp aşağıdaki ekranların ham `.png` çıktısı `aso/screenshots/iphone-6.9/` klasörüne kaydedildi:
+- `01-home.png` — Ana sayfa (gradient header, Günün Genel Kültür Sorusu kartı, Bugünün Soruları)
+- `02-culture-modal.png` — Günün Genel Kültür Sorusu modalı (görsel + şıklar)
+- `03-quiz.png` — Quiz çözme ekranı
+- `04-art-levels.png` — Genel Kültür zorluk seviyesi seçimi
+- `05-leaderboard.png` — Sıralama ekranı
+- `06-login.png` — Giriş ekranı
+
+Bu dosyaları doğrudan Figma/Canva'ya sürükleyip üstüne başlık ekleyebilirsin; boyutları zaten App Store'un istediği 1320×2868 çözünürlükte.
 
 ---
 

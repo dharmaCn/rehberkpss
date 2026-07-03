@@ -6,6 +6,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuth } from '../hooks/useAuth';
 import { isDemoMode } from '../lib/demoMode';
 import { Colors } from '../constants/colors';
+import SeasonResetModal from '../components/SeasonResetModal';
+import { refreshComebackSchedule } from '../lib/notifications';
 
 export default function RootLayout() {
   const { user, loading } = useAuth();
@@ -24,6 +26,11 @@ export default function RootLayout() {
     }
   }, [user, loading, segments]);
 
+  // Her app açılışında 3/5/7 günlük comeback push'larını yeniden planla
+  useEffect(() => {
+    refreshComebackSchedule().catch(() => {});
+  }, []);
+
   if (loading) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -38,6 +45,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }} />
+      {user && !isDemoMode() ? <SeasonResetModal /> : null}
     </GestureHandlerRootView>
   );
 }

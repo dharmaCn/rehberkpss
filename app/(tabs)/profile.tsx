@@ -10,12 +10,27 @@ import {
   Alert,
   Modal,
   TextInput,
+  Switch,
 } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { signOut } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 import { getAuthSync, deleteAccountAsync } from '../../lib/firebase';
-import { fetchUserProfile, fetchUserRank, UserProfile } from '../../lib/firestore';
+import {
+  fetchUserProfile,
+  fetchUserRank,
+  fetchWeeklyResults,
+  markShareMission,
+  UserProfile,
+} from '../../lib/firestore';
 import { Colors } from '../../constants/colors';
+import { BADGES, BadgeId } from '../../lib/badges';
+import { getLevelInfo } from '../../lib/levels';
+import { SEASON_LABEL, SEASON_END_AT, daysUntil } from '../../constants/season';
+import { enableAll, disableAll, isEnabled } from '../../lib/notifications';
+import { shareInvite } from '../../lib/share';
+import ExamGoalModal from '../../components/ExamGoalModal';
 
 export default function ProfileScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -25,24 +40,38 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [ranks, setRanks] = useState({ daily: 0, weekly: 0, alltime: 0 });
   const [loading, setLoading] = useState(true);
+  const [weekly, setWeekly] = useState<{ date: string; score: number }[]>([]);
+  const [notif, setNotif] = useState(false);
+  const [examModal, setExamModal] = useState(false);
   const [delVisible, setDelVisible] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   const canDelete = confirmText.trim().toLowerCase() === 'hesapsil';
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     if (!user) return;
     Promise.all([
       fetchUserProfile(user.uid),
       fetchUserRank(user.uid, 'daily'),
       fetchUserRank(user.uid, 'weekly'),
       fetchUserRank(user.uid, 'alltime'),
-    ]).then(([prof, daily, weekly, alltime]) => {
-      setProfile(prof);
-      setRanks({ daily, weekly, alltime });
-    }).finally(() => setLoading(false));
+      fetchWeeklyResults(user.uid),
+      isEnabled(),
+    ])
+      .then(([prof, daily, weekly, alltime, week, en]) => {
+        setProfile(prof);
+        setRanks({ daily, weekly, alltime });
+        setWeekly(week.map((w) => ({ date: w.date, score: w.score })));
+        setNotif(en);
+      })
+      .finally(() => setLoading(false));
   }, [user]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  // Sekme her odaklandığında yeniden veri çek (quiz/davet sonrası rozetler, streak, görevler güncellensin)
+  useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
   async function handleSignOut() {
     Alert.alert('Çıkış Yap', 'Hesabınızdan çıkmak istiyor musunuz?', [
@@ -58,22 +87,41 @@ export default function ProfileScreen() {
     ]);
   }
 
+  async function handleNotifToggle(v: boolean) {
+    if (v) {
+      const ok = await enableAll();
+      if (!ok) {
+        Alert.alert('İzin Gerekli', 'Bildirimleri açabilmek için sistem ayarlarından izin vermelisin.');
+        setNotif(false);
+        return;
+      }
+    } else {
+      await disableAll();
+    }
+    setNotif(v);
+  }
+
+  async function handleInvite() {
+    if (!user) return;
+    const ok = await shareInvite(user.displayName ?? '');
+    if (ok) {
+      await markShareMission(user.uid);
+      refresh();
+    }
+  }
+
   async function handleDeleteAccount() {
     if (!canDelete || deleting) return;
     setDeleting(true);
     try {
       await deleteAccountAsync();
-      // Hesap silinince onAuthStateChanged tetiklenir, _layout giriş ekranına yönlendirir
       setDelVisible(false);
       setConfirmText('');
     } catch (e: unknown) {
       const code = (e as { code?: string })?.code ?? '';
       const msg = e instanceof Error ? e.message : String(e);
       if (code === 'auth/requires-recent-login') {
-        Alert.alert(
-          'Yeniden Giriş Gerekli',
-          'Güvenlik nedeniyle hesabı silmeden önce çıkış yapıp tekrar giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yapın, ardından yeniden deneyin.'
-        );
+        Alert.alert('Yeniden Giriş Gerekli', 'Güvenlik nedeniyle hesabı silmeden önce çıkış yapıp tekrar giriş yapmanız gerekiyor.');
       } else {
         Alert.alert('Hata', 'Hesap silinemedi: ' + msg);
       }
@@ -90,9 +138,15 @@ export default function ProfileScreen() {
     );
   }
 
+  const seasonScore = profile?.seasonScore ?? 0;
   const totalScore = profile?.totalScore ?? 0;
   const quizCount = profile?.quizCount ?? 0;
   const bestScore = profile?.bestDayScore ?? 0;
+  const currentStreak = profile?.currentStreak ?? 0;
+  const longestStreak = profile?.longestStreak ?? 0;
+  const earnedBadges = (profile?.badges ?? []) as BadgeId[];
+  const seasonLeft = daysUntil(SEASON_END_AT);
+  const maxWeekly = Math.max(1, ...weekly.map((w) => w.score));
 
   return (
     <ScrollView
@@ -122,28 +176,130 @@ export default function ProfileScreen() {
         <Text style={[styles.email, { color: c.textSecondary }]}>{user?.email ?? ''}</Text>
       </View>
 
+      {/* Sezon kartı */}
+      <View style={[styles.seasonCard, { backgroundColor: Colors.primary }]}>
+        <View style={styles.seasonHead}>
+          <View style={styles.seasonChip}>
+            <Ionicons name="trophy" size={14} color="#fff" />
+            <Text style={styles.seasonChipText}>{SEASON_LABEL}</Text>
+          </View>
+          <Text style={styles.seasonCountdown}>{seasonLeft}g kaldı</Text>
+        </View>
+        <Text style={styles.seasonScore}>{seasonScore.toLocaleString('tr-TR')}</Text>
+        <Text style={styles.seasonLabel}>sezon puanı</Text>
+        <Text style={styles.seasonHint}>İlk 100 sezon sonunda Şampiyon rozeti kazanır 👑</Text>
+      </View>
+
       {/* Rank kartları */}
       <View style={styles.rankRow}>
         {[
           { label: 'Bugün', rank: ranks.daily, icon: '☀️' },
           { label: 'Bu Hafta', rank: ranks.weekly, icon: '📅' },
-          { label: 'Tüm Zamanlar', rank: ranks.alltime, icon: '🌍' },
+          { label: 'Sezon', rank: ranks.alltime, icon: '🏆' },
         ].map((r) => (
           <View key={r.label} style={[styles.rankCard, { backgroundColor: c.card, borderColor: c.border }]}>
             <Text style={styles.rankIcon}>{r.icon}</Text>
-            <Text style={[styles.rankNum, { color: Colors.primary }]}>
-              {r.rank >= 999 ? '—' : `#${r.rank}`}
-            </Text>
+            <Text style={[styles.rankNum, { color: Colors.primary }]}>{r.rank >= 999 ? '—' : `#${r.rank}`}</Text>
             <Text style={[styles.rankLabel, { color: c.textSecondary }]}>{r.label}</Text>
           </View>
         ))}
       </View>
 
+      {/* Seviye / XP */}
+      {(() => {
+        const lvl = getLevelInfo(totalScore);
+        return (
+          <View style={[styles.levelCard, { backgroundColor: c.card, borderColor: c.border }]}>
+            <View style={styles.levelTop}>
+              <Text style={styles.levelEmoji}>{lvl.emoji}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.levelTitle, { color: c.text }]}>Seviye {lvl.level} — {lvl.title}</Text>
+                <Text style={[styles.levelSub, { color: c.textSecondary }]}>
+                  {lvl.nextThreshold !== null
+                    ? `${(lvl.nextThreshold - lvl.xp).toLocaleString('tr-TR')} puan sonra bir üst seviye`
+                    : 'En yüksek seviyedesin! 👑'}
+                </Text>
+              </View>
+              <Text style={[styles.levelXp, { color: Colors.primary }]}>{lvl.xp.toLocaleString('tr-TR')} XP</Text>
+            </View>
+            <View style={[styles.levelBarTrack, { backgroundColor: c.border }]}>
+              <View style={[styles.levelBarFill, { width: `${Math.round(lvl.progress * 100)}%`, backgroundColor: Colors.primary }]} />
+            </View>
+          </View>
+        );
+      })()}
+
+      {/* Streak */}
+      <View style={[styles.streakCard, { backgroundColor: c.card, borderColor: c.border }]}>
+        <View style={styles.streakItem}>
+          <Text style={styles.streakEmoji}>🔥</Text>
+          <Text style={[styles.streakBig, { color: Colors.warning }]}>{currentStreak}</Text>
+          <Text style={[styles.streakLbl, { color: c.textSecondary }]}>Güncel Seri</Text>
+        </View>
+        <View style={[styles.streakDivider, { backgroundColor: c.border }]} />
+        <View style={styles.streakItem}>
+          <Text style={styles.streakEmoji}>🏆</Text>
+          <Text style={[styles.streakBig, { color: c.text }]}>{longestStreak}</Text>
+          <Text style={[styles.streakLbl, { color: c.textSecondary }]}>En Uzun</Text>
+        </View>
+        <View style={[styles.streakDivider, { backgroundColor: c.border }]} />
+        <View style={styles.streakItem}>
+          <Text style={styles.streakEmoji}>❄️</Text>
+          <Text style={[styles.streakBig, { color: '#0EA5E9' }]}>{profile?.streakFreeze?.available ?? 0}</Text>
+          <Text style={[styles.streakLbl, { color: c.textSecondary }]}>Freeze</Text>
+        </View>
+      </View>
+
+      {/* Haftalık özet */}
+      {weekly.length > 0 && (
+        <View style={[styles.weeklyCard, { backgroundColor: c.card, borderColor: c.border }]}>
+          <Text style={[styles.sectionTitle, { color: c.text, marginBottom: 12 }]}>Bu Hafta</Text>
+          <View style={styles.weeklyBars}>
+            {weekly.map((w) => {
+              const h = w.score === 0 ? 4 : Math.max(8, (w.score / maxWeekly) * 80);
+              const day = new Date(w.date + 'T12:00:00').toLocaleDateString('tr-TR', { weekday: 'short' });
+              return (
+                <View key={w.date} style={styles.weeklyCol}>
+                  <Text style={[styles.weeklyScore, { color: c.textSecondary }]}>{w.score || ''}</Text>
+                  <View style={[styles.weeklyBar, { height: h, backgroundColor: w.score > 0 ? Colors.primary : c.border }]} />
+                  <Text style={[styles.weeklyDay, { color: c.textSecondary }]}>{day}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
+
+      {/* Rozetler */}
+      <Text style={[styles.sectionTitle, { color: c.text }]}>Rozetlerim</Text>
+      <View style={styles.badgeGrid}>
+        {(Object.values(BADGES) as typeof BADGES[BadgeId][]).map((b) => {
+          const earned = earnedBadges.includes(b.id);
+          return (
+            <View
+              key={b.id}
+              style={[
+                styles.badge,
+                { backgroundColor: c.card, borderColor: earned ? b.color : c.border, opacity: earned ? 1 : 0.5 },
+              ]}
+            >
+              <View style={[styles.badgeIcon, { backgroundColor: earned ? b.color + '22' : c.border + '40' }]}>
+                <Ionicons name={b.icon as never} size={22} color={earned ? b.color : c.textSecondary} />
+              </View>
+              <Text style={[styles.badgeTitle, { color: c.text }]} numberOfLines={1}>{b.title}</Text>
+              <Text style={[styles.badgeDesc, { color: c.textSecondary }]} numberOfLines={2}>
+                {earned ? b.description : 'Henüz kazanılmadı'}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
       {/* İstatistikler */}
-      <Text style={[styles.sectionTitle, { color: c.text }]}>İstatistikler</Text>
+      <Text style={[styles.sectionTitle, { color: c.text }]}>Tüm Zamanlar</Text>
       <View style={[styles.statsCard, { backgroundColor: c.card, borderColor: c.border }]}>
         {[
-          { label: 'Toplam Puan', value: totalScore.toLocaleString('tr-TR'), icon: '⭐' },
+          { label: 'Tüm Zamanlar Puanı', value: totalScore.toLocaleString('tr-TR'), icon: '⭐' },
           { label: 'Çözülen Quiz', value: quizCount, icon: '📝' },
           { label: 'En Yüksek Günlük Puan', value: bestScore, icon: '🏆' },
         ].map((s, i, arr) => (
@@ -160,100 +316,119 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      {/* Seviye */}
-      <View style={[styles.levelCard, { backgroundColor: Colors.primary }]}>
-        <View style={styles.levelLeft}>
-          <Text style={styles.levelBadge}>
-            {totalScore >= 5000 ? '🌟 Uzman' : totalScore >= 2000 ? '🎓 İleri Seviye' : totalScore >= 500 ? '📚 Orta Seviye' : '🌱 Başlangıç'}
-          </Text>
-          <Text style={styles.levelSub}>
-            {totalScore >= 5000
-              ? 'KPSS konularına hâkimsin!'
-              : `Bir üst seviye için ${totalScore >= 2000 ? 5000 - totalScore : totalScore >= 500 ? 2000 - totalScore : 500 - totalScore} puan daha`}
-          </Text>
-        </View>
-        <Text style={styles.levelScore}>{totalScore}</Text>
-      </View>
-
-      {/* Çıkış */}
+      {/* Hedef */}
       <TouchableOpacity
-        style={[styles.signOutBtn, { borderColor: Colors.error }]}
-        onPress={handleSignOut}
+        style={[styles.examEdit, { backgroundColor: c.card, borderColor: c.border }]}
+        onPress={() => setExamModal(true)}
         activeOpacity={0.85}
       >
+        <Ionicons name="calendar" size={20} color={Colors.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.examEditTitle, { color: c.text }]}>
+            {profile?.profileMeta?.examDate
+              ? `Sınav: ${new Date(profile.profileMeta.examDate + 'T12:00:00').toLocaleDateString('tr-TR')}`
+              : 'Sınav tarihi belirle'}
+          </Text>
+          <Text style={[styles.examEditSub, { color: c.textSecondary }]}>
+            {profile?.profileMeta?.targetScore ? `Hedef: ${profile.profileMeta.targetScore} puan — düzenle` : 'Hedef puanını seç'}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
+      </TouchableOpacity>
+
+      {/* Bildirim toggle */}
+      <View style={[styles.notifRow, { backgroundColor: c.card, borderColor: c.border }]}>
+        <Ionicons name="notifications" size={20} color={Colors.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.notifTitle, { color: c.text }]}>Günlük Hatırlatma</Text>
+          <Text style={[styles.notifSub, { color: c.textSecondary }]}>Her gün 20:00'de bildirim al</Text>
+        </View>
+        <Switch value={notif} onValueChange={handleNotifToggle} trackColor={{ true: Colors.primary }} />
+      </View>
+
+      {/* Arkadaşını davet */}
+      <TouchableOpacity
+        style={[styles.inviteBtn, { backgroundColor: Colors.primary }]}
+        onPress={handleInvite}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="share-social" size={18} color="#fff" />
+        <Text style={styles.inviteText}>Arkadaşını Davet Et</Text>
+      </TouchableOpacity>
+
+      {/* Çıkış */}
+      <TouchableOpacity style={[styles.signOutBtn, { borderColor: Colors.error }]} onPress={handleSignOut} activeOpacity={0.85}>
         <Text style={[styles.signOutText, { color: Colors.error }]}>Çıkış Yap</Text>
       </TouchableOpacity>
 
-      {/* Hesabımı Sil — yalnızca gerçek (Google) hesaplarda; misafirde gösterilmez */}
       {!user?.isAnonymous && (
-      <>
-      <TouchableOpacity
-        style={styles.deleteLink}
-        onPress={() => { setConfirmText(''); setDelVisible(true); }}
-        activeOpacity={0.7}
-      >
-        <Text style={[styles.deleteLinkText, { color: Colors.error }]}>Hesabımı Sil</Text>
-      </TouchableOpacity>
+        <>
+          <TouchableOpacity
+            style={styles.deleteLink}
+            onPress={() => { setConfirmText(''); setDelVisible(true); }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.deleteLinkText, { color: Colors.error }]}>Hesabımı Sil</Text>
+          </TouchableOpacity>
 
-      {/* Hesap silme onay modalı */}
-      <Modal
-        visible={delVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => !deleting && setDelVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: c.card }]}>
-            <Text style={[styles.modalTitle, { color: c.text }]}>Hesabını Sil</Text>
-            <Text style={[styles.modalDesc, { color: c.textSecondary }]}>
-              Bu işlem geri alınamaz. Tüm verilerin (puanların, sıralaman ve quiz geçmişin) kalıcı olarak silinir.
-              {'\n\n'}Onaylamak için aşağıya{' '}
-              <Text style={{ fontWeight: '800', color: c.text }}>hesapsil</Text> yaz.
-            </Text>
-            <TextInput
-              value={confirmText}
-              onChangeText={setConfirmText}
-              placeholder="hesapsil"
-              placeholderTextColor={c.textSecondary}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!deleting}
-              style={[styles.modalInput, { borderColor: c.border, color: c.text, backgroundColor: c.background }]}
-            />
-            <View style={styles.modalBtns}>
-              <TouchableOpacity
-                style={[styles.modalBtn, { borderColor: c.border, borderWidth: 1.5 }]}
-                onPress={() => { setDelVisible(false); setConfirmText(''); }}
-                disabled={deleting}
-                activeOpacity={0.85}
-              >
-                <Text style={[styles.modalBtnText, { color: c.text }]}>İptal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, { backgroundColor: Colors.error, opacity: canDelete && !deleting ? 1 : 0.5 }]}
-                onPress={handleDeleteAccount}
-                disabled={!canDelete || deleting}
-                activeOpacity={0.85}
-              >
-                {deleting ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={[styles.modalBtnText, { color: '#fff' }]}>Hesabı Sil</Text>
-                )}
-              </TouchableOpacity>
+          <Modal visible={delVisible} transparent animationType="fade" onRequestClose={() => !deleting && setDelVisible(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalCard, { backgroundColor: c.card }]}>
+                <Text style={[styles.modalTitle, { color: c.text }]}>Hesabını Sil</Text>
+                <Text style={[styles.modalDesc, { color: c.textSecondary }]}>
+                  Bu işlem geri alınamaz. Onaylamak için aşağıya{' '}
+                  <Text style={{ fontWeight: '800', color: c.text }}>hesapsil</Text> yaz.
+                </Text>
+                <TextInput
+                  value={confirmText}
+                  onChangeText={setConfirmText}
+                  placeholder="hesapsil"
+                  placeholderTextColor={c.textSecondary}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!deleting}
+                  style={[styles.modalInput, { borderColor: c.border, color: c.text, backgroundColor: c.background }]}
+                />
+                <View style={styles.modalBtns}>
+                  <TouchableOpacity
+                    style={[styles.modalBtn, { borderColor: c.border, borderWidth: 1.5 }]}
+                    onPress={() => { setDelVisible(false); setConfirmText(''); }}
+                    disabled={deleting}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.modalBtnText, { color: c.text }]}>İptal</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalBtn, { backgroundColor: Colors.error, opacity: canDelete && !deleting ? 1 : 0.5 }]}
+                    onPress={handleDeleteAccount}
+                    disabled={!canDelete || deleting}
+                    activeOpacity={0.85}
+                  >
+                    {deleting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={[styles.modalBtnText, { color: '#fff' }]}>Hesabı Sil</Text>}
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
-      </Modal>
-      </>
+          </Modal>
+        </>
       )}
+
+      {user ? (
+        <ExamGoalModal
+          uid={user.uid}
+          visible={examModal}
+          initialDate={profile?.profileMeta?.examDate}
+          initialTarget={profile?.profileMeta?.targetScore}
+          onClose={() => { setExamModal(false); refresh(); }}
+        />
+      ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { padding: 20, paddingTop: 60, gap: 20, paddingBottom: 40 },
+  content: { padding: 20, paddingTop: 60, gap: 16, paddingBottom: 40 },
 
   hero: { alignItems: 'center', gap: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -266,20 +441,59 @@ const styles = StyleSheet.create({
   name: { fontSize: 22, fontWeight: '800', marginTop: 4 },
   email: { fontSize: 14 },
 
+  seasonCard: { borderRadius: 20, padding: 20, alignItems: 'center', gap: 4 },
+  seasonHead: { flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'stretch', alignItems: 'center' },
+  seasonChip: { flexDirection: 'row', gap: 5, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14 },
+  seasonChipText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  seasonCountdown: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700' },
+  seasonScore: { color: '#fff', fontSize: 44, fontWeight: '900', marginTop: 4 },
+  seasonLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 13 },
+  seasonHint: { color: 'rgba(255,255,255,0.8)', fontSize: 11, textAlign: 'center', marginTop: 6 },
+
   rankRow: { flexDirection: 'row', gap: 12 },
-  rankCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 14,
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-  },
+  rankCard: { flex: 1, borderRadius: 16, padding: 14, alignItems: 'center', gap: 6, borderWidth: 1 },
   rankIcon: { fontSize: 22 },
   rankNum: { fontSize: 20, fontWeight: '800' },
   rankLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
 
+  levelCard: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 12 },
+  levelTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  levelEmoji: { fontSize: 30 },
+  levelTitle: { fontSize: 15, fontWeight: '800' },
+  levelSub: { fontSize: 12, marginTop: 2 },
+  levelXp: { fontSize: 13, fontWeight: '800' },
+  levelBarTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  levelBarFill: { height: 8, borderRadius: 4 },
+
+  streakCard: { flexDirection: 'row', borderRadius: 16, borderWidth: 1, padding: 14, alignItems: 'center', justifyContent: 'space-around' },
+  streakItem: { flex: 1, alignItems: 'center', gap: 2 },
+  streakDivider: { width: 1, alignSelf: 'stretch', marginVertical: 4 },
+  streakEmoji: { fontSize: 20 },
+  streakBig: { fontSize: 22, fontWeight: '900' },
+  streakLbl: { fontSize: 11, fontWeight: '600' },
+
+  weeklyCard: { borderRadius: 16, padding: 16, borderWidth: 1 },
+  weeklyBars: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 110 },
+  weeklyCol: { flex: 1, alignItems: 'center', gap: 4 },
+  weeklyScore: { fontSize: 10, fontWeight: '700', minHeight: 12 },
+  weeklyBar: { width: 18, borderRadius: 6 },
+  weeklyDay: { fontSize: 10, fontWeight: '600' },
+
   sectionTitle: { fontSize: 18, fontWeight: '700' },
+
+  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  badge: {
+    flexBasis: '30%',
+    flexGrow: 1,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    padding: 10,
+    alignItems: 'center',
+    gap: 4,
+  },
+  badgeIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  badgeTitle: { fontSize: 12, fontWeight: '800', textAlign: 'center' },
+  badgeDesc: { fontSize: 10, textAlign: 'center', lineHeight: 13 },
 
   statsCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   statRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
@@ -288,17 +502,16 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 14 },
   statValue: { fontSize: 16, fontWeight: '700' },
 
-  levelCard: {
-    borderRadius: 20,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  levelLeft: { gap: 6, flex: 1 },
-  levelBadge: { fontSize: 16, fontWeight: '800', color: '#fff' },
-  levelSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 18 },
-  levelScore: { fontSize: 32, fontWeight: '900', color: '#fff' },
+  examEdit: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1 },
+  examEditTitle: { fontSize: 14, fontWeight: '800' },
+  examEditSub: { fontSize: 12, marginTop: 2 },
+
+  notifRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1 },
+  notifTitle: { fontSize: 14, fontWeight: '800' },
+  notifSub: { fontSize: 12, marginTop: 2 },
+
+  inviteBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
+  inviteText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   signOutBtn: { borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5 },
   signOutText: { fontSize: 15, fontWeight: '700' },

@@ -551,6 +551,13 @@ export default function TopicDetail() {
           <Text style={styles.primaryBtnText}>Seviyeler</Text>
         </TouchableOpacity>
       </View>
+      <TouchableOpacity
+        style={[styles.homeBtn, { backgroundColor: Colors.primary }]}
+        onPress={() => router.replace('/(tabs)')}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.homeBtnText}>🏠 Ana Sayfaya Dön</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -752,4 +759,6 @@ const styles = StyleSheet.create({
   reviewAciklamaText: { fontSize: 13, lineHeight: 20 },
 
   resultActions: { flexDirection: 'row', gap: 12, marginHorizontal: 20, marginTop: 20 },
+  homeBtn: { marginHorizontal: 20, marginTop: 12, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  homeBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

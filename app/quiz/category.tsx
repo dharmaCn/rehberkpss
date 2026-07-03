@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { getAuthSync } from '../../lib/firebase';
-import { saveCategoryQuizResult } from '../../lib/firestore';
+import { saveCategoryQuizResult, logWrongQuestion } from '../../lib/firestore';
 import {
   getDailyCategoryQuestions,
   calculateScore,
@@ -96,6 +97,13 @@ export default function CategoryQuizSession() {
     setAnswers((a) => [...a, optIndex]);
 
     const isCorrect = optIndex === q.correctIndex;
+    Haptics.notificationAsync(
+      isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
+    ).catch(() => {});
+    if (!isCorrect) {
+      const u = getAuthSync()?.currentUser ?? null;
+      if (u) logWrongQuestion(u.uid, q.id).catch(() => {});
+    }
     const rawPts = isCorrect ? calculateScore(true, timeLeft, QUESTION_TIME) : 0;
     const pts = Math.round(rawPts * CATEGORY_SCORE_MULTIPLIER);
     const newCorrect = isCorrect ? correctCount + 1 : correctCount;

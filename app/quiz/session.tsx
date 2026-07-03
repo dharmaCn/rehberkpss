@@ -10,12 +10,17 @@ import {
 } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { getAuthSync } from '../../lib/firebase';
-import { saveQuizResult } from '../../lib/firestore';
-import { getDailyQuestions, calculateScore, getCategoryLabel, getCategoryColor } from '../../lib/quiz';
+import { saveQuizResult, logWrongQuestion, SaveResultOutcome } from '../../lib/firestore';
+import { getDailyQuestions, calculateScore, getCategoryLabel, getCategoryColor, getTodayKey } from '../../lib/quiz';
 import { recordQuizCompletedAndMaybePrompt } from '../../lib/review';
 import { Question } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
+import { BADGES, BadgeId } from '../../lib/badges';
+import { captureAndShare, buildChallengeUrl } from '../../lib/share';
+import { markShareMission } from '../../lib/firestore';
 
 const QUESTION_TIME = 30;
 
@@ -34,9 +39,12 @@ export default function QuizSession() {
   const [saving, setSaving] = useState(false);
   const [answers, setAnswers] = useState<number[]>([]); // her sorunun verilen cevabı (-1 = süre doldu)
   const [openReview, setOpenReview] = useState<number | null>(null);
+  const [outcome, setOutcome] = useState<SaveResultOutcome | null>(null);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
+  const shareCardRef = useRef<View | null>(null);
 
   const q: Question = questions[index];
 
@@ -87,6 +95,15 @@ export default function QuizSession() {
     setAnswers((a) => [...a, optIndex]);
 
     const isCorrect = optIndex === q.correctIndex;
+    Haptics.notificationAsync(
+      isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
+    ).catch(() => {});
+
+    if (!isCorrect) {
+      const u = getAuthSync()?.currentUser ?? null;
+      if (u) logWrongQuestion(u.uid, q.id).catch(() => {});
+    }
+
     const pts = isCorrect ? calculateScore(true, timeLeft, QUESTION_TIME) : 0;
     const newCorrect = isCorrect ? correctCount + 1 : correctCount;
     const newScore = totalScore + pts;
@@ -113,14 +130,28 @@ export default function QuizSession() {
     if (!user) return;
     setSaving(true);
     try {
-      await saveQuizResult(user, score, corrects);
+      const res = await saveQuizResult(user, score, corrects, questions.length);
+      setOutcome(res);
+      if (res.newBadges.length > 0) {
+        setTimeout(() => setShowBadgeModal(true), 600);
+      }
     } catch {
       // Sonuç kaydedilemese de ekran gösterilir
     } finally {
       setSaving(false);
     }
-    // Sonuç ekranı görününce kısa gecikmeyle değerlendirme iste
     setTimeout(() => { recordQuizCompletedAndMaybePrompt(); }, 800);
+  }
+
+  async function handleShare() {
+    const user = getAuthSync()?.currentUser ?? null;
+    if (!user) return;
+    const today = getTodayKey();
+    const url = buildChallengeUrl(user.uid, totalScore, today);
+    const ok = await captureAndShare(shareCardRef, `${totalScore} puan yaptım — beni geçebilir misin? ${url}`);
+    if (ok) {
+      await markShareMission(user.uid).catch(() => {});
+    }
   }
 
   function getOptionStyle(i: number) {
@@ -147,7 +178,7 @@ export default function QuizSession() {
         contentContainerStyle={styles.resultScrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.resultCard, { backgroundColor: Colors.primary }]}>
+        <View ref={shareCardRef} collapsable={false} style={[styles.resultCard, { backgroundColor: Colors.primary }]}>
           <Text style={styles.resultEmoji}>{emoji}</Text>
           <Text style={styles.resultTitle}>Quiz Tamamlandı!</Text>
           <Text style={styles.resultScore}>{totalScore}</Text>
@@ -164,7 +195,26 @@ export default function QuizSession() {
               <Text style={styles.resultStatLabel}>Başarı</Text>
             </View>
           </View>
+          <Text style={styles.shareWatermark}>KPSS Quiz · {getTodayKey()}</Text>
         </View>
+
+        {outcome?.percentile !== undefined && outcome.percentile >= 10 && (
+          <View style={[styles.percentileChip, { backgroundColor: Colors.success + '22' }]}>
+            <Ionicons name="trending-up" size={16} color={Colors.success} />
+            <Text style={[styles.percentileText, { color: Colors.success }]}>
+              Bugün kullanıcıların %{outcome.percentile}'inden iyisin 🎯
+            </Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[styles.shareBtn, { backgroundColor: c.card, borderColor: Colors.primary }]}
+          onPress={handleShare}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="share-social" size={18} color={Colors.primary} />
+          <Text style={[styles.shareBtnText, { color: Colors.primary }]}>Sonucu Paylaş — Beni Geçebilir Misin?</Text>
+        </TouchableOpacity>
 
         <Text style={[styles.resultMsg, { color: c.textSecondary }]}>
           {percentage >= 80
@@ -257,6 +307,42 @@ export default function QuizSession() {
         >
           <Text style={[styles.leaderBtnText, { color: c.text }]}>Sıralamayı Gör 🏆</Text>
         </TouchableOpacity>
+
+        {/* Rozet açma modal'ı */}
+        {showBadgeModal && outcome && outcome.newBadges.length > 0 && (
+          <View style={styles.badgeOverlay}>
+            <View style={[styles.badgeModal, { backgroundColor: c.card }]}>
+              <Text style={styles.badgeEmoji}>🎉</Text>
+              <Text style={[styles.badgeTitleBig, { color: c.text }]}>
+                {outcome.newBadges.length > 1 ? 'Yeni Rozetler!' : 'Yeni Rozet!'}
+              </Text>
+              <View style={styles.badgeList}>
+                {outcome.newBadges.map((id) => {
+                  const def = BADGES[id as BadgeId];
+                  if (!def) return null;
+                  return (
+                    <View key={id} style={styles.badgeChip}>
+                      <View style={[styles.badgeChipIcon, { backgroundColor: def.color + '22' }]}>
+                        <Ionicons name={def.icon as never} size={24} color={def.color} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.badgeChipTitle, { color: c.text }]}>{def.title}</Text>
+                        <Text style={[styles.badgeChipDesc, { color: c.textSecondary }]}>{def.description}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+              <TouchableOpacity
+                style={[styles.badgeCloseBtn, { backgroundColor: Colors.primary }]}
+                onPress={() => setShowBadgeModal(false)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.badgeCloseText}>Devam</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     );
   }
@@ -460,4 +546,47 @@ const styles = StyleSheet.create({
   reviewAciklama: { borderRadius: 12, borderWidth: 1, padding: 12, gap: 6, marginTop: 4 },
   reviewAciklamaLabel: { fontSize: 13, fontWeight: '800' },
   reviewAciklamaText: { fontSize: 13, lineHeight: 20 },
+
+  shareWatermark: { color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: '600', marginTop: 16, letterSpacing: 1 },
+  percentileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 12,
+  },
+  percentileText: { fontSize: 13, fontWeight: '700' },
+  shareBtn: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 14,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  shareBtnText: { fontSize: 14, fontWeight: '800' },
+
+  badgeOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  badgeModal: { borderRadius: 22, padding: 24, alignItems: 'center', gap: 12 },
+  badgeEmoji: { fontSize: 52 },
+  badgeTitleBig: { fontSize: 20, fontWeight: '800' },
+  badgeList: { alignSelf: 'stretch', gap: 10 },
+  badgeChip: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  badgeChipIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  badgeChipTitle: { fontSize: 14, fontWeight: '800' },
+  badgeChipDesc: { fontSize: 12, marginTop: 2 },
+  badgeCloseBtn: { alignSelf: 'stretch', paddingVertical: 13, borderRadius: 12, alignItems: 'center', marginTop: 8 },
+  badgeCloseText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });
