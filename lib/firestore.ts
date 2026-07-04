@@ -600,6 +600,17 @@ export async function recordArtAnswer(
   }
 
   if (!alreadyAnswered) {
+    // Kullanıcının kendi cevap kaydı önce ve ayrı try/catch ile yazılır: sayaç
+    // yazması (artStats) başarısız olsa bile "cevapladım" durumu kaybolmamalı.
+    try {
+      await setDoc(userAnsRef, {
+        questionId,
+        correct: isCorrect,
+        answeredAt: serverTimestamp(),
+      });
+    } catch {
+      // ignore — bir sonraki sayfa yüklemesinde tekrar denenecek
+    }
     try {
       // Sayaç dokümanı yoksa oluştur, varsa artır
       await setDoc(
@@ -607,11 +618,6 @@ export async function recordArtAnswer(
         { total: increment(1), correct: increment(isCorrect ? 1 : 0) },
         { merge: true }
       );
-      await setDoc(userAnsRef, {
-        questionId,
-        correct: isCorrect,
-        answeredAt: serverTimestamp(),
-      });
     } catch {
       // ignore — istatistik kaydı başarısız olsa da UI çalışır
     }

@@ -33,9 +33,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Quiz',
+          title: 'Anasayfa',
           tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon name={focused ? 'bulb' : 'bulb-outline'} color={color} size={size} />
+            <TabIcon name={focused ? 'home' : 'home-outline'} color={color} size={size} />
           ),
         }}
       />

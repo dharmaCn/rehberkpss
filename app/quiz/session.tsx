@@ -178,6 +178,15 @@ export default function QuizSession() {
         contentContainerStyle={styles.resultScrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <TouchableOpacity
+          style={styles.homeBtnTop}
+          onPress={() => router.replace('/(tabs)')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="home" size={16} color={Colors.primary} />
+          <Text style={styles.homeBtnTopText}>Ana Sayfa</Text>
+        </TouchableOpacity>
+
         <View ref={shareCardRef} collapsable={false} style={[styles.resultCard, { backgroundColor: Colors.primary }]}>
           <Text style={styles.resultEmoji}>{emoji}</Text>
           <Text style={styles.resultTitle}>Quiz Tamamlandı!</Text>
@@ -517,6 +526,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   homeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  homeBtnTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  homeBtnTopText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
   leaderBtn: {
     marginHorizontal: 20,
     marginTop: 8,

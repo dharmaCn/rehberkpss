@@ -445,12 +445,12 @@ export default function HomeScreen() {
               </View>
               <View style={styles.lessonBody}>
                 <Text style={[styles.lessonLabel, { color: c.text }]} numberOfLines={1}>{cat.label}</Text>
-                <Text style={[styles.lessonCount, { color: c.textSecondary }]}>{qCount} soru • {cat.exam} ünite</Text>
+                <Text style={[styles.lessonCount, { color: c.textSecondary }]}>{qCount} soruluk mini quizler</Text>
               </View>
               <View style={styles.lessonMetaRow}>
                 <View style={styles.lessonMiniStat}>
-                  <Text style={[styles.lessonMiniNumber, { color: cat.color }]}>{cat.exam}</Text>
-                  <Text style={[styles.lessonMiniLabel, { color: c.textSecondary }]}>ünite</Text>
+                  <Text style={[styles.lessonMiniNumber, { color: cat.color }]}>{qCount}</Text>
+                  <Text style={[styles.lessonMiniLabel, { color: c.textSecondary }]}>soru</Text>
                 </View>
                 <View style={[styles.lessonActionCircle, { backgroundColor: done ? cat.color + '18' : cat.color }]}>
                   <Ionicons name={done ? 'checkmark' : 'arrow-forward'} size={16} color={done ? cat.color : '#fff'} />
