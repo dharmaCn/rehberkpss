@@ -22,6 +22,7 @@ interface Props {
   question: ArtQuestion;
   uid: string | null;
   onClose: () => void;
+  onAnswered?: () => void;
 }
 
 /**
@@ -29,7 +30,7 @@ interface Props {
  * Kullanıcı görseli görür, şıkkı seçer; cevap sonrası sosyal kanıt (%) ve
  * "Bunu Unutma" bilgi kartı gösterilir.
  */
-export default function DailyCultureModal({ visible, question, uid, onClose }: Props) {
+export default function DailyCultureModal({ visible, question, uid, onClose, onAnswered }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
 
@@ -50,6 +51,7 @@ export default function DailyCultureModal({ visible, question, uid, onClose }: P
     if (uid) {
       const s = await recordArtAnswer(uid, question.id, isCorrect);
       setStat(s);
+      onAnswered?.();
     }
   }
 

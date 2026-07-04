@@ -26,11 +26,13 @@ import { daysUntil } from '../../constants/season';
 import ExamGoalModal from '../../components/ExamGoalModal';
 import DailyCultureModal from '../../components/DailyCultureModal';
 
+const CULTURE_CARD_IMAGE = require('../../assets/culture-card-bg.png');
+
 const CATEGORIES = [
-  { key: 'tarih', label: 'Tarih', color: '#EF4444', icon: '📜', exam: 27 },
-  { key: 'cografya', label: 'Coğrafya', color: '#10B981', icon: '🌍', exam: 18 },
-  { key: 'vatandaslik', label: 'Vatandaşlık', color: Colors.primary, icon: '🏛️', exam: 9 },
-  { key: 'guncel', label: 'Güncel', color: '#F59E0B', icon: '📰', exam: 6 },
+  { key: 'tarih', label: 'Tarih', color: '#EF4444', icon: '📜', iconName: 'book', exam: 27 },
+  { key: 'cografya', label: 'Coğrafya', color: '#10B981', icon: '🌍', iconName: 'earth', exam: 18 },
+  { key: 'vatandaslik', label: 'Vatandaşlık', color: Colors.primary, icon: '🏛️', iconName: 'business', exam: 9 },
+  { key: 'guncel', label: 'Güncel', color: '#F59E0B', icon: '📰', iconName: 'newspaper', exam: 6 },
 ] as const;
 
 export default function HomeScreen() {
@@ -153,24 +155,43 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.headerBanner}
       >
+        <View style={styles.headerGlowLarge} />
+        <View style={styles.headerGlowSmall} />
         <View style={styles.headerTop}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.greetingWhite}>
-              {greeting()}, {user?.displayName?.split(' ')[0] ?? 'Kullanıcı'} 👋
-            </Text>
+          <View style={styles.headerCopy}>
+            <Text style={styles.greetingWhite}>{greeting()}, {user?.displayName?.split(' ')[0] ?? 'Kullanıcı'}</Text>
             <Text style={styles.dateWhite}>{today}</Text>
-          </View>
-          {user?.photoURL ? (
-            <Image source={{ uri: user.photoURL }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatarPlaceholder, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Text style={styles.avatarText}>{user?.displayName?.[0] ?? '?'}</Text>
+            <View style={styles.headerMetaRow}>
+              <Ionicons name="sparkles" size={13} color="rgba(255,255,255,0.82)" />
+              <Text style={styles.headerMetaText}>Bugünkü odağın hazır</Text>
             </View>
-          )}
+          </View>
+          <TouchableOpacity
+            style={styles.avatarButton}
+            onPress={() => router.push('/profile' as never)}
+            activeOpacity={0.82}
+            accessibilityRole="button"
+            accessibilityLabel="Profile git"
+          >
+            {user?.photoURL ? (
+              <Image source={{ uri: user.photoURL }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>{user?.displayName?.[0] ?? 'M'}</Text>
+              </View>
+            )}
+            <View style={styles.avatarCue}>
+              <Ionicons name="chevron-forward" size={10} color={Colors.primary} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Streak + Sınav bilgisi header'da */}
         <View style={styles.headerChips}>
+          <View style={styles.headerChip}>
+            <Ionicons name="checkmark-done" size={14} color="#A7F3D0" />
+            <Text style={styles.headerChipText}>Günlük plan</Text>
+          </View>
           {streak > 0 && (
             <View style={styles.headerChip}>
               <Ionicons name="flame" size={14} color="#F59E0B" />
@@ -210,78 +231,121 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* ═══ GÜNÜN GENEL KÜLTÜR SORUSU ═══ */}
-      <TouchableOpacity
-        style={[styles.artCard, { backgroundColor: c.card, borderColor: c.border }]}
-        onPress={() => (artAnswered ? router.push('/art?daily=1' as never) : setCultureModal(true))}
-        activeOpacity={0.9}
-      >
-        {dailyArt.image ? (
-          <Image source={{ uri: dailyArt.image }} style={styles.artThumb} resizeMode="cover" />
-        ) : (
-          <View style={[styles.artThumb, styles.artThumbFallback, { backgroundColor: Colors.accent + '22' }]}>
-            <Ionicons name="color-palette" size={28} color={Colors.accent} />
-          </View>
-        )}
-        <View style={styles.artBody}>
-          <View style={styles.artLabelRow}>
-            <Ionicons name="sparkles" size={13} color={Colors.accent} />
-            <Text style={[styles.artLabel, { color: Colors.accent }]}>GÜNÜN GENEL KÜLTÜR SORUSU</Text>
-          </View>
-          <Text style={[styles.artTitle, { color: c.text }]} numberOfLines={2}>
-            {artAnswered ? 'Bugünkü soruyu çözdün ✓' : 'Bugünün sorusunu çöz'}
-          </Text>
-          <Text style={[styles.artSub, { color: c.textSecondary }]}>
-            {artAnswered ? 'Sonucu ve oranı gör' : 'Günde 1 soru • çöz, kaç kişi bildi gör'}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={c.textSecondary} />
-      </TouchableOpacity>
+      <View style={styles.featureDeck}>
+        <TouchableOpacity
+          style={[styles.featureCard, styles.quizFeatureCard, { backgroundColor: c.card, borderColor: c.border }]}
+          onPress={() => (completed ? undefined : router.push('/quiz/session'))}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={['#4338CA', '#7C3AED']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.quizHeroBand}
+          >
+            <View style={styles.quizHeroGlowOne} />
+            <View style={styles.quizHeroGlowTwo} />
+            <View style={styles.quizHeroLeft}>
+              <View style={styles.quizHeroIcon}>
+                <Ionicons name="timer" size={22} color="#fff" />
+              </View>
+              <View>
+                <Text style={styles.quizHeroKicker}>30 sn tempo</Text>
+                <Text style={styles.quizHeroTitle}>Hızlı günlük pratik</Text>
+              </View>
+            </View>
+            <View style={styles.quizHeroBadge}>
+              <Text style={styles.quizHeroBadgeNumber}>{questionCount}</Text>
+              <Text style={styles.quizHeroBadgeLabel}>soru</Text>
+            </View>
+          </LinearGradient>
 
-      {/* ═══ GÜNLÜK QUIZ ═══ */}
-      <View style={[styles.quizCard, { backgroundColor: c.card, borderColor: c.border }]}>
-        <View style={styles.quizCardTop}>
-          <View style={[styles.quizIconBox, { backgroundColor: Colors.primary + '15' }]}>
-            <Ionicons name="help-circle" size={28} color={Colors.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.quizCardTitle, { color: c.text }]}>Bugünün Soruları</Text>
-            <Text style={[styles.quizCardSub, { color: c.textSecondary }]}>
-              {questionCount} soru • 4 kategori • 30sn/soru
+          <View style={styles.featureBody}>
+            <Text style={[styles.featureTitle, { color: c.text }]}>Günlük 10 Soru</Text>
+            <Text style={[styles.featureSub, { color: c.textSecondary }]}>
+              Ana pratik, 30 saniyelik hızlı tempo ve günlük puan.
             </Text>
           </View>
-          <View style={[styles.quizBadge, { backgroundColor: Colors.primary + '15' }]}>
-            <Text style={[styles.quizBadgeText, { color: Colors.primary }]}>{questionCount}</Text>
-          </View>
-        </View>
 
-        {completed === null ? (
-          <ActivityIndicator color={Colors.primary} style={{ marginTop: 16 }} />
-        ) : completed ? (
-          <View style={[styles.completedBox, { backgroundColor: Colors.success + '12' }]}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-            <View>
-              <Text style={[styles.completedText, { color: Colors.success }]}>Bugün tamamlandı!</Text>
-              <Text style={[styles.completedSub, { color: c.textSecondary }]}>Yarın yeni sorular gelecek.</Text>
+          <View style={styles.featurePills}>
+            <View style={[styles.featurePill, { backgroundColor: Colors.primary + '12' }]}>
+              <Text style={[styles.featurePillText, { color: Colors.primary }]}>Ana görev</Text>
+            </View>
+            <View style={[styles.featurePill, { backgroundColor: Colors.success + '12' }]}>
+              <Text style={[styles.featurePillText, { color: Colors.success }]}>Her gün yenilenir</Text>
             </View>
           </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.quizStartBtn}
-            onPress={() => router.push('/quiz/session')}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={['#4F46E5', '#7C3AED']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.quizStartGradient}
+
+          <View style={styles.featureActionWrap}>
+            {completed === null ? (
+              <ActivityIndicator color={Colors.primary} />
+            ) : completed ? (
+              <View style={[styles.featureStateRow, { backgroundColor: Colors.success + '12' }]}>
+                <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                <Text style={[styles.featureStateText, { color: Colors.success }]}>Bugün tamamlandı</Text>
+              </View>
+            ) : (
+              <LinearGradient
+                colors={['#4F46E5', '#7C3AED']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.featurePrimaryButton}
+              >
+                <Text style={styles.featurePrimaryButtonText}>Günlük Quize Başla</Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" />
+              </LinearGradient>
+            )}
+          </View>
+        </TouchableOpacity>
+
+        <View
+          style={[styles.featureCard, styles.cultureFeatureCard, { backgroundColor: c.card, borderColor: c.border }]}
+        >
+          <View style={styles.cultureImageFrame}>
+            <Image source={CULTURE_CARD_IMAGE} style={styles.cultureImage} resizeMode="cover" />
+            <View style={styles.cultureImageOverlay} />
+            <View style={styles.cultureChip}>
+              <Ionicons name={artAnswered ? 'checkmark-circle' : 'sparkles'} size={13} color="#fff" />
+              <Text style={styles.cultureChipText}>{artAnswered ? 'Çözüldü' : 'Günün sorusu'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.featureBody}>
+            <Text style={[styles.featureTitle, { color: c.text }]}>Genel Kültür Soruları</Text>
+            <Text style={[styles.featureSub, { color: c.textSecondary }]}>
+              Ressam, eser, yazar ve diğer kültür alıştırmaları.
+            </Text>
+          </View>
+
+          <View style={styles.featurePills}>
+            <View style={[styles.featurePill, { backgroundColor: Colors.accent + '12' }]}>
+              <Text style={[styles.featurePillText, { color: Colors.accent }]}>Görsel destekli</Text>
+            </View>
+            <View style={[styles.featurePill, { backgroundColor: Colors.primary + '12' }]}>
+              <Text style={[styles.featurePillText, { color: Colors.primary }]}>1 dakikalık alıştırma</Text>
+            </View>
+          </View>
+
+          <View style={styles.cultureActions}>
+            <TouchableOpacity
+              style={styles.cultureDailyButton}
+              onPress={() => (artAnswered ? router.push('/art?daily=1' as never) : setCultureModal(true))}
+              activeOpacity={0.85}
             >
-              <Text style={styles.quizStartText}>Quize Başla</Text>
-              <Ionicons name="arrow-forward" size={18} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
+              <Text style={styles.cultureDailyButtonText}>{artAnswered ? 'Sonucu Gör' : 'Günün Sorusu'}</Text>
+              <Ionicons name="sparkles" size={16} color="#fff" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cultureAllButton}
+              onPress={() => router.push('/art' as never)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.cultureAllButtonText}>Testler</Text>
+              <Ionicons name="albums" size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       {/* ═══ TEKRAR ZAMANI — aralıklı yanlış tekrarı ═══ */}
@@ -340,7 +404,7 @@ export default function HomeScreen() {
           <View style={[styles.sectionDot, { backgroundColor: Colors.primary }]} />
           <Text style={[styles.sectionTitle, { color: c.text }]}>Ders Quizleri</Text>
         </View>
-        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>%20 puan • 5 soru</Text>
+        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>Günlük pratik</Text>
       </View>
       <View style={styles.lessonGrid}>
         {CATEGORIES.map((cat) => {
@@ -357,18 +421,41 @@ export default function HomeScreen() {
               }
               activeOpacity={0.8}
             >
-              <Text style={styles.lessonIcon}>{cat.icon}</Text>
-              <Text style={[styles.lessonLabel, { color: c.text }]}>{cat.label}</Text>
-              <Text style={[styles.lessonCount, { color: c.textSecondary }]}>{qCount} soru</Text>
-              {done ? (
-                <View style={[styles.lessonDoneBadge, { backgroundColor: cat.color + '22' }]}>
-                  <Text style={[styles.lessonDoneText, { color: cat.color }]}>✓ Tamam</Text>
+              <LinearGradient
+                colors={[cat.color + '22', cat.color + '08']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.lessonCardTint}
+              />
+              <View style={[styles.lessonOrb, { backgroundColor: cat.color + '20' }]} />
+              <View style={styles.lessonCardTop}>
+                <View style={[styles.lessonIconBox, { backgroundColor: cat.color }]}>
+                  <Ionicons name={cat.iconName as any} size={23} color="#fff" />
                 </View>
-              ) : (
-                <View style={[styles.lessonStartBadge, { backgroundColor: cat.color }]}>
-                  <Text style={styles.lessonStartText}>Başla</Text>
+                <View style={[styles.lessonStatusBadge, { backgroundColor: done ? cat.color + '22' : '#fff' }]}>
+                  <Ionicons
+                    name={done ? 'checkmark-circle' : 'play-circle'}
+                    size={13}
+                    color={done ? cat.color : Colors.primary}
+                  />
+                  <Text style={[styles.lessonStatusText, { color: done ? cat.color : Colors.primary }]}>
+                    {done ? 'Tamam' : 'Başla'}
+                  </Text>
                 </View>
-              )}
+              </View>
+              <View style={styles.lessonBody}>
+                <Text style={[styles.lessonLabel, { color: c.text }]} numberOfLines={1}>{cat.label}</Text>
+                <Text style={[styles.lessonCount, { color: c.textSecondary }]}>{qCount} soru • {cat.exam} ünite</Text>
+              </View>
+              <View style={styles.lessonMetaRow}>
+                <View style={styles.lessonMiniStat}>
+                  <Text style={[styles.lessonMiniNumber, { color: cat.color }]}>{cat.exam}</Text>
+                  <Text style={[styles.lessonMiniLabel, { color: c.textSecondary }]}>ünite</Text>
+                </View>
+                <View style={[styles.lessonActionCircle, { backgroundColor: done ? cat.color + '18' : cat.color }]}>
+                  <Ionicons name={done ? 'checkmark' : 'arrow-forward'} size={16} color={done ? cat.color : '#fff'} />
+                </View>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -405,31 +492,14 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* ═══ GENEL KÜLTÜR + YANLIŞLARIM ═══ */}
+      {/* ═══ YANLIŞLARIM ═══ */}
       <View style={styles.sectionHeader}>
         <View style={styles.sectionTitleRow}>
           <View style={[styles.sectionDot, { backgroundColor: Colors.accent }]} />
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Keşfet</Text>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Tekrar</Text>
         </View>
       </View>
       <View style={{ gap: 10 }}>
-        <TouchableOpacity
-          style={[styles.topicRow, { backgroundColor: c.card, borderColor: c.border }]}
-          onPress={() => router.push('/art' as never)}
-          activeOpacity={0.85}
-        >
-          <View style={[styles.topicIcon, { backgroundColor: Colors.accent + '15' }]}>
-            <Ionicons name="color-palette" size={24} color={Colors.accent} />
-          </View>
-          <View style={styles.topicBody}>
-            <Text style={[styles.topicTitle, { color: c.text }]}>Genel Kültür & Güncel Bilgiler</Text>
-            <Text style={[styles.topicSub, { color: c.textSecondary }]}>
-              Ünlü eserler, ressamlar, yazarlar • görsel destekli
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={[styles.topicRow, { backgroundColor: c.card, borderColor: c.border }]}
           onPress={() => router.push('/wrong' as never)}
@@ -504,6 +574,7 @@ export default function HomeScreen() {
           setCultureModal(false);
           if (user) hasAnsweredDailyArt(user.uid, dailyArt.id).then(setArtAnswered);
         }}
+        onAnswered={() => setArtAnswered(true)}
       />
     </ScrollView>
   );
@@ -515,39 +586,95 @@ const styles = StyleSheet.create({
 
   // ── Header banner ──
   headerBanner: {
-    paddingTop: 64,
-    paddingBottom: 24,
+    paddingTop: 58,
+    paddingBottom: 18,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     marginBottom: 4,
+    overflow: 'hidden',
+  },
+  headerGlowLarge: {
+    position: 'absolute',
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    top: -82,
+    right: -46,
+  },
+  headerGlowSmall: {
+    position: 'absolute',
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    backgroundColor: 'rgba(245,158,11,0.20)',
+    bottom: -52,
+    left: 18,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 14,
   },
-  greetingWhite: { fontSize: 14, fontWeight: '500', color: 'rgba(255,255,255,0.8)' },
-  dateWhite: { fontSize: 20, fontWeight: '800', color: '#fff', marginTop: 2 },
-  avatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
+  headerCopy: {
+    flex: 1,
+    gap: 3,
+  },
+  greetingWhite: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.78)' },
+  dateWhite: { fontSize: 24, fontWeight: '900', color: '#fff', lineHeight: 29 },
+  headerMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 3,
+  },
+  headerMetaText: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.82)' },
+  avatarButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.28)',
+  },
+  avatar: { width: 44, height: 44, borderRadius: 16 },
   avatarPlaceholder: {
-    width: 44, height: 44, borderRadius: 22,
+    width: 44, height: 44, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.22)',
   },
-  avatarText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  avatarText: { color: '#fff', fontSize: 18, fontWeight: '900' },
+  avatarCue: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
 
   headerChips: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    marginTop: 14,
+    marginTop: 16,
   },
   headerChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.16)',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 20,
   },
   headerChipText: { fontSize: 12, fontWeight: '700', color: '#fff' },
@@ -561,18 +688,278 @@ const styles = StyleSheet.create({
   bannerTitle: { fontSize: 14, fontWeight: '800' },
   bannerBody: { fontSize: 12, lineHeight: 17, marginTop: 2 },
 
-  // ── Art card ──
-  artCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: 12, borderRadius: 16, borderWidth: 1, marginHorizontal: 20,
+  // ── Main features ──
+  featureDeck: {
+    marginHorizontal: 20,
+    gap: 12,
   },
-  artThumb: { width: 56, height: 56, borderRadius: 12 },
-  artThumbFallback: { alignItems: 'center', justifyContent: 'center' },
-  artBody: { flex: 1, gap: 2 },
-  artLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  artLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  artTitle: { fontSize: 14, fontWeight: '800' },
-  artSub: { fontSize: 11 },
+  featureCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 16,
+    gap: 14,
+  },
+  quizFeatureCard: {
+    minHeight: 242,
+  },
+  cultureFeatureCard: {
+    minHeight: 230,
+  },
+  quizHeroBand: {
+    minHeight: 136,
+    borderRadius: 16,
+    padding: 16,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quizHeroGlowOne: {
+    position: 'absolute',
+    width: 156,
+    height: 156,
+    borderRadius: 78,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    top: -64,
+    right: 18,
+  },
+  quizHeroGlowTwo: {
+    position: 'absolute',
+    width: 118,
+    height: 118,
+    borderRadius: 59,
+    backgroundColor: 'rgba(245,158,11,0.30)',
+    bottom: -46,
+    left: -28,
+  },
+  quizHeroLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    paddingRight: 10,
+  },
+  quizHeroIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+  },
+  quizHeroKicker: {
+    color: 'rgba(255,255,255,0.76)',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  quizHeroTitle: {
+    color: '#fff',
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: '900',
+  },
+  quizHeroBadge: {
+    width: 74,
+    height: 74,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+  },
+  quizHeroBadgeNumber: {
+    color: Colors.primary,
+    fontSize: 26,
+    lineHeight: 28,
+    fontWeight: '900',
+  },
+  quizHeroBadgeLabel: {
+    color: Colors.primary,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  featureCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  featureIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureBadge: {
+    minWidth: 62,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureBadgeNumber: {
+    fontSize: 20,
+    fontWeight: '900',
+    lineHeight: 22,
+  },
+  featureBadgeLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    marginTop: -1,
+  },
+  featureBody: {
+    gap: 4,
+  },
+  featureTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    lineHeight: 28,
+  },
+  featureSub: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '500',
+  },
+  featurePills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  featurePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  featurePillText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  featureActionWrap: {
+    marginTop: 'auto',
+  },
+  featureStateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    justifyContent: 'center',
+  },
+  featureStateText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  featurePrimaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  featurePrimaryButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  featureSecondaryButton: {
+    minHeight: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  featureSecondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  cultureImageFrame: {
+    height: 136,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#111827',
+  },
+  cultureImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cultureImageFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cultureImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15,23,42,0.16)',
+  },
+  cultureChip: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(15,23,42,0.72)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  cultureChipText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  cultureActions: {
+    marginTop: 'auto',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cultureDailyButton: {
+    minHeight: 48,
+    flex: 1.15,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    backgroundColor: Colors.accent,
+  },
+  cultureDailyButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  cultureAllButton: {
+    minHeight: 48,
+    flex: 0.9,
+    borderRadius: 16,
+    borderWidth: 0,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  cultureAllButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
 
   // ── Tekrar Zamanı card ──
   dueCard: {
@@ -582,39 +969,6 @@ const styles = StyleSheet.create({
   dueIconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   dueTitle: { fontSize: 14, fontWeight: '800' },
   dueSub: { fontSize: 12, marginTop: 2 },
-
-  // ── Quiz card ──
-  quizCard: {
-    borderRadius: 20, padding: 20, borderWidth: 1, marginHorizontal: 20,
-  },
-  quizCardTop: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-  },
-  quizIconBox: {
-    width: 48, height: 48, borderRadius: 14,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  quizCardTitle: { fontSize: 18, fontWeight: '800' },
-  quizCardSub: { fontSize: 12, marginTop: 2 },
-  quizBadge: {
-    width: 44, height: 44, borderRadius: 22,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  quizBadgeText: { fontSize: 18, fontWeight: '800' },
-
-  completedBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    marginTop: 16, padding: 14, borderRadius: 12,
-  },
-  completedText: { fontSize: 14, fontWeight: '700' },
-  completedSub: { fontSize: 11, marginTop: 1 },
-
-  quizStartBtn: { marginTop: 16 },
-  quizStartGradient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 14, borderRadius: 14,
-  },
-  quizStartText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   // ── Missions ──
   missionsCard: { borderRadius: 16, padding: 16, borderWidth: 1, gap: 10, marginHorizontal: 20 },
@@ -635,18 +989,76 @@ const styles = StyleSheet.create({
   sectionHint: { fontSize: 11, fontWeight: '500' },
 
   // ── Lesson grid ──
-  lessonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginHorizontal: 20 },
+  lessonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginHorizontal: 20 },
   lessonCard: {
-    flexGrow: 1, flexBasis: '44%', borderRadius: 16, padding: 14,
-    alignItems: 'center', gap: 5, borderWidth: 1,
+    flexGrow: 1,
+    flexBasis: '46%',
+    minHeight: 164,
+    borderRadius: 20,
+    padding: 14,
+    gap: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
-  lessonIcon: { fontSize: 26 },
-  lessonLabel: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
-  lessonCount: { fontSize: 11, fontWeight: '500' },
-  lessonDoneBadge: { borderRadius: 16, paddingHorizontal: 10, paddingVertical: 3, marginTop: 2 },
-  lessonDoneText: { fontSize: 10, fontWeight: '700' },
-  lessonStartBadge: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 5, marginTop: 2 },
-  lessonStartText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  lessonCardTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  lessonOrb: {
+    position: 'absolute',
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    right: -28,
+    top: -24,
+  },
+  lessonCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  lessonIconBox: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lessonStatusBadge: {
+    minHeight: 28,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  lessonStatusText: { fontSize: 10, fontWeight: '900' },
+  lessonBody: {
+    gap: 4,
+    minHeight: 44,
+  },
+  lessonLabel: { fontSize: 16, lineHeight: 20, fontWeight: '900' },
+  lessonCount: { fontSize: 11, lineHeight: 15, fontWeight: '600' },
+  lessonMetaRow: {
+    marginTop: 'auto',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  lessonMiniStat: {
+    gap: 0,
+  },
+  lessonMiniNumber: { fontSize: 22, lineHeight: 24, fontWeight: '900' },
+  lessonMiniLabel: { fontSize: 10, fontWeight: '800' },
+  lessonActionCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   // ── Topic rows ──
   topicRow: {
