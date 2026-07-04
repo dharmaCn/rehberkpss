@@ -15,8 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuthSync } from '../../lib/firebase';
-import { hasCompletedTodayQuiz, hasCompletedTodayCategoryQuiz, fetchUserProfile, hasAnsweredDailyArt, fetchDueWrongCount, UserProfile } from '../../lib/firestore';
-import { getDailyQuestions, getDailyCategoryQuestions, getTodayKey } from '../../lib/quiz';
+import { hasCompletedTodayQuiz, fetchUserProfile, hasAnsweredDailyArt, fetchDueWrongCount, UserProfile } from '../../lib/firestore';
+import { getDailyQuestions, getTodayKey } from '../../lib/quiz';
 import { getDailyArtQuestion } from '../../constants/artworks';
 import { getDailyFact, FACT_CATEGORY_LABELS } from '../../constants/facts';
 import { openStoreReview } from '../../lib/review';
@@ -28,13 +28,6 @@ import DailyCultureModal from '../../components/DailyCultureModal';
 
 const CULTURE_CARD_IMAGE = require('../../assets/culture-card-bg.png');
 
-const CATEGORIES = [
-  { key: 'tarih', label: 'Tarih', color: '#EF4444', icon: '📜', iconName: 'book', exam: 27 },
-  { key: 'cografya', label: 'Coğrafya', color: '#10B981', icon: '🌍', iconName: 'earth', exam: 18 },
-  { key: 'vatandaslik', label: 'Vatandaşlık', color: Colors.primary, icon: '🏛️', iconName: 'business', exam: 9 },
-  { key: 'guncel', label: 'Güncel', color: '#F59E0B', icon: '📰', iconName: 'newspaper', exam: 6 },
-] as const;
-
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
@@ -42,7 +35,6 @@ export default function HomeScreen() {
   const user = getAuthSync()?.currentUser ?? null;
 
   const [completed, setCompleted] = useState<boolean | null>(null);
-  const [catCompleted, setCatCompleted] = useState<Record<string, boolean>>({});
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [examModal, setExamModal] = useState(false);
   const [artAnswered, setArtAnswered] = useState(false);
@@ -51,28 +43,14 @@ export default function HomeScreen() {
   const dailyArt = useMemo(() => getDailyArtQuestion(), []);
   const dailyFact = useMemo(() => getDailyFact(), []);
   const questionCount = useMemo(() => getDailyQuestions().length, []);
-  const catCounts = useMemo(
-    () => Object.fromEntries(CATEGORIES.map((cat) => [cat.key, getDailyCategoryQuestions(cat.key).length])),
-    []
-  );
   const today = getTodayKey();
 
   const refreshAll = useCallback((openExamIfNeeded = false) => {
     if (!user) {
       setCompleted(false);
-      setCatCompleted({});
       return;
     }
     hasCompletedTodayQuiz(user.uid).then(setCompleted);
-    Promise.all(
-      CATEGORIES.map((cat) =>
-        hasCompletedTodayCategoryQuiz(user.uid, cat.key).then((done) => ({ key: cat.key, done }))
-      )
-    ).then((results) => {
-      const map: Record<string, boolean> = {};
-      results.forEach(({ key, done }) => { map[key] = done; });
-      setCatCompleted(map);
-    });
     fetchUserProfile(user.uid).then((p) => {
       setProfile(p);
       if (openExamIfNeeded && p && !p.profileMeta?.examDate) {
@@ -160,11 +138,25 @@ export default function HomeScreen() {
         <View style={styles.headerTop}>
           <View style={styles.headerCopy}>
             <Text style={styles.greetingWhite}>{greeting()}, {user?.displayName?.split(' ')[0] ?? 'Kullanıcı'}</Text>
-            <Text style={styles.dateWhite}>{today}</Text>
-            <View style={styles.headerMetaRow}>
-              <Ionicons name="sparkles" size={13} color="rgba(255,255,255,0.82)" />
-              <Text style={styles.headerMetaText}>Bugünkü odağın hazır</Text>
-            </View>
+            {examDaysLeft !== null ? (
+              <TouchableOpacity
+                style={styles.examCountdown}
+                onPress={() => setExamModal(true)}
+                activeOpacity={0.84}
+              >
+                <Ionicons name="calendar" size={14} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.examCountdownText}>Sınava {examDaysLeft} gün</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.examSetButton}
+                onPress={() => setExamModal(true)}
+                activeOpacity={0.84}
+              >
+                <Ionicons name="calendar-outline" size={15} color="#fff" />
+                <Text style={styles.examSetButtonText}>Sınav hedefi belirle</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <TouchableOpacity
             style={styles.avatarButton}
@@ -186,25 +178,14 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Streak + Sınav bilgisi header'da */}
-        <View style={styles.headerChips}>
-          <View style={styles.headerChip}>
-            <Ionicons name="checkmark-done" size={14} color="#A7F3D0" />
-            <Text style={styles.headerChipText}>Günlük plan</Text>
-          </View>
-          {streak > 0 && (
+        {streak > 0 && (
+          <View style={styles.headerChips}>
             <View style={styles.headerChip}>
               <Ionicons name="flame" size={14} color="#F59E0B" />
               <Text style={styles.headerChipText}>{streak} gün serisi</Text>
             </View>
-          )}
-          {examDaysLeft !== null && (
-            <TouchableOpacity style={styles.headerChip} onPress={() => setExamModal(true)} activeOpacity={0.8}>
-              <Ionicons name="calendar" size={14} color="#60A5FA" />
-              <Text style={styles.headerChipText}>Sınava {examDaysLeft} gün</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+          </View>
+        )}
       </LinearGradient>
 
       {/* Streak banner — freeze veya kırılma uyarısı */}
@@ -398,126 +379,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* ═══ DERS QUIZLERİ ═══ */}
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          <View style={[styles.sectionDot, { backgroundColor: Colors.primary }]} />
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Ders Quizleri</Text>
-        </View>
-        <Text style={[styles.sectionHint, { color: c.textSecondary }]}>Günlük pratik</Text>
-      </View>
-      <View style={styles.lessonGrid}>
-        {CATEGORIES.map((cat) => {
-          const done = catCompleted[cat.key] ?? false;
-          const qCount = catCounts[cat.key];
-          return (
-            <TouchableOpacity
-              key={cat.key}
-              style={[styles.lessonCard, { backgroundColor: c.card, borderColor: done ? cat.color : c.border }]}
-              onPress={() =>
-                done
-                  ? undefined
-                  : router.push({ pathname: '/quiz/category' as never, params: { cat: cat.key } })
-              }
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={[cat.color + '22', cat.color + '08']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.lessonCardTint}
-              />
-              <View style={[styles.lessonOrb, { backgroundColor: cat.color + '20' }]} />
-              <View style={styles.lessonCardTop}>
-                <View style={[styles.lessonIconBox, { backgroundColor: cat.color }]}>
-                  <Ionicons name={cat.iconName as any} size={23} color="#fff" />
-                </View>
-                <View style={[styles.lessonStatusBadge, { backgroundColor: done ? cat.color + '22' : '#fff' }]}>
-                  <Ionicons
-                    name={done ? 'checkmark-circle' : 'play-circle'}
-                    size={13}
-                    color={done ? cat.color : Colors.primary}
-                  />
-                  <Text style={[styles.lessonStatusText, { color: done ? cat.color : Colors.primary }]}>
-                    {done ? 'Tamam' : 'Başla'}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.lessonBody}>
-                <Text style={[styles.lessonLabel, { color: c.text }]} numberOfLines={1}>{cat.label}</Text>
-                <Text style={[styles.lessonCount, { color: c.textSecondary }]}>{qCount} soruluk mini quizler</Text>
-              </View>
-              <View style={styles.lessonMetaRow}>
-                <View style={styles.lessonMiniStat}>
-                  <Text style={[styles.lessonMiniNumber, { color: cat.color }]}>{qCount}</Text>
-                  <Text style={[styles.lessonMiniLabel, { color: c.textSecondary }]}>soru</Text>
-                </View>
-                <View style={[styles.lessonActionCircle, { backgroundColor: done ? cat.color + '18' : cat.color }]}>
-                  <Ionicons name={done ? 'checkmark' : 'arrow-forward'} size={16} color={done ? cat.color : '#fff'} />
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* ═══ KONU ANLATIMI ═══ */}
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          <View style={[styles.sectionDot, { backgroundColor: '#10B981' }]} />
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Konu Anlatımı</Text>
-        </View>
-      </View>
-      <View style={{ gap: 10 }}>
-        {[
-          { subject: 'tarih', label: 'Tarih', sub: '13 ünite • Kart + mini quiz', icon: '📜', color: '#EF4444' },
-          { subject: 'cografya', label: 'Coğrafya', sub: '2 ünite • Kart + mini quiz (yeni!)', icon: '🌍', color: '#10B981' },
-          { subject: 'vatandaslik', label: 'Vatandaşlık', sub: '2 ünite • Kart + mini quiz (yeni!)', icon: '🏛️', color: Colors.primary },
-        ].map((item) => (
-          <TouchableOpacity
-            key={item.subject}
-            style={[styles.topicRow, { backgroundColor: c.card, borderColor: c.border }]}
-            onPress={() => router.push({ pathname: '/topic', params: { subject: item.subject } } as never)}
-            activeOpacity={0.85}
-          >
-            <View style={[styles.topicIcon, { backgroundColor: item.color + '15' }]}>
-              <Text style={styles.topicEmoji}>{item.icon}</Text>
-            </View>
-            <View style={styles.topicBody}>
-              <Text style={[styles.topicTitle, { color: c.text }]}>{item.label}</Text>
-              <Text style={[styles.topicSub, { color: c.textSecondary }]}>{item.sub}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* ═══ YANLIŞLARIM ═══ */}
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          <View style={[styles.sectionDot, { backgroundColor: Colors.accent }]} />
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Tekrar</Text>
-        </View>
-      </View>
-      <View style={{ gap: 10 }}>
-        <TouchableOpacity
-          style={[styles.topicRow, { backgroundColor: c.card, borderColor: c.border }]}
-          onPress={() => router.push('/wrong' as never)}
-          activeOpacity={0.85}
-        >
-          <View style={[styles.topicIcon, { backgroundColor: Colors.error + '15' }]}>
-            <Ionicons name="book" size={24} color={Colors.error} />
-          </View>
-          <View style={styles.topicBody}>
-            <Text style={[styles.topicTitle, { color: c.text }]}>Yanlışlarım Defteri</Text>
-            <Text style={[styles.topicSub, { color: c.textSecondary }]}>
-              Yanlış cevapladığın soruları tekrar çöz
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
-        </TouchableOpacity>
-      </View>
-
       {/* Günün Bilgisi */}
       <View style={[styles.tipCard, { backgroundColor: Colors.primary + '08', borderColor: Colors.primary + '20' }]}>
         <View style={styles.tipHeaderRow}>
@@ -586,12 +447,12 @@ const styles = StyleSheet.create({
 
   // ── Header banner ──
   headerBanner: {
-    paddingTop: 58,
-    paddingBottom: 18,
+    paddingTop: 48,
+    paddingBottom: 12,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    marginBottom: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    marginBottom: 0,
     overflow: 'hidden',
   },
   headerGlowLarge: {
@@ -620,34 +481,63 @@ const styles = StyleSheet.create({
   },
   headerCopy: {
     flex: 1,
-    gap: 3,
+    gap: 8,
   },
-  greetingWhite: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.78)' },
-  dateWhite: { fontSize: 24, fontWeight: '900', color: '#fff', lineHeight: 29 },
-  headerMetaRow: {
+  greetingWhite: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.78)' },
+  examCountdown: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 3,
+    alignSelf: 'flex-start',
+    gap: 6,
+    minHeight: 32,
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
   },
-  headerMetaText: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.82)' },
+  examCountdownText: {
+    color: '#fff',
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '800',
+  },
+  examSetButton: {
+    alignSelf: 'flex-start',
+    minHeight: 38,
+    borderRadius: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  examSetButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
   avatarButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.28)',
   },
-  avatar: { width: 44, height: 44, borderRadius: 16 },
+  avatar: { width: 38, height: 38, borderRadius: 14 },
   avatarPlaceholder: {
-    width: 44, height: 44, borderRadius: 16,
+    width: 38, height: 38, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.22)',
   },
-  avatarText: { color: '#fff', fontSize: 18, fontWeight: '900' },
+  avatarText: { color: '#fff', fontSize: 16, fontWeight: '900' },
   avatarCue: {
     position: 'absolute',
     right: -2,
@@ -664,7 +554,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginTop: 16,
+    marginTop: 10,
   },
   headerChip: {
     flexDirection: 'row',
@@ -673,11 +563,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.16)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.16)',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 20,
   },
-  headerChipText: { fontSize: 12, fontWeight: '700', color: '#fff' },
+  headerChipText: { fontSize: 11, fontWeight: '700', color: '#fff' },
 
   // ── Banners ──
   banner: {
@@ -977,102 +867,6 @@ const styles = StyleSheet.create({
   missionsSub: { fontSize: 12, marginTop: -4 },
   missionRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   missionText: { fontSize: 14, flex: 1 },
-
-  // ── Section headers ──
-  sectionHeader: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between', marginHorizontal: 20, marginTop: 4,
-  },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sectionDot: { width: 4, height: 18, borderRadius: 2 },
-  sectionTitle: { fontSize: 17, fontWeight: '800' },
-  sectionHint: { fontSize: 11, fontWeight: '500' },
-
-  // ── Lesson grid ──
-  lessonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginHorizontal: 20 },
-  lessonCard: {
-    flexGrow: 1,
-    flexBasis: '46%',
-    minHeight: 164,
-    borderRadius: 20,
-    padding: 14,
-    gap: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  lessonCardTint: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  lessonOrb: {
-    position: 'absolute',
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    right: -28,
-    top: -24,
-  },
-  lessonCardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  lessonIconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lessonStatusBadge: {
-    minHeight: 28,
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  lessonStatusText: { fontSize: 10, fontWeight: '900' },
-  lessonBody: {
-    gap: 4,
-    minHeight: 44,
-  },
-  lessonLabel: { fontSize: 16, lineHeight: 20, fontWeight: '900' },
-  lessonCount: { fontSize: 11, lineHeight: 15, fontWeight: '600' },
-  lessonMetaRow: {
-    marginTop: 'auto',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  lessonMiniStat: {
-    gap: 0,
-  },
-  lessonMiniNumber: { fontSize: 22, lineHeight: 24, fontWeight: '900' },
-  lessonMiniLabel: { fontSize: 10, fontWeight: '800' },
-  lessonActionCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // ── Topic rows ──
-  topicRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    padding: 14, borderRadius: 14, borderWidth: 1, marginHorizontal: 20,
-  },
-  topicIcon: {
-    width: 46, height: 46, borderRadius: 13,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  topicEmoji: { fontSize: 24 },
-  topicBody: { flex: 1, gap: 2 },
-  topicTitle: { fontSize: 15, fontWeight: '800' },
-  topicSub: { fontSize: 11, fontWeight: '500' },
 
   // ── Tip / Günün Bilgisi ──
   tipCard: { borderRadius: 14, padding: 14, borderWidth: 1, marginHorizontal: 20, gap: 6 },

@@ -31,9 +31,9 @@ app/
 ├── art/                     Günün Genel Kültür Sorusu
 └── wrong/                   Yanlış tekrarı (aralıklı tekrar, 2 gün bekleme)
 
-components/  DailyCultureModal, ExamGoalModal, SeasonResetModal
-constants/   questions.ts (501 soru), artworks.ts (50), facts.ts (42), topics.ts (17 ünite), exams.ts, season.ts
-lib/         firestore.ts (veri katmanı), badges.ts, levels.ts (XP/seviye), notifications.ts, share.ts, demoMode.ts
+components/  DailyCultureModal, ExamGoalModal, SeasonResetModal, ReportQuestionButton
+constants/   questions.ts (902 soru), artworks.ts (81), facts.ts (101), topics.ts (30 ünite: 13 tarih + 10 coğrafya + 7 vatandaşlık), exams.ts, season.ts
+lib/         firestore.ts (veri katmanı), badges.ts, levels.ts (XP/seviye), notifications.ts, share.ts, demoMode.ts, guestName.ts
 ```
 
 ## Kritik Kurallar
@@ -66,7 +66,17 @@ firebase deploy --only firestore:rules,firestore:indexes
 | Google Play | Kapalı test (Alpha); 12 test kullanıcısı; ~16 Tem'de üretim başvurusu açılır (12'nin altına düşerse sayaç sıfırlanır) |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
-Son oturumda ([app/(tabs)/index.tsx](app/(tabs)/index.tsx)) ana ekran yenilendi: iki büyük feature kartı (Günlük 10 Soru + Genel Kültür Soruları), kompakt header, canlı 2x2 ders grid'i. Detay için `git log` ve commit mesajlarına bak — ayrı devir notu dosyası tutulmuyor artık.
+Son oturumda eklenenler (detay için `git log`):
+- **Soru bildirme özelliği**: `ReportQuestionButton` bileşeni + `questionReports` Firestore koleksiyonu. Günlük quiz, ders bazlı quiz ve yanlışlarım ekranlarındaki sonuç/inceleme görünümlerinde "🚩 Bu soruyu bildir" (ampul ikonlu chip) var. Raporları görmek için Firebase Console → Firestore → `questionReports`. Firestore rules deploy edildi.
+- **Sıralama ekranı**: `fetchLeaderboard` varsayılan limiti 50→10 düşürüldü (sadece ilk 10 gösteriliyor).
+- **Misafir isimleri**: `lib/guestName.ts` — "Misafir #XXXXX" yerine uid'den deterministik, sınav temalı takma isim üretiliyor (Aday482 gibi); eski kayıtlar da sıralamada geriye dönük düzeltiliyor.
+- **Kullanıcı nickname değiştirme**: Profil ekranında isim yanındaki ✏️ ikonuyla herkes (misafir dahil) 2-24 karakter nickname belirleyebiliyor.
+- **Yanlışlarım ekranı**: Listedeki bir soruya tıklayınca artık tek soruluk pratik açılıyor (ayrı `quizQueue` state'i); yanlış cevapta soru otomatik kaybolmuyor, "Listeye Dön" ile kullanıcı kendi kararıyla kapatıyor.
+- **Konu anlatımı büyütmesi TAMAMLANDI**: Coğrafya ve Vatandaşlık, Tarih'teki gibi tam ünite setine ulaştı (aşağıya bak).
+- **Ana ekran sadeleştirme**: Header'da tarih / "bugünkü odağın hazır" / quiz hazır metinleri kaldırıldı; sınava kalan gün küçük chip olarak bırakıldı. "Bugünkü plan" kartı kaldırıldı.
+- **Pratik sekmesi**: Ders quizleri, konu anlatımı ve yanlışlar defteri ana ekrandan alınıp yeni `app/(tabs)/practice.tsx` tab ekranına taşındı. Alt tab sırası: Anasayfa → Pratik → Sıralama → Profil.
+- **Pratik kart görselleri**: Ders quiz kartlarına konuya özel silik ikon dokusu eklendi (Tarih, Coğrafya, Vatandaşlık, Güncel).
+- **Yeni güncelleme ekran görüntüleri**: iPhone 16 Pro Max simülatörde 6 adet PNG alındı ve `aso/screenshots/new-update-2026-07-04/` içine kaydedildi: `01-home-top.png`, `02-home-daily-info.png`, `03-practice-quizzes.png`, `04-practice-topics-repeat.png`, `05-leaderboard.png`, `06-profile.png`. Hepsi 1320×2868.
 
 ## v1.3.0 Yol Haritası
 
@@ -84,7 +94,12 @@ Son oturumda ([app/(tabs)/index.tsx](app/(tabs)/index.tsx)) ana ekran yenilendi:
 - [x] Kültür (artworks): 81
 - [x] Günlük bilgi (facts): 101
 
-Bir sonraki büyütme turu için yeni hedef sayılar belirlenip buraya eklenecek.
+**Konu anlatımı büyütme — TAMAMLANDI (`constants/topics.ts`, format: her ünite kolay/orta/zor × ~15 kart + ~10 soru):**
+- [x] Tarih: 13 ünite (t01-t13) — İslamiyet öncesi'nden Cumhuriyet'e kadar
+- [x] Coğrafya: 10 ünite (c01-c10: Konum, İklim, Yerşekilleri, Su Kaynakları, Nüfus-Yerleşme, Tarım, Sanayi, Madenler-Enerji, Ulaşım, Bölgeler)
+- [x] Vatandaşlık: 7 ünite (v01-v07: Devlet-Anayasa, Temel Haklar, Yasama-TBMM, Yürütme-Cumhurbaşkanı, Yargı, Yerel Yönetimler, Uluslararası Kuruluşlar)
+- Yeni ünite eklenirse `app/(tabs)/index.tsx`'teki "N ünite" etiketini de güncelle.
+- Sıradaki büyütme fikri: mevcut ünitelere ek zorluk katmanı, ya da yeni bir ders (örn. Genel Yetenek/Matematik) eklenmesi — henüz karar verilmedi.
 
 ## Yayın Sürecinde Kalan İşler
 

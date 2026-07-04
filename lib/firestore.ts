@@ -13,9 +13,11 @@ import {
   where,
   arrayUnion,
   deleteDoc,
+  addDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getTodayKey } from './quiz';
+import { guestDisplayName, isGuestDisplayName } from './guestName';
 import { SEASON_ID } from '../constants/season';
 import { BadgeId, evaluateNewBadges } from './badges';
 
@@ -344,7 +346,7 @@ export async function saveQuizResult(
 
 export async function fetchLeaderboard(
   period: 'daily' | 'weekly' | 'alltime',
-  count = 50
+  count = 10
 ): Promise<LeaderboardEntry[]> {
   let q;
 
@@ -377,9 +379,14 @@ export async function fetchLeaderboard(
   return snap.docs.map((d, i) => {
     const data = d.data() as Record<string, unknown>;
     const score = (data.score as number | undefined) ?? (data.seasonScore as number | undefined) ?? 0;
+    const uid = data.uid as string;
+    const rawName = data.displayName as string | undefined;
+    // Eski "Misafir #XXXXX" isimlerini de kapsayarak sıralamada daha doğal görünsün diye
+    // deterministik bir takma adla değiştiriyoruz (aynı uid her zaman aynı adı alır).
+    const displayName = isGuestDisplayName(rawName) ? guestDisplayName(uid) : rawName!;
     return {
-      uid: data.uid as string,
-      displayName: (data.displayName as string) ?? 'Anonim',
+      uid,
+      displayName,
       photoURL: (data.photoURL as string) ?? '',
       score,
       rank: i + 1,
@@ -477,6 +484,10 @@ export async function fetchWeeklyResults(uid: string): Promise<{ date: string; s
   return results;
 }
 
+export async function updateUserDisplayName(uid: string, displayName: string): Promise<void> {
+  await updateDoc(doc(db, 'users', uid), { displayName });
+}
+
 export async function updateProfileMeta(uid: string, meta: ProfileMeta): Promise<void> {
   await updateDoc(doc(db, 'users', uid), { profileMeta: meta });
   // also flip profileComplete mission
@@ -531,6 +542,31 @@ export async function logWrongQuestion(uid: string, questionId: string): Promise
 export async function markQuestionMastered(uid: string, questionId: string): Promise<void> {
   const ref = doc(db, 'users', uid, 'wrongQuestions', questionId);
   await updateDoc(ref, { mastered: true });
+}
+
+export type QuestionReportReason = 'wrong_answer' | 'unclear' | 'typo' | 'other';
+
+export async function reportQuestion(params: {
+  uid: string;
+  questionId: string;
+  category: string;
+  question: string;
+  userAnswerIndex: number;
+  correctIndex: number;
+  reason: QuestionReportReason;
+  note?: string;
+}): Promise<void> {
+  await addDoc(collection(db, 'questionReports'), {
+    uid: params.uid,
+    questionId: params.questionId,
+    category: params.category,
+    question: params.question,
+    userAnswerIndex: params.userAnswerIndex,
+    correctIndex: params.correctIndex,
+    reason: params.reason,
+    note: params.note ?? '',
+    createdAt: serverTimestamp(),
+  });
 }
 
 export async function clearMasteredQuestion(uid: string, questionId: string): Promise<void> {

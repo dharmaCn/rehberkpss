@@ -18,6 +18,7 @@ import { fetchWrongQuestionIds, markQuestionMastered, clearMasteredQuestion } fr
 import { QUESTION_POOL, Question } from '../../constants/questions';
 import { getCategoryLabel, getCategoryColor } from '../../lib/quiz';
 import { Colors } from '../../constants/colors';
+import ReportQuestionButton from '../../components/ReportQuestionButton';
 
 export default function WrongScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -27,6 +28,7 @@ export default function WrongScreen() {
 
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [quizQueue, setQuizQueue] = useState<Question[]>([]);
   const [mode, setMode] = useState<'list' | 'quiz' | 'done'>('list');
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -58,7 +60,16 @@ export default function WrongScreen() {
   function startQuiz() {
     if (questions.length === 0) return;
     const shuffled = [...questions].sort(() => Math.random() - 0.5).slice(0, Math.min(10, questions.length));
-    setQuestions(shuffled);
+    setQuizQueue(shuffled);
+    setIndex(0);
+    setSelected(null);
+    setCorrectCount(0);
+    setMastered([]);
+    setMode('quiz');
+  }
+
+  function startQuizForQuestion(q: Question) {
+    setQuizQueue([q]);
     setIndex(0);
     setSelected(null);
     setCorrectCount(0);
@@ -68,7 +79,7 @@ export default function WrongScreen() {
 
   function handleAnswer(optIndex: number) {
     if (selected !== null || !user) return;
-    const q = questions[index];
+    const q = quizQueue[index];
     const isCorrect = optIndex === q.correctIndex;
     setSelected(optIndex);
     Haptics.notificationAsync(
@@ -83,10 +94,15 @@ export default function WrongScreen() {
         Animated.timing(pulse, { toValue: 0, duration: 250, useNativeDriver: true }),
       ]).start();
     }
+    // Tek soruluk pratikte (listeden tek tıklamayla açılan) otomatik ilerlemiyoruz —
+    // kullanıcı açıklamayı okuyup "Bu soruyu bildir" seçeneğini kullanabilsin diye
+    // "Listeye Dön" ile kendi kararıyla kapatır.
+    if (quizQueue.length === 1) return;
     setTimeout(() => {
       const next = index + 1;
-      if (next >= questions.length) {
+      if (next >= quizQueue.length) {
         setMode('done');
+        load();
       } else {
         setIndex(next);
         setSelected(null);
@@ -114,21 +130,21 @@ export default function WrongScreen() {
         <Text style={styles.bigEmoji}>🎯</Text>
         <Text style={[styles.doneTitle, { color: c.text }]}>Bitti!</Text>
         <Text style={[styles.doneSub, { color: c.textSecondary }]}>
-          {correctCount}/{questions.length} doğru — {mastered.length} soru defterinden silindi.
+          {correctCount}/{quizQueue.length} doğru — {mastered.length} soru defterinden silindi.
         </Text>
         <TouchableOpacity
           style={[styles.primaryBtn, { backgroundColor: Colors.primary, marginTop: 24 }]}
-          onPress={() => router.back()}
+          onPress={() => setMode('list')}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryBtnText}>Ana Sayfaya Dön</Text>
+          <Text style={styles.primaryBtnText}>Listeye Dön</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   if (mode === 'quiz') {
-    const q = questions[index];
+    const q = quizQueue[index];
     return (
       <View style={[styles.quizContainer, { backgroundColor: c.background }]}>
         <View style={styles.quizHeader}>
@@ -138,7 +154,7 @@ export default function WrongScreen() {
           ])}>
             <Text style={[styles.exit, { color: c.textSecondary }]}>✕</Text>
           </TouchableOpacity>
-          <Text style={[styles.counter, { color: c.textSecondary }]}>{index + 1}/{questions.length}</Text>
+          <Text style={[styles.counter, { color: c.textSecondary }]}>{index + 1}/{quizQueue.length}</Text>
         </View>
 
         <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(q.category) + '22' }]}>
@@ -191,6 +207,26 @@ export default function WrongScreen() {
             <Text style={[styles.tipText, { color: c.text }]}>{q.aciklama}</Text>
           </View>
         )}
+
+        {selected !== null && (
+          <ReportQuestionButton
+            questionId={q.id}
+            category={q.category}
+            question={q.question}
+            userAnswerIndex={selected}
+            correctIndex={q.correctIndex}
+          />
+        )}
+
+        {selected !== null && quizQueue.length === 1 && (
+          <TouchableOpacity
+            style={[styles.primaryBtn, { backgroundColor: Colors.primary, marginTop: 16 }]}
+            onPress={() => { setMode('list'); load(); }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.primaryBtnText}>Listeye Dön</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -240,7 +276,12 @@ export default function WrongScreen() {
 
           <View style={{ gap: 10, marginTop: 8 }}>
             {questions.map((q) => (
-              <View key={q.id} style={[styles.itemCard, { backgroundColor: c.card, borderColor: c.border }]}>
+              <TouchableOpacity
+                key={q.id}
+                style={[styles.itemCard, { backgroundColor: c.card, borderColor: c.border }]}
+                onPress={() => startQuizForQuestion(q)}
+                activeOpacity={0.8}
+              >
                 <View style={[styles.itemDot, { backgroundColor: getCategoryColor(q.category) }]} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.itemCat, { color: getCategoryColor(q.category) }]}>{getCategoryLabel(q.category)}</Text>
@@ -249,7 +290,7 @@ export default function WrongScreen() {
                 <TouchableOpacity onPress={() => removeFromList(q.id)} hitSlop={10}>
                   <Ionicons name="close-circle" size={22} color={c.textSecondary} />
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </>

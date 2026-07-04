@@ -10,6 +10,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
+import { guestDisplayName } from './guestName';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
@@ -45,14 +46,19 @@ export function getAuthSync() {
   return _auth;
 }
 
+export async function updateDisplayNameAsync(displayName: string): Promise<void> {
+  const user = getAuthSync()?.currentUser;
+  if (!user) throw new Error('Oturum açık değil');
+  await updateProfile(user, { displayName });
+}
+
 export async function signInGuestAsync(): Promise<import('firebase/auth').User | null> {
   const auth = getFirebaseAuth();
   if (!auth) throw new Error('Firebase Auth başlatılamadı');
   const result = await signInAnonymously(auth);
   const user = result.user;
-  const guestSuffix = user.uid.slice(-5).toUpperCase();
   try {
-    await updateProfile(user, { displayName: `Misafir #${guestSuffix}` });
+    await updateProfile(user, { displayName: guestDisplayName(user.uid) });
   } catch {
     // devam et
   }

@@ -23,6 +23,7 @@ import {
 import { recordQuizCompletedAndMaybePrompt } from '../../lib/review';
 import { Question } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
+import ReportQuestionButton from '../../components/ReportQuestionButton';
 
 const QUESTION_TIME = 30;
 
@@ -254,6 +255,14 @@ export default function CategoryQuizSession() {
                         <Text style={[styles.reviewAciklamaText, { color: c.text }]}>{rq.aciklama}</Text>
                       </View>
                     )}
+
+                    <ReportQuestionButton
+                      questionId={rq.id}
+                      category={rq.category}
+                      question={rq.question}
+                      userAnswerIndex={userAns}
+                      correctIndex={rq.correctIndex}
+                    />
                   </View>
                 )}
               </View>

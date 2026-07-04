@@ -40,6 +40,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="practice"
+        options={{
+          title: 'Pratik',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon name={focused ? 'library' : 'library-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Sıralama',

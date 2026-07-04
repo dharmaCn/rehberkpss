@@ -75,6 +75,15 @@ service cloud.firestore {
       // Kullanıcı yalnızca kendi sonuçlarını silebilir (hesap silme)
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
+
+    // Soru hata bildirimleri — kullanıcı sadece kendi adına rapor oluşturabilir,
+    // okuma/güncelleme/silme yok (geliştirici Firebase Console üzerinden inceler)
+    match /questionReports/{reportId} {
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && validQuestionReportData(request.resource.data);
+      allow read, update, delete: if false;
+    }
   }
 
   // Kullanıcı verisi doğrulama
@@ -105,6 +114,18 @@ service cloud.firestore {
       && data.correct is int && data.correct >= 0 && data.correct <= 5
       && data.date is string && data.date.size() == 10
       && data.category in ['tarih', 'cografya', 'vatandaslik', 'guncel'];
+  }
+
+  // Soru bildirimi doğrulama
+  function validQuestionReportData(data) {
+    return data.keys().hasAll(['uid', 'questionId', 'category', 'question', 'userAnswerIndex', 'correctIndex', 'reason'])
+      && data.uid is string
+      && data.questionId is string
+      && data.category is string
+      && data.question is string && data.question.size() <= 1000
+      && data.userAnswerIndex is int
+      && data.correctIndex is int
+      && data.reason in ['wrong_answer', 'unclear', 'typo', 'other'];
   }
 
   // Quiz sonucu doğrulama

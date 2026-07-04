@@ -16,12 +16,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { getAuthSync, deleteAccountAsync } from '../../lib/firebase';
+import { getAuthSync, deleteAccountAsync, updateDisplayNameAsync } from '../../lib/firebase';
 import {
   fetchUserProfile,
   fetchUserRank,
   fetchWeeklyResults,
   markShareMission,
+  updateUserDisplayName,
   UserProfile,
 } from '../../lib/firestore';
 import { Colors } from '../../constants/colors';
@@ -46,8 +47,27 @@ export default function ProfileScreen() {
   const [delVisible, setDelVisible] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [nickModal, setNickModal] = useState(false);
+  const [nickText, setNickText] = useState('');
+  const [savingNick, setSavingNick] = useState(false);
 
   const canDelete = confirmText.trim().toLowerCase() === 'hesapsil';
+
+  async function handleSaveNickname() {
+    const trimmed = nickText.trim();
+    if (!user || trimmed.length < 2 || trimmed.length > 24 || savingNick) return;
+    setSavingNick(true);
+    try {
+      await updateDisplayNameAsync(trimmed);
+      await updateUserDisplayName(user.uid, trimmed);
+      setNickModal(false);
+      refresh();
+    } catch {
+      Alert.alert('Hata', 'İsim güncellenemedi, tekrar dener misin?');
+    } finally {
+      setSavingNick(false);
+    }
+  }
 
   const refresh = useCallback(() => {
     if (!user) return;
@@ -167,6 +187,16 @@ export default function ProfileScreen() {
         </View>
         <View style={styles.nameRow}>
           <Text style={[styles.name, { color: c.text }]}>{profile?.displayName ?? user?.displayName ?? 'Kullanıcı'}</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setNickText(profile?.displayName ?? user?.displayName ?? '');
+              setNickModal(true);
+            }}
+            hitSlop={10}
+            style={styles.editNameBtn}
+          >
+            <Ionicons name="pencil" size={15} color={c.textSecondary} />
+          </TouchableOpacity>
           {user?.isAnonymous && (
             <View style={[styles.guestBadge, { backgroundColor: Colors.primary + '22' }]}>
               <Text style={[styles.guestBadgeText, { color: Colors.primary }]}>Misafir</Text>
@@ -361,6 +391,44 @@ export default function ProfileScreen() {
         <Text style={[styles.signOutText, { color: Colors.error }]}>Çıkış Yap</Text>
       </TouchableOpacity>
 
+      <Modal visible={nickModal} transparent animationType="fade" onRequestClose={() => !savingNick && setNickModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: c.card }]}>
+            <Text style={[styles.modalTitle, { color: c.text }]}>İsmini Değiştir</Text>
+            <Text style={[styles.modalDesc, { color: c.textSecondary }]}>
+              Sıralamada ve profilinde görünecek isim (2-24 karakter).
+            </Text>
+            <TextInput
+              value={nickText}
+              onChangeText={setNickText}
+              placeholder="Örn. Ahmet K."
+              placeholderTextColor={c.textSecondary}
+              maxLength={24}
+              editable={!savingNick}
+              style={[styles.modalInput, { borderColor: c.border, color: c.text, backgroundColor: c.background }]}
+            />
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { borderColor: c.border, borderWidth: 1.5 }]}
+                onPress={() => setNickModal(false)}
+                disabled={savingNick}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.modalBtnText, { color: c.text }]}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: Colors.primary, opacity: nickText.trim().length >= 2 && !savingNick ? 1 : 0.5 }]}
+                onPress={handleSaveNickname}
+                disabled={nickText.trim().length < 2 || savingNick}
+                activeOpacity={0.85}
+              >
+                {savingNick ? <ActivityIndicator color="#fff" size="small" /> : <Text style={[styles.modalBtnText, { color: '#fff' }]}>Kaydet</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {!user?.isAnonymous && (
         <>
           <TouchableOpacity
@@ -432,6 +500,7 @@ const styles = StyleSheet.create({
 
   hero: { alignItems: 'center', gap: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  editNameBtn: { padding: 4 },
   guestBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   guestBadgeText: { fontSize: 12, fontWeight: '700' },
   avatarRing: { borderWidth: 3, borderRadius: 52, padding: 3 },
