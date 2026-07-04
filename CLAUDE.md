@@ -76,13 +76,15 @@ Son oturumda ([app/(tabs)/index.tsx](app/(tabs)/index.tsx)) ana ekran yenilendi:
 - [ ] Arkadaşla Düello (link paylaşımı + 5 soru, kazanan rozet)
 - [ ] Seviye/XP unvanları genişlet (Çaylak → Kâtip → Uzman → Şampiyon → …)
 
-**İçerik büyütme:**
-- [ ] Vatandaşlık: 75 → 150 (öncelikli, en zayıf ders)
-- [ ] Güncel: 50 → 100 (2026 olayları)
-- [ ] Coğrafya: 150 → 200
-- [ ] Tarih: 226 → 275
-- [ ] Kültür (artworks): 50 → 80
-- [ ] Günlük bilgi (facts): 42 → 100
+**İçerik büyütme — tamamlandı (2026-07-04 itibarıyla mevcut sayılar):**
+- [x] Vatandaşlık: 199 soru (+49, web onay masasından geçirilerek eklendi)
+- [x] Güncel: 149 soru (+49, web onay masasından geçirilerek eklendi)
+- [x] Coğrafya: 235 soru (+35, web onay masasından geçirilerek eklendi)
+- [x] Tarih: 319 soru (+44, web onay masasından geçirilerek eklendi)
+- [x] Kültür (artworks): 81
+- [x] Günlük bilgi (facts): 101
+
+Bir sonraki büyütme turu için yeni hedef sayılar belirlenip buraya eklenecek.
 
 ## Yayın Sürecinde Kalan İşler
 
