@@ -8,12 +8,12 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { getAuthSync } from '../../lib/firebase';
-import { recordArtAnswer, ArtStat } from '../../lib/firestore';
+import { recordArtAnswer, hasAnsweredDailyArt, ArtStat } from '../../lib/firestore';
 import {
   ART_QUESTIONS,
   ArtQuestion,
@@ -52,6 +52,20 @@ export default function ArtScreen() {
   const [stat, setStat] = useState<ArtStat | null>(null);
   const [imgError, setImgError] = useState(false);
   const [imgLoading, setImgLoading] = useState(true);
+
+  // Günün sorusu daha önce cevaplanmışsa "Sonucu Gör" ekranını salt-okunur aç —
+  // yoksa selected null başladığı için soru tekrar işaretlenebilir hale geliyordu.
+  useEffect(() => {
+    if (!isDaily || !user) return;
+    let cancelled = false;
+    hasAnsweredDailyArt(user.uid, dailyQ.id).then((answered) => {
+      if (!cancelled && answered) {
+        setSelected(dailyQ.correctIndex);
+        setImgLoading(true);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [isDaily, user, dailyQ]);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)'));
 

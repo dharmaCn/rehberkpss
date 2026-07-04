@@ -230,7 +230,7 @@ export default function HomeScreen() {
               <View style={styles.quizHeroIcon}>
                 <Ionicons name="timer" size={22} color="#fff" />
               </View>
-              <View>
+              <View style={styles.quizHeroTextCol}>
                 <Text style={styles.quizHeroKicker}>30 sn tempo</Text>
                 <Text style={styles.quizHeroTitle}>Hızlı günlük pratik</Text>
               </View>
@@ -628,6 +628,9 @@ const styles = StyleSheet.create({
     gap: 10,
     flex: 1,
     paddingRight: 10,
+  },
+  quizHeroTextCol: {
+    flex: 1,
   },
   quizHeroIcon: {
     width: 50,
