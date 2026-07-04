@@ -45,13 +45,20 @@ export function publicDisplayName(uid: string, rawName?: string | null): string 
   return isGuestDisplayName(rawName ?? undefined) ? guestDisplayName(uid) : (rawName ?? 'Anonim');
 }
 
+async function docExists(path: string[]): Promise<boolean> {
+  try {
+    const snap = await getDoc(doc(db, path[0], ...path.slice(1)));
+    return snap.exists();
+  } catch {
+    // İzin/ağ hatası durum kontrolünü engellemesin — "yok" varsay
+    return false;
+  }
+}
+
 export async function getFriendStatus(myUid: string, otherUid: string): Promise<FriendStatus> {
-  const friendSnap = await getDoc(doc(db, 'users', myUid, 'friends', otherUid));
-  if (friendSnap.exists()) return 'friends';
-  const outSnap = await getDoc(doc(db, 'friendRequests', requestId(myUid, otherUid)));
-  if (outSnap.exists()) return 'outgoing';
-  const inSnap = await getDoc(doc(db, 'friendRequests', requestId(otherUid, myUid)));
-  if (inSnap.exists()) return 'incoming';
+  if (await docExists(['users', myUid, 'friends', otherUid])) return 'friends';
+  if (await docExists(['friendRequests', requestId(myUid, otherUid)])) return 'outgoing';
+  if (await docExists(['friendRequests', requestId(otherUid, myUid)])) return 'incoming';
   return 'none';
 }
 
