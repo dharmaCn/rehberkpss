@@ -80,6 +80,9 @@ Son oturumda eklenenler (detay için `git log`):
 
 ## v1.3.0 Yol Haritası
 
+**Özellikler:**
+- [x] Arkadaş ekleme (2026-07-05): `lib/friends.ts` + `app/user/[uid].tsx` (herkese açık profil). Sıralamadaki kullanıcıya dokununca profili açılır, "Arkadaş Ol" ile istek gönderilir; profil sekmesinde gelen istekler (kabul/ret) ve arkadaş listesi görünür. Firestore: `friendRequests/{from_to}` koleksiyonu + `users/{uid}/friends/{friendUid}` alt koleksiyonu; rules güncellendi (**deploy gerekli**). Sohbet yok, ileride düello için zemin.
+
 **Özellikler (henüz yapılmadı):**
 - [ ] Haftalık Deneme Sınavı (pazar 30 soru, yüzdelik dilim, gerçek sınav formatı)
 - [ ] Aralıklı yanlış tekrarı cilası (`app/wrong/` iskeleti hazır)

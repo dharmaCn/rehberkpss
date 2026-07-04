@@ -10,6 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { getAuthSync } from '../../lib/firebase';
 import { fetchLeaderboard, LeaderboardEntry } from '../../lib/firestore';
 import { Colors } from '../../constants/colors';
@@ -26,6 +27,7 @@ export default function LeaderboardScreen() {
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
   const user = getAuthSync()?.currentUser ?? null;
+  const router = useRouter();
 
   const [period, setPeriod] = useState<Period>('daily');
   const [data, setData] = useState<LeaderboardEntry[]>([]);
@@ -58,6 +60,10 @@ export default function LeaderboardScreen() {
   const top3 = data.slice(0, 3);
   const rest = data.slice(3);
   const myRank = data.findIndex((e) => e.uid === user?.uid);
+
+  function openProfile(uid: string) {
+    router.push(`/user/${uid}`);
+  }
 
   function getMedalColor(rank: number) {
     if (rank === 1) return '#F59E0B';
@@ -110,7 +116,7 @@ export default function LeaderboardScreen() {
             <View style={styles.podium}>
               {/* 2nd place */}
               {top3[1] && (
-                <View style={[styles.podiumItem, { marginTop: 32 }]}>
+                <TouchableOpacity style={[styles.podiumItem, { marginTop: 32 }]} onPress={() => openProfile(top3[1].uid)} activeOpacity={0.8}>
                   {top3[1].photoURL ? (
                     <Image source={{ uri: top3[1].photoURL }} style={[styles.podiumAvatar, { borderColor: '#94A3B8' }]} />
                   ) : (
@@ -121,11 +127,11 @@ export default function LeaderboardScreen() {
                   <Text style={styles.podiumMedal}>🥈</Text>
                   <Text style={[styles.podiumName, { color: c.text }]} numberOfLines={1}>{top3[1].displayName.split(' ')[0]}</Text>
                   <Text style={[styles.podiumScore, { color: c.textSecondary }]}>{top3[1].score} pt</Text>
-                </View>
+                </TouchableOpacity>
               )}
 
               {/* 1st place */}
-              <View style={[styles.podiumItem, styles.podiumFirst]}>
+              <TouchableOpacity style={[styles.podiumItem, styles.podiumFirst]} onPress={() => openProfile(top3[0].uid)} activeOpacity={0.8}>
                 {top3[0].photoURL ? (
                   <Image source={{ uri: top3[0].photoURL }} style={[styles.podiumAvatar, styles.podiumAvatarFirst, { borderColor: '#F59E0B' }]} />
                 ) : (
@@ -136,11 +142,11 @@ export default function LeaderboardScreen() {
                 <Text style={styles.podiumMedal}>🥇</Text>
                 <Text style={[styles.podiumName, { color: c.text }]} numberOfLines={1}>{top3[0].displayName.split(' ')[0]}</Text>
                 <Text style={[styles.podiumScore, { color: c.textSecondary }]}>{top3[0].score} pt</Text>
-              </View>
+              </TouchableOpacity>
 
               {/* 3rd place */}
               {top3[2] && (
-                <View style={[styles.podiumItem, { marginTop: 48 }]}>
+                <TouchableOpacity style={[styles.podiumItem, { marginTop: 48 }]} onPress={() => openProfile(top3[2].uid)} activeOpacity={0.8}>
                   {top3[2].photoURL ? (
                     <Image source={{ uri: top3[2].photoURL }} style={[styles.podiumAvatar, { borderColor: '#D97706' }]} />
                   ) : (
@@ -151,7 +157,7 @@ export default function LeaderboardScreen() {
                   <Text style={styles.podiumMedal}>🥉</Text>
                   <Text style={[styles.podiumName, { color: c.text }]} numberOfLines={1}>{top3[2].displayName.split(' ')[0]}</Text>
                   <Text style={[styles.podiumScore, { color: c.textSecondary }]}>{top3[2].score} pt</Text>
-                </View>
+                </TouchableOpacity>
               )}
             </View>
           )}
@@ -161,13 +167,15 @@ export default function LeaderboardScreen() {
             {rest.map((entry, i) => {
               const isMe = entry.uid === user?.uid;
               return (
-                <View
+                <TouchableOpacity
                   key={entry.uid}
                   style={[
                     styles.listRow,
                     i < rest.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.border },
                     isMe && { backgroundColor: Colors.primary + '11' },
                   ]}
+                  onPress={() => openProfile(entry.uid)}
+                  activeOpacity={0.7}
                 >
                   <Text style={[styles.rank, { color: c.textSecondary }]}>#{entry.rank}</Text>
                   {entry.photoURL ? (
@@ -181,7 +189,7 @@ export default function LeaderboardScreen() {
                     {entry.displayName}{isMe ? ' (Sen)' : ''}
                   </Text>
                   <Text style={[styles.listScore, { color: Colors.primary }]}>{entry.score} pt</Text>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>

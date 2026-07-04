@@ -30,6 +30,36 @@ service cloud.firestore {
       match /artAnswers/{questionId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
+
+      // Arkadaş listesi: sahibi veya karşı taraf yazabilir (kabul eden iki tarafa
+      // da yazar), silme de aynı şekilde (arkadaşlıktan çıkma iki taraflı).
+      match /friends/{friendUid} {
+        allow read: if request.auth != null
+                    && (request.auth.uid == uid || request.auth.uid == friendUid);
+        allow create: if request.auth != null
+                      && (request.auth.uid == uid || request.auth.uid == friendUid)
+                      && request.resource.data.uid == friendUid;
+        allow delete: if request.auth != null
+                      && (request.auth.uid == uid || request.auth.uid == friendUid);
+        allow update: if false;
+      }
+    }
+
+    // Arkadaşlık istekleri — doküman id: fromUid_toUid
+    match /friendRequests/{requestId} {
+      allow read: if request.auth != null
+                  && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      allow create: if request.auth != null
+                    && requestId == request.auth.uid + '_' + request.resource.data.to
+                    && request.resource.data.from == request.auth.uid
+                    && request.resource.data.from != request.resource.data.to
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.fromName is string
+                    && request.resource.data.fromName.size() <= 100;
+      // Gönderen iptal edebilir, alıcı kabul/ret sonrası silebilir
+      allow delete: if request.auth != null
+                    && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      allow update: if false;
     }
 
     // Eser sorusu istatistik sayaçları (toplam / doğru). Sosyal kanıt için herkes okur,

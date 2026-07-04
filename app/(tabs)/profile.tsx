@@ -13,7 +13,7 @@ import {
   Switch,
 } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuthSync, deleteAccountAsync, updateDisplayNameAsync } from '../../lib/firebase';
@@ -25,6 +25,14 @@ import {
   updateUserDisplayName,
   UserProfile,
 } from '../../lib/firestore';
+import {
+  FriendEntry,
+  FriendRequest,
+  fetchFriends,
+  fetchIncomingRequests,
+  acceptFriendRequest,
+  declineFriendRequest,
+} from '../../lib/friends';
 import { Colors } from '../../constants/colors';
 import { BADGES, BadgeId } from '../../lib/badges';
 import { getLevelInfo } from '../../lib/levels';
@@ -37,8 +45,12 @@ export default function ProfileScreen() {
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
   const user = getAuthSync()?.currentUser ?? null;
+  const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [friends, setFriends] = useState<FriendEntry[]>([]);
+  const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [reqBusy, setReqBusy] = useState<string | null>(null);
   const [ranks, setRanks] = useState({ daily: 0, weekly: 0, alltime: 0 });
   const [loading, setLoading] = useState(true);
   const [weekly, setWeekly] = useState<{ date: string; score: number }[]>([]);
@@ -78,12 +90,16 @@ export default function ProfileScreen() {
       fetchUserRank(user.uid, 'alltime'),
       fetchWeeklyResults(user.uid),
       isEnabled(),
+      fetchFriends(user.uid).catch(() => [] as FriendEntry[]),
+      fetchIncomingRequests(user.uid).catch(() => [] as FriendRequest[]),
     ])
-      .then(([prof, daily, weekly, alltime, week, en]) => {
+      .then(([prof, daily, weekly, alltime, week, en, frs, reqs]) => {
         setProfile(prof);
         setRanks({ daily, weekly, alltime });
         setWeekly(week.map((w) => ({ date: w.date, score: w.score })));
         setNotif(en);
+        setFriends(frs);
+        setRequests(reqs);
       })
       .finally(() => setLoading(false));
   }, [user]);
@@ -127,6 +143,23 @@ export default function ProfileScreen() {
     if (ok) {
       await markShareMission(user.uid);
       refresh();
+    }
+  }
+
+  async function handleRequest(fromUid: string, accept: boolean) {
+    if (!user || reqBusy) return;
+    setReqBusy(fromUid);
+    try {
+      if (accept) {
+        await acceptFriendRequest(user.uid, fromUid);
+      } else {
+        await declineFriendRequest(user.uid, fromUid);
+      }
+      refresh();
+    } catch {
+      Alert.alert('Hata', 'İşlem tamamlanamadı, tekrar dener misin?');
+    } finally {
+      setReqBusy(null);
     }
   }
 
@@ -279,6 +312,95 @@ export default function ProfileScreen() {
           <Text style={[styles.streakLbl, { color: c.textSecondary }]}>Freeze</Text>
         </View>
       </View>
+
+      {/* Arkadaşlık istekleri */}
+      {requests.length > 0 && (
+        <>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Arkadaşlık İstekleri</Text>
+          <View style={[styles.friendsCard, { backgroundColor: c.card, borderColor: c.border }]}>
+            {requests.map((r, i) => (
+              <View
+                key={r.from}
+                style={[styles.friendRow, i < requests.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.border }]}
+              >
+                <TouchableOpacity
+                  style={styles.friendInfo}
+                  onPress={() => router.push(`/user/${r.from}`)}
+                  activeOpacity={0.7}
+                >
+                  {r.fromPhoto ? (
+                    <Image source={{ uri: r.fromPhoto }} style={styles.friendAvatar} />
+                  ) : (
+                    <View style={[styles.friendAvatarPlaceholder, { backgroundColor: Colors.primary }]}>
+                      <Text style={styles.friendAvatarText}>{r.fromName[0]}</Text>
+                    </View>
+                  )}
+                  <Text style={[styles.friendName, { color: c.text }]} numberOfLines={1}>{r.fromName}</Text>
+                </TouchableOpacity>
+                {reqBusy === r.from ? (
+                  <ActivityIndicator color={Colors.primary} size="small" />
+                ) : (
+                  <View style={styles.reqBtns}>
+                    <TouchableOpacity
+                      style={[styles.reqBtn, { backgroundColor: Colors.primary }]}
+                      onPress={() => handleRequest(r.from, true)}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="checkmark" size={18} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.reqBtn, { backgroundColor: c.border }]}
+                      onPress={() => handleRequest(r.from, false)}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="close" size={18} color={c.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
+      {/* Arkadaşlar */}
+      <Text style={[styles.sectionTitle, { color: c.text }]}>Arkadaşlarım</Text>
+      {friends.length === 0 ? (
+        <View style={[styles.friendsEmpty, { backgroundColor: c.card, borderColor: c.border }]}>
+          <Text style={styles.friendsEmptyEmoji}>👥</Text>
+          <Text style={[styles.friendsEmptyText, { color: c.textSecondary }]}>
+            Henüz arkadaşın yok. Sıralamadan bir kullanıcıya dokunup arkadaşlık isteği gönderebilirsin.
+          </Text>
+        </View>
+      ) : (
+        <View style={[styles.friendsCard, { backgroundColor: c.card, borderColor: c.border }]}>
+          {friends.map((f, i) => (
+            <TouchableOpacity
+              key={f.uid}
+              style={[styles.friendRow, i < friends.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.border }]}
+              onPress={() => router.push(`/user/${f.uid}`)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.friendInfo}>
+                {f.photoURL ? (
+                  <Image source={{ uri: f.photoURL }} style={styles.friendAvatar} />
+                ) : (
+                  <View style={[styles.friendAvatarPlaceholder, { backgroundColor: Colors.primary }]}>
+                    <Text style={styles.friendAvatarText}>{f.displayName[0]}</Text>
+                  </View>
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.friendName, { color: c.text }]} numberOfLines={1}>{f.displayName}</Text>
+                  <Text style={[styles.friendSub, { color: c.textSecondary }]}>
+                    🏆 {f.seasonScore.toLocaleString('tr-TR')} pt{f.currentStreak > 0 ? `  ·  🔥 ${f.currentStreak} gün` : ''}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {/* Haftalık özet */}
       {weekly.length > 0 && (
@@ -549,6 +671,20 @@ const styles = StyleSheet.create({
   weeklyDay: { fontSize: 10, fontWeight: '600' },
 
   sectionTitle: { fontSize: 18, fontWeight: '700' },
+
+  friendsCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
+  friendRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
+  friendInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  friendAvatar: { width: 40, height: 40, borderRadius: 20 },
+  friendAvatarPlaceholder: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  friendAvatarText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  friendName: { fontSize: 14, fontWeight: '700' },
+  friendSub: { fontSize: 12, marginTop: 2 },
+  reqBtns: { flexDirection: 'row', gap: 8 },
+  reqBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  friendsEmpty: { borderRadius: 16, borderWidth: 1, padding: 18, alignItems: 'center', gap: 8 },
+  friendsEmptyEmoji: { fontSize: 28 },
+  friendsEmptyText: { fontSize: 13, textAlign: 'center', lineHeight: 19 },
 
   badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   badge: {
