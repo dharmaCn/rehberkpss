@@ -31,9 +31,12 @@ app/
 ├── art/                     Günün Genel Kültür Sorusu
 └── wrong/                   Yanlış tekrarı (aralıklı tekrar, 2 gün bekleme)
 
-components/  DailyCultureModal, ExamGoalModal, SeasonResetModal, ReportQuestionButton
+components/  DailyCultureModal, ExamGoalModal, SeasonResetModal, ReportQuestionButton, DuelRunner
 constants/   questions.ts (902 soru), artworks.ts (81), facts.ts (101), topics.ts (30 ünite: 13 tarih + 10 coğrafya + 7 vatandaşlık), exams.ts, season.ts
-lib/         firestore.ts (veri katmanı), badges.ts, levels.ts (XP/seviye), notifications.ts, share.ts, demoMode.ts, guestName.ts
+lib/         firestore.ts (veri katmanı), badges.ts, levels.ts (XP/seviye), titles.ts (Aday Kimliği unvanları), categoryAnalysis.ts (Zayıf Konu Radarı), duels.ts, notifications.ts, share.ts, demoMode.ts, guestName.ts, onboarding.ts
+app/duel/    Arkadaşla düello (yeni + [id] sonuç ekranı)
+app/evening/ Akşam Sınavı (20:00'de açılan ek 10 soru)
+app/onboarding.tsx  Yeni kullanıcı karşılama akışı
 ```
 
 ## Kritik Kurallar
@@ -57,16 +60,23 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-07-07)
+## Güncel Durum (2026-07-10)
 
 | Şey | Durum |
 |---|---|
-| Versiyon | v1.3.0 (iOS build 27, Android versionCode 5) |
-| App Store | **Review geçti, yayında** |
+| Versiyon | v1.3.0 kod tabanı, iOS **build 29 TestFlight'a submit edildi** (2026-07-10) — Android versionCode 5 hâlâ güncel |
+| App Store | Production'da yayında olan build 27; build 29 TestFlight işleniyor, henüz production'a submit edilmedi |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
-Son oturumda eklenenler (detay için `git log`):
+**⚠️ Build notu:** `@sentry/react-native` eklendi ama organizasyon/proje/token yapılandırılmadı — Xcode build'inde source map yükleme adımı bu yüzden hata veriyordu. `eas.json` → `build.production.env.SENTRY_DISABLE_AUTO_UPLOAD=true` ile şimdilik atlanıyor (build 29 bu düzeltmeyle geçti). Sentry'yi gerçek kullanmak istersen org/proje/authToken ayarlanıp bu env kaldırılmalı.
+
+### 2026-07-10 oturumunda eklenenler
+- **Aday Kimliği**: `lib/titles.ts` — ders performansına (categoryStats), streak'e ve haftalık gelişime göre kazanılan 12 unvanlık sistem (örn. "Tarih Kâşifi", "Dört Yönlü Aday"). Öncelik sıralı `evaluateTitle()` ile hesaplanıp `saveCategoryQuizResult` içinde her ders quizinden sonra güncelleniyor. Profilde (kendi + arkadaş) ve sıralamanın "Tüm Zamanlar" sekmesinde görünüyor.
+- **Zayıf Konu Radarı**: `lib/categoryAnalysis.ts` — `categoryStats`'tan ders bazlı doğruluk dağılımını (en zayıftan güçlüye) hesaplıyor. Profilde "En zayıf dersin: X" satırı (`/wrong`'a yönlendirir) + Yanlışlarım Defteri'nde tam radar kartı. Ünite/konu bazlı analiz şu an **mümkün değil** — sorularda topicId etiketi yok, ayrı bir migration gerekir.
+- Bu iki özellikle birlikte önceden kod tabanında olup commit'lenmemiş büyük bir birikim de commit'lendi: **Arkadaşla Düello** (v1.4.0, aşağıda detaylı), **Akşam Sınavı** (her gün 20:00'de açılan ek 10 soru, `app/evening/`), **onboarding akışı** (`app/onboarding.tsx`), Sentry entegrasyonu.
+
+Önceki oturumlarda eklenenler (detay için `git log`):
 - **Soru bildirme özelliği**: `ReportQuestionButton` bileşeni + `questionReports` Firestore koleksiyonu. Günlük quiz, ders bazlı quiz ve yanlışlarım ekranlarındaki sonuç/inceleme görünümlerinde "🚩 Bu soruyu bildir" (ampul ikonlu chip) var. Raporları görmek için Firebase Console → Firestore → `questionReports`. Firestore rules deploy edildi.
 - **Sıralama ekranı**: `fetchLeaderboard` varsayılan limiti 50→10 düşürüldü (sadece ilk 10 gösteriliyor).
 - **Misafir isimleri**: `lib/guestName.ts` — "Misafir #XXXXX" yerine uid'den deterministik, sınav temalı takma isim üretiliyor (Aday482 gibi); eski kayıtlar da sıralamada geriye dönük düzeltiliyor.
@@ -97,7 +107,7 @@ Hedef kitle analizi: KPSS adayı belirsizlik içinde, yalnız, kıyas baskısı 
 
 Not: "Çalışma Loncası" (takımlar) fikri şimdilik pas geçildi; ileride tekrar değerlendirilebilir.
 
-## v1.4.0 — Arkadaşla Düello (2026-07-08, kod tamam + simülatörde E2E test edildi)
+## v1.4.0 — Arkadaşla Düello (2026-07-08, kod tamam + simülatörde E2E test edildi; 2026-07-10 commit'lendi ve build 29'a girdi)
 
 - **Akış:** Arkadaş listesinden ⚔️ → ders seç (Tarih/Coğrafya/Vatandaşlık/Güncel/Karışık) → meydan okuyan 5 soruyu çözer → rakip uygulamayı açınca ana ekranda "sana meydan okudu" kartı → aynı 5 soruyu çözer → VS sonuç ekranı + Rövanş. 48 saat cevapsızsa meydan okuyan hükmen kazanır. Kazanan +25 XP (totalScore+seasonScore).
 - **Dosyalar:** `lib/duels.ts` (veri katmanı), `components/DuelRunner.tsx` (5 soru koşucusu), `app/duel/new.tsx`, `app/duel/[id].tsx`; entegrasyon: profil arkadaş listesi, `app/user/[uid].tsx` ("Düelloya Davet Et" + düello istatistiği), ana ekran kartları.
@@ -135,7 +145,7 @@ Mevcut bildirimler tamamen lokal; rakibe anlık "sana meydan okundu" push'u içi
 
 ## Yayın Sürecinde Kalan İşler
 
-- **iOS:** v1.3.0 review geçti, yayında.
+- **iOS:** Production'da build 27 yayında. Build 29 (düello + akşam sınavı + Aday Kimliği + Zayıf Konu Radarı) 2026-07-10'da TestFlight'a submit edildi — Apple işleyip test için hazır hale getirince App Store Connect → TestFlight'tan test edilecek. Test onaylanırsa production'a ayrıca submit/review başvurusu gerekir.
 - **Android:** ~16 Tem sayaç dolunca Play Console → Kontrol paneli'nden "Üretime başvur".
 
 ## Dosya Referansları
