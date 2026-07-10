@@ -64,12 +64,15 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 | Şey | Durum |
 |---|---|
-| Versiyon | v1.3.0 kod tabanı, iOS **build 29 TestFlight'a submit edildi** (2026-07-10) — Android versionCode 5 hâlâ güncel |
-| App Store | Production'da yayında olan build 27; build 29 TestFlight işleniyor, henüz production'a submit edilmedi |
+| Versiyon | **v1.3.1, iOS build 31 TestFlight'a submit edildi** (2026-07-10) — Android versionCode 5 hâlâ güncel |
+| App Store | Production'da yayında olan v1.3.0/build 27; v1.3.1/build 31 TestFlight işleniyor, henüz production'a submit edilmedi |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
-**⚠️ Build notu:** `@sentry/react-native` eklendi ama organizasyon/proje/token yapılandırılmadı — Xcode build'inde source map yükleme adımı bu yüzden hata veriyordu. `eas.json` → `build.production.env.SENTRY_DISABLE_AUTO_UPLOAD=true` ile şimdilik atlanıyor (build 29 bu düzeltmeyle geçti). Sentry'yi gerçek kullanmak istersen org/proje/authToken ayarlanıp bu env kaldırılmalı.
+**⚠️ Build notları:**
+- `@sentry/react-native` eklendi ama organizasyon/proje/token yapılandırılmadı — Xcode build'inde source map yükleme adımı bu yüzden hata veriyordu. `eas.json` → `build.production.env.SENTRY_DISABLE_AUTO_UPLOAD=true` ile şimdilik atlanıyor. Sentry'yi gerçek kullanmak istersen org/proje/authToken ayarlanıp bu env kaldırılmalı.
+- İlk submit denemesi (build 29, v1.3.0) Apple tarafından **90062 hatasıyla reddedildi**: `app.json`'daki `"version"` (CFBundleShortVersionString) zaten onaylanmış 1.3.0 ile aynıydı, artırılması gerekiyordu → `1.3.1`'e çekildi. Bir sonraki sürümde `app.json`'daki `version`'ı da elle artırmayı unutma (EAS sadece `buildNumber`'ı `autoIncrement` ile otomatik artırıyor, marketing version'ı artırmıyor).
+- `eas build:version:set --platform ios` komutu **interaktif** — bu ortamda `expect` ile otomatikleştirildi ama alan öndeki değeri temizlemeden yazarsa değerleri birbirine karıştırabiliyor (`30` yerine yanlışlıkla `1.3.1` yazılmıştı, düzeltildi). Bu komutu tekrar çalıştırırken dikkatli ol, sonucu `eas build:version:get --platform ios` ile doğrula.
 
 ### 2026-07-10 oturumunda eklenenler
 - **Aday Kimliği**: `lib/titles.ts` — ders performansına (categoryStats), streak'e ve haftalık gelişime göre kazanılan 12 unvanlık sistem (örn. "Tarih Kâşifi", "Dört Yönlü Aday"). Öncelik sıralı `evaluateTitle()` ile hesaplanıp `saveCategoryQuizResult` içinde her ders quizinden sonra güncelleniyor. Profilde (kendi + arkadaş) ve sıralamanın "Tüm Zamanlar" sekmesinde görünüyor.
@@ -145,7 +148,7 @@ Mevcut bildirimler tamamen lokal; rakibe anlık "sana meydan okundu" push'u içi
 
 ## Yayın Sürecinde Kalan İşler
 
-- **iOS:** Production'da build 27 yayında. Build 29 (düello + akşam sınavı + Aday Kimliği + Zayıf Konu Radarı) 2026-07-10'da TestFlight'a submit edildi — Apple işleyip test için hazır hale getirince App Store Connect → TestFlight'tan test edilecek. Test onaylanırsa production'a ayrıca submit/review başvurusu gerekir.
+- **iOS:** Production'da v1.3.0/build 27 yayında. v1.3.1/build 31 (düello + akşam sınavı + Aday Kimliği + Zayıf Konu Radarı) 2026-07-10'da TestFlight'a submit edildi — Apple işleyip test için hazır hale getirince App Store Connect → TestFlight'tan test edilecek. Test onaylanırsa production'a ayrıca submit/review başvurusu gerekir.
 - **Android:** ~16 Tem sayaç dolunca Play Console → Kontrol paneli'nden "Üretime başvur".
 
 ## Dosya Referansları
