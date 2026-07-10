@@ -4,21 +4,12 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Sentry from '@sentry/react-native';
 import { useAuth } from '../hooks/useAuth';
 import { isDemoMode } from '../lib/demoMode';
 import { Colors } from '../constants/colors';
 import SeasonResetModal from '../components/SeasonResetModal';
 import { refreshComebackSchedule } from '../lib/notifications';
 import { ONBOARDING_SEEN_KEY, OnboardingContext } from '../lib/onboarding';
-
-if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-    tracesSampleRate: 0.2,
-    sendDefaultPii: false,
-  });
-}
 
 function RootLayout() {
   const { user, loading } = useAuth();
@@ -83,4 +74,4 @@ function RootLayout() {
   );
 }
 
-export default Sentry.wrap(RootLayout);
+export default RootLayout;
