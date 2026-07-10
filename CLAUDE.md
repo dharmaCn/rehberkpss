@@ -64,8 +64,8 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.1, iOS build 33 TestFlight'a submit edilecek** (2026-07-10, açılış crash'i için 2 düzeltme uygulandı) — Android versionCode 5 hâlâ güncel |
-| App Store | Production'da yayında olan v1.3.0/build 27; v1.3.1 hattı (build 31→33) TestFlight'ta test ediliyor, henüz production'a submit edilmedi |
+| Versiyon | **v1.3.1, iOS build 33 TestFlight'a submit edildi** (2026-07-10, açılış crash'i için 2 düzeltme uygulandı, simülatörde Release modda 5 soğuk başlatma temiz geçti) — Android versionCode 5 hâlâ güncel |
+| App Store | Production'da yayında olan v1.3.0/build 27; v1.3.1 hattı (build 31 crash etti → 32/33 düzeltmelerle) TestFlight'ta test ediliyor, henüz production'a submit edilmedi |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
