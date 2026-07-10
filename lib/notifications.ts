@@ -117,16 +117,21 @@ export async function enableAll(): Promise<boolean> {
 }
 
 export async function refreshComebackSchedule(): Promise<void> {
-  if (!(await isEnabled())) return;
-  // Cancel just the comeback ones and reschedule
-  for (const id of ['comeback-3', 'comeback-5', 'comeback-7']) {
-    try {
-      await Notifications.cancelScheduledNotificationAsync(id);
-    } catch {
-      // ignore
+  try {
+    if (!(await isEnabled())) return;
+    // Cancel just the comeback ones and reschedule
+    for (const id of ['comeback-3', 'comeback-5', 'comeback-7']) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(id);
+      } catch {
+        // ignore
+      }
     }
+    await scheduleComeback();
+  } catch {
+    // Native bildirim API'si beklenmedik şekilde reddederse sessizce vazgeç —
+    // bu, uygulama açılışında çalışan en kritik yollardan biri.
   }
-  await scheduleComeback();
 }
 
 export async function disableAll(): Promise<void> {

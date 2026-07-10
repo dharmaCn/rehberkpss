@@ -48,9 +48,14 @@ function RootLayout() {
     }
   }, [user, loading, segments, onboardingSeen]);
 
-  // Her app açılışında 3/5/7 günlük comeback push'larını yeniden planla
+  // Her app açılışında 3/5/7 günlük comeback push'larını yeniden planla.
+  // İlk açılışın hemen ardından değil, birkaç saniye gecikmeyle — soğuk başlangıçtaki
+  // en kritik pencerede native bildirim API çağrılarının JS/GC yükünü artırmaması için.
   useEffect(() => {
-    refreshComebackSchedule().catch(() => {});
+    const t = setTimeout(() => {
+      refreshComebackSchedule().catch(() => {});
+    }, 4000);
+    return () => clearTimeout(t);
   }, []);
 
   if (loading || onboardingSeen === null) {
