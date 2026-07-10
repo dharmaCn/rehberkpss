@@ -64,13 +64,19 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.1, iOS build 31 TestFlight'a submit edildi** (2026-07-10) — Android versionCode 5 hâlâ güncel |
-| App Store | Production'da yayında olan v1.3.0/build 27; v1.3.1/build 31 TestFlight işleniyor, henüz production'a submit edilmedi |
+| Versiyon | **v1.3.1, iOS build 33 TestFlight'a submit edilecek** (2026-07-10, açılış crash'i için 2 düzeltme uygulandı) — Android versionCode 5 hâlâ güncel |
+| App Store | Production'da yayında olan v1.3.0/build 27; v1.3.1 hattı (build 31→33) TestFlight'ta test ediliyor, henüz production'a submit edilmedi |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
-**⚠️ Build notları:**
-- `@sentry/react-native` eklendi ama organizasyon/proje/token yapılandırılmadı — Xcode build'inde source map yükleme adımı bu yüzden hata veriyordu. `eas.json` → `build.production.env.SENTRY_DISABLE_AUTO_UPLOAD=true` ile şimdilik atlanıyor. Sentry'yi gerçek kullanmak istersen org/proje/authToken ayarlanıp bu env kaldırılmalı.
+**🔴 Bilinen sorun — TestFlight açılış crash'i (2026-07-10, araştırıldı, kesin çözülmedi):**
+Build 31, kurulumdan sonra beyaz ekran ardından anında çöküyordu — hem beta hem stabil iOS'ta tekrarlanabilir (cihaza/OS'a özgü değil). Xcode Organizer crash log'ları (`~/Library/Developer/Xcode/Products/com.rehberkpss.app/Crashes/Points/.../Logs/*.crash`) incelendi: her iki log da `facebook::react::TurboModuleConvertUtils::convertNSExceptionToJSError` çağrısının Hermes'in eşzamanlı çöp toplayıcısı (HadesGC) ile çakışıp `EXC_BAD_ACCESS (SIGSEGV)` verdiğini gösteriyor — bilinen ama RN 0.81'de tam kapatılmamış bir hata sınıfı (bkz. facebook/react-native#55337, hâlâ 0.82'de bile raporlanıyor; kök neden: bir native TurboModule bir NSException fırlatıyor, RN'in bunu JS Error'a çevirme kodu Hermes'i çökertiyor). `npx expo install --check` tüm paketlerin güncel olduğunu gösterdi — basit bir paket güncellemesiyle çözülecek bir şey yok.
+- **Build 32:** `@sentry/react-native` tamamen kaldırıldı (kod + plugin + paket) — Sentry DSN zaten sadece `.env.local`'deydi, EAS production ortamına hiç eklenmemişti; `Sentry.wrap(RootLayout)` kök bileşeni sarıyordu, ihtimal dahilindeydi.
+- **Build 33:** En güçlü şüpheli olan `app/_layout.tsx`'teki `refreshComebackSchedule()` (her açılışta senkron çalışan native bildirim planlama çağrısı, `lib/notifications.ts`) 4 saniye geciktirildi + try/catch ile sarmalandı.
+- **Hiçbiri garantili çözüm değil** (motor seviyesinde, ara sıra oluşan bir hata) — build 33 TestFlight'ta test edilip crash tekrar olursa, sıradaki adım muhtemelen diğer native çağrıları (Firebase, Google Sign-In, Apple Auth) tek tek izole etmek veya Expo/RN'in bir sonraki patch sürümünü beklemek olacak.
+- Yeni bir crash daha olursa: Xcode → Window → Organizer → cihaz seç → crash log'a çift tıkla → "Open in Xcode" ile sembolize edilmiş tam log'u al, `Thread N Crashed:` kısmındaki ilk birkaç frame'i paylaş.
+
+**⚠️ Diğer build notları:**
 - İlk submit denemesi (build 29, v1.3.0) Apple tarafından **90062 hatasıyla reddedildi**: `app.json`'daki `"version"` (CFBundleShortVersionString) zaten onaylanmış 1.3.0 ile aynıydı, artırılması gerekiyordu → `1.3.1`'e çekildi. Bir sonraki sürümde `app.json`'daki `version`'ı da elle artırmayı unutma (EAS sadece `buildNumber`'ı `autoIncrement` ile otomatik artırıyor, marketing version'ı artırmıyor).
 - `eas build:version:set --platform ios` komutu **interaktif** — bu ortamda `expect` ile otomatikleştirildi ama alan öndeki değeri temizlemeden yazarsa değerleri birbirine karıştırabiliyor (`30` yerine yanlışlıkla `1.3.1` yazılmıştı, düzeltildi). Bu komutu tekrar çalıştırırken dikkatli ol, sonucu `eas build:version:get --platform ios` ile doğrula.
 
