@@ -20,6 +20,7 @@ import { getTodayKey } from './quiz';
 import { guestDisplayName, isGuestDisplayName } from './guestName';
 import { SEASON_ID } from '../constants/season';
 import { BadgeId, evaluateNewBadges } from './badges';
+import { CategoryKey, TitleId, evaluateTitle } from './titles';
 
 export interface ProfileMeta {
   examDate?: string;
@@ -59,6 +60,17 @@ export interface UserProfile {
   profileMeta?: ProfileMeta;
   missions?: MissionsState;
   streakFreeze?: StreakFreezeState;
+  // v1.4 — düello
+  duelCount?: number;
+  duelWins?: number;
+  duelStreak?: number;
+  // v1.5 — Aday Kimliği (unvan)
+  categoryStats?: Record<CategoryKey, { correct: number; total: number }>;
+  weeklyCorrect?: number;
+  weeklyTotal?: number;
+  weeklyKey?: string;
+  previousWeeklyAccuracy?: number | null;
+  titleId?: TitleId | null;
 }
 
 export interface QuizResult {
@@ -78,6 +90,7 @@ export interface LeaderboardEntry {
   photoURL: string;
   score: number;
   rank?: number;
+  titleId?: TitleId | null;
 }
 
 function getWeekKey(): string {
@@ -132,6 +145,12 @@ export async function ensureUserProfile(user: {
       profileMeta: {},
       missions: DEFAULT_MISSIONS,
       streakFreeze: DEFAULT_FREEZE,
+      categoryStats: {},
+      weeklyCorrect: 0,
+      weeklyTotal: 0,
+      weeklyKey: getWeekKey(),
+      previousWeeklyAccuracy: null,
+      titleId: null,
     });
   } else {
     // Migrate existing users to v1.1 schema if missing fields
@@ -148,6 +167,12 @@ export async function ensureUserProfile(user: {
     if (data.profileMeta === undefined) patch.profileMeta = {};
     if (data.missions === undefined) patch.missions = DEFAULT_MISSIONS;
     if (data.streakFreeze === undefined) patch.streakFreeze = DEFAULT_FREEZE;
+    if (data.categoryStats === undefined) patch.categoryStats = {};
+    if (data.weeklyCorrect === undefined) patch.weeklyCorrect = 0;
+    if (data.weeklyTotal === undefined) patch.weeklyTotal = 0;
+    if (data.weeklyKey === undefined) patch.weeklyKey = getWeekKey();
+    if (data.previousWeeklyAccuracy === undefined) patch.previousWeeklyAccuracy = null;
+    if (data.titleId === undefined) patch.titleId = null;
     if (Object.keys(patch).length > 0) {
       await updateDoc(ref, patch);
     }
@@ -344,6 +369,59 @@ export async function saveQuizResult(
   };
 }
 
+export async function hasCompletedTodayEveningQuiz(uid: string): Promise<boolean> {
+  const today = getTodayKey();
+  const ref = doc(db, 'results', `${uid}_${today}`);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return false;
+  const data = snap.data() as { eveningCompleted?: boolean };
+  return data.eveningCompleted === true;
+}
+
+// Akşam Sınavı puanı günlük/haftalık/sezon sıralamasına dahil olsun diye aynı `results`
+// dokümanındaki `score` alanına eklenir; streak/badge/mainCompleted mantığına dokunmaz.
+export async function saveEveningQuizResult(
+  user: { uid: string; displayName: string | null; photoURL: string | null },
+  score: number,
+  correct: number
+): Promise<void> {
+  const today = getTodayKey();
+  const week = getWeekKey();
+  const resultRef = doc(db, 'results', `${user.uid}_${today}`);
+  const existing = await getDoc(resultRef);
+  if (existing.exists()) {
+    await updateDoc(resultRef, {
+      eveningCompleted: true,
+      eveningScore: score,
+      eveningCorrect: correct,
+      score: increment(score),
+      week,
+      seasonId: SEASON_ID,
+    });
+  } else {
+    await setDoc(resultRef, {
+      uid: user.uid,
+      displayName: user.displayName ?? 'Anonim',
+      photoURL: user.photoURL ?? '',
+      score,
+      correct,
+      eveningCompleted: true,
+      eveningScore: score,
+      eveningCorrect: correct,
+      date: today,
+      week,
+      seasonId: SEASON_ID,
+      completedAt: serverTimestamp(),
+    });
+  }
+
+  const userRef = doc(db, 'users', user.uid);
+  await updateDoc(userRef, {
+    totalScore: increment(score),
+    seasonScore: increment(score),
+  });
+}
+
 export async function fetchLeaderboard(
   period: 'daily' | 'weekly' | 'alltime',
   count = 10
@@ -390,6 +468,7 @@ export async function fetchLeaderboard(
       photoURL: (data.photoURL as string) ?? '',
       score,
       rank: i + 1,
+      titleId: period === 'alltime' ? ((data.titleId as TitleId | null | undefined) ?? null) : undefined,
     };
   });
 }
@@ -406,11 +485,19 @@ export async function hasCompletedTodayCategoryQuiz(uid: string, category: strin
   return snap.exists();
 }
 
+const EMPTY_CATEGORY_STATS: Record<CategoryKey, { correct: number; total: number }> = {
+  tarih: { correct: 0, total: 0 },
+  cografya: { correct: 0, total: 0 },
+  vatandaslik: { correct: 0, total: 0 },
+  guncel: { correct: 0, total: 0 },
+};
+
 export async function saveCategoryQuizResult(
   user: { uid: string; displayName: string | null; photoURL: string | null },
   category: string,
   score: number,
-  correct: number
+  correct: number,
+  total: number
 ): Promise<void> {
   const today = getTodayKey();
   const week = getWeekKey();
@@ -448,10 +535,49 @@ export async function saveCategoryQuizResult(
   }
 
   const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+  const userData = (userSnap.data() ?? {}) as Partial<UserProfile>;
+
+  const catKey = category as CategoryKey;
+  const prevStats = userData.categoryStats ?? EMPTY_CATEGORY_STATS;
+  const prevForCat = prevStats[catKey] ?? { correct: 0, total: 0 };
+  const newCategoryStats: Record<CategoryKey, { correct: number; total: number }> = {
+    ...EMPTY_CATEGORY_STATS,
+    ...prevStats,
+    [catKey]: { correct: prevForCat.correct + correct, total: prevForCat.total + total },
+  };
+
+  const currentWeekKey = getWeekKey();
+  const rolledOver = (userData.weeklyKey ?? currentWeekKey) !== currentWeekKey;
+  const prevWeeklyCorrect = rolledOver ? 0 : userData.weeklyCorrect ?? 0;
+  const prevWeeklyTotal = rolledOver ? 0 : userData.weeklyTotal ?? 0;
+  const previousWeeklyAccuracy = rolledOver
+    ? (userData.weeklyTotal ?? 0) > 0
+      ? ((userData.weeklyCorrect ?? 0) / (userData.weeklyTotal ?? 1)) * 100
+      : null
+    : userData.previousWeeklyAccuracy ?? null;
+
+  const newWeeklyCorrect = prevWeeklyCorrect + correct;
+  const newWeeklyTotal = prevWeeklyTotal + total;
+  const weeklyAccuracy = newWeeklyTotal > 0 ? (newWeeklyCorrect / newWeeklyTotal) * 100 : null;
+
+  const newTitleId = evaluateTitle({
+    categoryStats: newCategoryStats,
+    currentStreak: userData.currentStreak ?? 0,
+    weeklyAccuracy,
+    previousWeeklyAccuracy,
+  });
+
   await updateDoc(userRef, {
     totalScore: increment(score),
     seasonScore: increment(score),
     seasonId: SEASON_ID,
+    categoryStats: newCategoryStats,
+    weeklyCorrect: newWeeklyCorrect,
+    weeklyTotal: newWeeklyTotal,
+    weeklyKey: currentWeekKey,
+    previousWeeklyAccuracy,
+    titleId: newTitleId,
   });
 }
 

@@ -7,7 +7,11 @@ export type BadgeId =
   | 'quiz_10'
   | 'quiz_50'
   | 'quiz_100'
-  | 'first_week';
+  | 'first_week'
+  | 'duel_first'
+  | 'duel_win_3'
+  | 'duel_win_10'
+  | 'duel_streak_5';
 
 export interface BadgeDef {
   id: BadgeId;
@@ -80,6 +84,34 @@ export const BADGES: Record<BadgeId, BadgeDef> = {
     description: 'İlk hafta görevlerini tamamladın',
     icon: 'sparkles',
     color: '#8B5CF6',
+  },
+  duel_first: {
+    id: 'duel_first',
+    title: 'İlk Düello',
+    description: 'İlk düellonu tamamladın',
+    icon: 'flash-outline',
+    color: '#06B6D4',
+  },
+  duel_win_3: {
+    id: 'duel_win_3',
+    title: '3 Galibiyet',
+    description: '3 düello kazandın',
+    icon: 'flash',
+    color: '#0EA5E9',
+  },
+  duel_win_10: {
+    id: 'duel_win_10',
+    title: 'Düello Ustası',
+    description: '10 düello kazandın',
+    icon: 'shield-checkmark',
+    color: '#2563EB',
+  },
+  duel_streak_5: {
+    id: 'duel_streak_5',
+    title: 'Yenilmez',
+    description: 'Üst üste 5 düello kazandın',
+    icon: 'skull-outline',
+    color: '#7C3AED',
   },
 };
 

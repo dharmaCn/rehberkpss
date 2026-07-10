@@ -110,6 +110,46 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
+    // Düellolar — meydan okuyan (from) kendi sonucuyla oluşturur,
+    // rakip (to) tamamlayarak sonucunu ekler. Sadece taraflar okuyabilir.
+    match /duels/{duelId} {
+      allow get: if request.auth != null
+                 && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      allow list: if request.auth != null
+                  && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+
+      allow create: if request.auth != null
+                    && request.resource.data.from == request.auth.uid
+                    && request.resource.data.from != request.resource.data.to
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.category in ['tarih', 'cografya', 'vatandaslik', 'guncel', 'karisik']
+                    && request.resource.data.questionIds is list
+                    && request.resource.data.questionIds.size() == 5
+                    && request.resource.data.fromName is string && request.resource.data.fromName.size() <= 100
+                    && request.resource.data.toName is string && request.resource.data.toName.size() <= 100
+                    && validDuelSide(request.resource.data.fromScore, request.resource.data.fromCorrect);
+
+      allow update: if request.auth != null
+                    && request.resource.data.from == resource.data.from
+                    && request.resource.data.to == resource.data.to
+                    && request.resource.data.questionIds == resource.data.questionIds
+                    && request.resource.data.fromScore == resource.data.fromScore
+                    && (
+                      // Rakip tamamlıyor
+                      (request.auth.uid == resource.data.to
+                       && resource.data.status == 'pending'
+                       && request.resource.data.status == 'completed'
+                       && validDuelSide(request.resource.data.toScore, request.resource.data.toCorrect))
+                      // Meydan okuyan: süre doldu işareti veya "sonucu gördüm" bayrağı
+                      || (request.auth.uid == resource.data.from
+                          && (request.resource.data.status == resource.data.status
+                              || (resource.data.status == 'pending' && request.resource.data.status == 'expired')))
+                    );
+
+      allow delete: if request.auth != null
+                    && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+    }
+
     // Soru hata bildirimleri — kullanıcı sadece kendi adına rapor oluşturabilir,
     // okuma/güncelleme/silme yok (geliştirici Firebase Console üzerinden inceler)
     match /questionReports/{reportId} {
@@ -148,6 +188,12 @@ service cloud.firestore {
       && data.correct is int && data.correct >= 0 && data.correct <= 5
       && data.date is string && data.date.size() == 10
       && data.category in ['tarih', 'cografya', 'vatandaslik', 'guncel'];
+  }
+
+  // Düello taraf sonucu doğrulama (5 soru × maks 150 puan)
+  function validDuelSide(score, correct) {
+    return score is int && score >= 0 && score <= 750
+      && correct is int && correct >= 0 && correct <= 5;
   }
 
   // Soru bildirimi doğrulama

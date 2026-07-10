@@ -8,14 +8,15 @@ import {
   useColorScheme,
   ActivityIndicator,
   Share,
+  Animated,
 } from 'react-native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuthSync } from '../../lib/firebase';
-import { hasCompletedTodayQuiz, fetchUserProfile, hasAnsweredDailyArt, fetchDueWrongCount, UserProfile } from '../../lib/firestore';
+import { hasCompletedTodayQuiz, hasCompletedTodayEveningQuiz, fetchUserProfile, hasAnsweredDailyArt, fetchDueWrongCount, UserProfile } from '../../lib/firestore';
 import { getDailyQuestions, getTodayKey } from '../../lib/quiz';
 import { getDailyArtQuestion } from '../../constants/artworks';
 import { getDailyFact, FACT_CATEGORY_LABELS } from '../../constants/facts';
@@ -25,8 +26,62 @@ import { Colors } from '../../constants/colors';
 import { daysUntil } from '../../constants/season';
 import ExamGoalModal from '../../components/ExamGoalModal';
 import DailyCultureModal from '../../components/DailyCultureModal';
+import { Duel, fetchMyDuels, DUEL_CATEGORY_LABELS } from '../../lib/duels';
 
 const CULTURE_CARD_IMAGE = require('../../assets/culture-card-bg.png');
+
+function secondsUntilEveningQuiz(): number {
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(20, 0, 0, 0);
+  return Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000));
+}
+
+function EveningCountdownCard({ onReady }: { onReady: () => void }) {
+  const [secondsLeft, setSecondsLeft] = useState(secondsUntilEveningQuiz);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const s = secondsUntilEveningQuiz();
+      setSecondsLeft(s);
+      if (s <= 0) {
+        clearInterval(id);
+        onReady();
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [onReady]);
+
+  const hh = Math.floor(secondsLeft / 3600);
+  const mm = Math.floor((secondsLeft % 3600) / 60);
+  const ss = secondsLeft % 60;
+  const countdownText = hh > 0
+    ? `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
+    : `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+
+  return (
+    <View style={styles.eveningWrap}>
+      <LinearGradient
+        colors={['#1E3A8A', '#3B82F6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.eveningCard}
+      >
+        <View style={styles.eveningIconBox}>
+          <Text style={styles.eveningEmoji}>⏳</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.eveningTitle}>Akşam Sınavı</Text>
+          <Text style={styles.eveningBody}>{countdownText}</Text>
+        </View>
+        <View style={styles.eveningInfoBadge}>
+          <Text style={styles.eveningInfoBadgeTime}>20:00</Text>
+          <Text style={styles.eveningInfoBadgeSub}>10 soru</Text>
+        </View>
+      </LinearGradient>
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -40,6 +95,10 @@ export default function HomeScreen() {
   const [artAnswered, setArtAnswered] = useState(false);
   const [cultureModal, setCultureModal] = useState(false);
   const [dueWrong, setDueWrong] = useState(0);
+  const [duels, setDuels] = useState<Duel[]>([]);
+  const [eveningDone, setEveningDone] = useState<boolean | null>(null);
+  const [eveningPhase, setEveningPhase] = useState<'hidden' | 'countdown' | 'ready'>('hidden');
+  const eveningPulse = useRef(new Animated.Value(0)).current;
   const dailyArt = useMemo(() => getDailyArtQuestion(), []);
   const dailyFact = useMemo(() => getDailyFact(), []);
   const questionCount = useMemo(() => getDailyQuestions().length, []);
@@ -59,6 +118,8 @@ export default function HomeScreen() {
     });
     hasAnsweredDailyArt(user.uid, dailyArt.id).then(setArtAnswered);
     fetchDueWrongCount(user.uid).then(setDueWrong).catch(() => {});
+    fetchMyDuels(user.uid).then(setDuels).catch(() => {});
+    hasCompletedTodayEveningQuiz(user.uid).then(setEveningDone).catch(() => {});
   }, [user, dailyArt.id]);
 
   useEffect(() => {
@@ -119,6 +180,41 @@ export default function HomeScreen() {
     return last < twoDaysAgo;
   })();
   const freezeUsedToday = profile?.streakFreeze?.autoUsedAt === today;
+
+  useEffect(() => {
+    if (eveningDone !== false) {
+      setEveningPhase('hidden');
+      return;
+    }
+    function tick() {
+      const h = new Date().getHours();
+      setEveningPhase(h >= 20 ? 'ready' : 'countdown');
+    }
+    tick();
+    const id = setInterval(tick, 15000);
+    return () => clearInterval(id);
+  }, [eveningDone]);
+
+  const showEveningQuiz = eveningPhase === 'ready';
+
+  useEffect(() => {
+    if (!showEveningQuiz) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(eveningPulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(eveningPulse, { toValue: 0, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [showEveningQuiz, eveningPulse]);
+
+  const uid = user?.uid ?? '';
+  // Bana gelen ve bekleyen düellolar + benim başlattığım ve sonucu henüz görmediğim düellolar
+  const incomingDuels = duels.filter((d) => d.to === uid && d.status === 'pending');
+  const unseenResults = duels.filter(
+    (d) => d.from === uid && d.status !== 'pending' && !d.fromSeenResult
+  );
 
   return (
     <ScrollView
@@ -210,6 +306,80 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
+      )}
+
+      {/* Düello kartları */}
+      {incomingDuels.map((d) => (
+        <TouchableOpacity
+          key={d.id}
+          style={[styles.banner, { backgroundColor: Colors.primary + '1A', borderColor: Colors.primary }]}
+          onPress={() => router.push(`/duel/${d.id}`)}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.bannerEmoji}>⚔️</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.bannerTitle, { color: c.text }]}>{d.fromName} sana meydan okudu!</Text>
+            <Text style={[styles.bannerBody, { color: c.textSecondary }]}>
+              {DUEL_CATEGORY_LABELS[d.category] ?? d.category} · 5 soru — dokun ve düelloyu kabul et
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.primary} />
+        </TouchableOpacity>
+      ))}
+      {unseenResults.map((d) => (
+        <TouchableOpacity
+          key={d.id}
+          style={[styles.banner, { backgroundColor: Colors.success + '1A', borderColor: Colors.success }]}
+          onPress={() => router.push(`/duel/${d.id}`)}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.bannerEmoji}>🏁</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.bannerTitle, { color: c.text }]}>Düello sonuçlandı!</Text>
+            <Text style={[styles.bannerBody, { color: c.textSecondary }]}>
+              {d.toName} ile {DUEL_CATEGORY_LABELS[d.category] ?? d.category} düellon bitti — sonucu gör
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.success} />
+        </TouchableOpacity>
+      ))}
+
+      {eveningPhase === 'countdown' && (
+        <EveningCountdownCard onReady={() => setEveningPhase('ready')} />
+      )}
+
+      {showEveningQuiz && (
+        <TouchableOpacity
+          style={styles.eveningWrap}
+          onPress={() => router.push('/evening/quiz' as never)}
+          activeOpacity={0.9}
+        >
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.eveningGlow,
+              {
+                opacity: eveningPulse.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.7] }),
+                transform: [{ scale: eveningPulse.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1.03] }) }],
+              },
+            ]}
+          />
+          <LinearGradient
+            colors={['#1E3A8A', '#3B82F6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.eveningCard}
+          >
+            <View style={styles.eveningIconBox}>
+              <Text style={styles.eveningEmoji}>🌙</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.eveningTitle}>Akşam Sınavı hazır!</Text>
+              <Text style={styles.eveningBody}>10 soru, gece yarısına kadar açık — hemen çöz</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
       )}
 
       <View style={styles.featureDeck}>
@@ -577,6 +747,54 @@ const styles = StyleSheet.create({
   bannerEmoji: { fontSize: 26 },
   bannerTitle: { fontSize: 14, fontWeight: '800' },
   bannerBody: { fontSize: 12, lineHeight: 17, marginTop: 2 },
+
+  // ── Akşam Sınavı (glowing pulse) ──
+  eveningWrap: {
+    marginHorizontal: 20,
+  },
+  eveningGlow: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+    right: -6,
+    bottom: -6,
+    borderRadius: 22,
+    backgroundColor: '#3B82F6',
+  },
+  eveningCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 18,
+    shadowColor: '#1E3A8A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  eveningIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  eveningEmoji: { fontSize: 22 },
+  eveningTitle: { fontSize: 15, fontWeight: '900', color: '#fff' },
+  eveningBody: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  eveningInfoBadge: {
+    minWidth: 58,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+  },
+  eveningInfoBadgeTime: { fontSize: 15, fontWeight: '900', color: '#1E3A8A', lineHeight: 17 },
+  eveningInfoBadgeSub: { fontSize: 10, fontWeight: '800', color: '#1E3A8A', marginTop: 1 },
 
   // ── Main features ──
   featureDeck: {

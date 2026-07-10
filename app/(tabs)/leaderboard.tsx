@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { getAuthSync } from '../../lib/firebase';
 import { fetchLeaderboard, LeaderboardEntry } from '../../lib/firestore';
+import { TITLES } from '../../lib/titles';
 import { Colors } from '../../constants/colors';
 
 type Period = 'daily' | 'weekly' | 'alltime';
@@ -91,6 +93,14 @@ export default function LeaderboardScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {user?.isAnonymous && (
+          <View style={[styles.guestNotice, { backgroundColor: Colors.primary + '12', borderColor: Colors.primary + '30' }]}>
+            <Text style={[styles.guestNoticeText, { color: Colors.primary }]}>
+              Sıralamada kalıcı hale gelmek istiyorsan kendi hesabınla giriş yap
+            </Text>
+          </View>
+        )}
       </View>
 
       {loading ? (
@@ -185,9 +195,19 @@ export default function LeaderboardScreen() {
                       <Text style={styles.listAvatarText}>{entry.displayName[0]}</Text>
                     </View>
                   )}
-                  <Text style={[styles.listName, { color: isMe ? Colors.primary : c.text }]} numberOfLines={1}>
-                    {entry.displayName}{isMe ? ' (Sen)' : ''}
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.listName, { color: isMe ? Colors.primary : c.text }]} numberOfLines={1}>
+                      {entry.displayName}{isMe ? ' (Sen)' : ''}
+                    </Text>
+                    {entry.titleId && TITLES[entry.titleId] && (
+                      <View style={styles.listTitleRow}>
+                        <Ionicons name={TITLES[entry.titleId].icon as never} size={11} color={TITLES[entry.titleId].color} />
+                        <Text style={[styles.listTitleText, { color: TITLES[entry.titleId].color }]} numberOfLines={1}>
+                          {TITLES[entry.titleId].name}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={[styles.listScore, { color: Colors.primary }]}>{entry.score} pt</Text>
                 </TouchableOpacity>
               );
@@ -220,6 +240,9 @@ const styles = StyleSheet.create({
   tab: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center' },
   tabText: { fontSize: 13, fontWeight: '600' },
 
+  guestNotice: { borderRadius: 12, borderWidth: 1, paddingVertical: 10, paddingHorizontal: 12 },
+  guestNoticeText: { fontSize: 12, fontWeight: '700', textAlign: 'center', lineHeight: 17 },
+
   scrollContent: { paddingBottom: 32 },
 
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 12 },
@@ -244,7 +267,9 @@ const styles = StyleSheet.create({
   listAvatar: { width: 40, height: 40, borderRadius: 20 },
   listAvatarPlaceholder: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   listAvatarText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  listName: { flex: 1, fontSize: 14, fontWeight: '600' },
+  listName: { fontSize: 14, fontWeight: '600' },
+  listTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  listTitleText: { fontSize: 11, fontWeight: '600' },
   listScore: { fontSize: 14, fontWeight: '700' },
 
   myRankBanner: {

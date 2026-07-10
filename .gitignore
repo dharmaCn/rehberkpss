@@ -38,6 +38,9 @@ __mocks__/
 .DS_Store
 *.pem
 
+# Google Play service account key
+google-play-service-account.json
+
 # local env files
 .env*.local
 

@@ -9,40 +9,29 @@ import {
   Alert,
 } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { getAuthSync } from '../../lib/firebase';
-import { saveCategoryQuizResult, logWrongQuestion } from '../../lib/firestore';
-import {
-  getDailyCategoryQuestions,
-  calculateScore,
-  getCategoryLabel,
-  getCategoryColor,
-  CATEGORY_SCORE_MULTIPLIER,
-} from '../../lib/quiz';
-import { recordQuizCompletedAndMaybePrompt } from '../../lib/review';
+import { saveEveningQuizResult } from '../../lib/firestore';
+import { getEveningQuizQuestions, calculateScore, getCategoryLabel, getCategoryColor } from '../../lib/quiz';
 import { Question } from '../../constants/questions';
 import { Colors } from '../../constants/colors';
 import ReportQuestionButton from '../../components/ReportQuestionButton';
 
 const QUESTION_TIME = 30;
 
-export default function CategoryQuizSession() {
+export default function EveningQuiz() {
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
-  const { cat } = useLocalSearchParams<{ cat: Question['category'] }>();
 
-  const category = (cat ?? 'tarih') as Question['category'];
-  const questions = useMemo(() => getDailyCategoryQuestions(category), [category]);
-
+  const questions = useMemo(() => getEveningQuizQuestions(), []);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const [totalScore, setTotalScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [answers, setAnswers] = useState<number[]>([]);
   const [openReview, setOpenReview] = useState<number | null>(null);
 
@@ -88,7 +77,7 @@ export default function CategoryQuizSession() {
     if (selected !== null) return;
     setSelected(-1);
     setAnswers((a) => [...a, -1]);
-    setTimeout(() => nextQuestion(0, 0), 1000);
+    setTimeout(() => nextQuestion(0, correctCount), 1000);
   }
 
   function handleAnswer(optIndex: number) {
@@ -101,12 +90,8 @@ export default function CategoryQuizSession() {
     Haptics.notificationAsync(
       isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
     ).catch(() => {});
-    if (!isCorrect) {
-      const u = getAuthSync()?.currentUser ?? null;
-      if (u) logWrongQuestion(u.uid, q.id).catch(() => {});
-    }
-    const rawPts = isCorrect ? calculateScore(true, timeLeft, QUESTION_TIME) : 0;
-    const pts = Math.round(rawPts * CATEGORY_SCORE_MULTIPLIER);
+
+    const pts = isCorrect ? calculateScore(true, timeLeft, QUESTION_TIME) : 0;
     const newCorrect = isCorrect ? correctCount + 1 : correctCount;
     const newScore = totalScore + pts;
 
@@ -119,27 +104,16 @@ export default function CategoryQuizSession() {
   async function nextQuestion(lastPts: number, corrects: number) {
     const next = index + 1;
     if (next >= questions.length) {
+      const finalScore = totalScore + lastPts;
       setFinished(true);
-      await saveResult(totalScore + lastPts, corrects);
+      const user = getAuthSync()?.currentUser ?? null;
+      if (user) {
+        saveEveningQuizResult(user, finalScore, corrects).catch(() => {});
+      }
     } else {
       setSelected(null);
       setIndex(next);
     }
-  }
-
-  async function saveResult(score: number, corrects: number) {
-    const user = getAuthSync()?.currentUser ?? null;
-    if (!user) return;
-    setSaving(true);
-    try {
-      await saveCategoryQuizResult(user, category, score, corrects, questions.length);
-    } catch {
-      // Sonuç kaydedilemese de ekran gösterilir
-    } finally {
-      setSaving(false);
-    }
-    // Sonuç ekranı görününce kısa gecikmeyle değerlendirme iste
-    setTimeout(() => { recordQuizCompletedAndMaybePrompt(); }, 800);
   }
 
   function getOptionStyle(i: number) {
@@ -159,7 +133,6 @@ export default function CategoryQuizSession() {
   if (finished) {
     const percentage = Math.round((correctCount / questions.length) * 100);
     const emoji = percentage >= 80 ? '🏆' : percentage >= 60 ? '👍' : percentage >= 40 ? '📚' : '💪';
-    const catColor = getCategoryColor(category);
 
     return (
       <ScrollView
@@ -167,12 +140,11 @@ export default function CategoryQuizSession() {
         contentContainerStyle={styles.resultScrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.resultCard, { backgroundColor: catColor }]}>
+        <View style={[styles.resultCard, { backgroundColor: '#4338CA' }]}>
           <Text style={styles.resultEmoji}>{emoji}</Text>
-          <Text style={styles.resultLabel}>{getCategoryLabel(category)} Quizi</Text>
-          <Text style={styles.resultTitle}>Tamamlandı!</Text>
+          <Text style={styles.resultTitle}>Akşam Sınavı Bitti!</Text>
           <Text style={styles.resultScore}>{totalScore}</Text>
-          <Text style={styles.resultScoreLabel}>toplam puan (%20 katsayılı)</Text>
+          <Text style={styles.resultScoreLabel}>toplam puan</Text>
 
           <View style={styles.resultStats}>
             <View style={styles.resultStat}>
@@ -189,16 +161,13 @@ export default function CategoryQuizSession() {
 
         <Text style={[styles.resultMsg, { color: c.textSecondary }]}>
           {percentage >= 80
-            ? 'Mükemmel! Bu konuyu çok iyi biliyorsun.'
+            ? 'Mükemmel! Bu akşam çok iyiydin.'
             : percentage >= 60
-            ? 'İyi iş! Biraz daha çalışarak uzmanlaşırsın.'
-            : 'Yarın tekrar dene, her gün gelişiyorsun!'}
+            ? 'İyi iş! Yarın akşam tekrar dene.'
+            : 'Yarın akşam daha iyisini yapacaksın!'}
         </Text>
 
         <Text style={[styles.reviewTitle, { color: c.text }]}>Cevaplarını İncele</Text>
-        <Text style={[styles.reviewHint, { color: c.textSecondary }]}>
-          Bir soruya dokunarak doğru cevabı ve açıklamasını gör.
-        </Text>
 
         <View style={styles.reviewList}>
           {questions.map((rq, i) => {
@@ -245,13 +214,9 @@ export default function CategoryQuizSession() {
                       );
                     })}
 
-                    {userAns === -1 && (
-                      <Text style={[styles.reviewTimeout, { color: c.textSecondary }]}>⏱ Süre doldu — bu soruyu cevaplamadın.</Text>
-                    )}
-
                     {rq.aciklama && (
-                      <View style={[styles.reviewAciklama, { backgroundColor: catColor + '12', borderColor: catColor + '33' }]}>
-                        <Text style={[styles.reviewAciklamaLabel, { color: catColor }]}>💡 Açıklama</Text>
+                      <View style={[styles.reviewAciklama, { backgroundColor: Colors.primary + '12', borderColor: Colors.primary + '33' }]}>
+                        <Text style={[styles.reviewAciklamaLabel, { color: Colors.primary }]}>💡 Açıklama</Text>
                         <Text style={[styles.reviewAciklamaText, { color: c.text }]}>{rq.aciklama}</Text>
                       </View>
                     )}
@@ -271,7 +236,7 @@ export default function CategoryQuizSession() {
         </View>
 
         <TouchableOpacity
-          style={[styles.homeBtn, { backgroundColor: catColor }]}
+          style={[styles.homeBtn, { backgroundColor: Colors.primary }]}
           onPress={() => router.replace('/(tabs)')}
           activeOpacity={0.85}
         >
@@ -286,7 +251,7 @@ export default function CategoryQuizSession() {
       <View style={styles.progressHeader}>
         <TouchableOpacity onPress={() => {
           clearTimer();
-          Alert.alert('Quiz\'den Çık', 'İlerlemeniz kaydedilmeyecek. Çıkmak istiyor musunuz?', [
+          Alert.alert('Sınavdan Çık', 'İlerlemeniz kaydedilmeyecek. Çıkmak istiyor musunuz?', [
             { text: 'Devam Et', onPress: startTimer },
             { text: 'Çık', style: 'destructive', onPress: () => router.back() },
           ]);
@@ -295,7 +260,7 @@ export default function CategoryQuizSession() {
         </TouchableOpacity>
 
         <View style={[styles.progressTrack, { backgroundColor: c.border }]}>
-          <View style={[styles.progressFill, { width: `${(index / questions.length) * 100}%`, backgroundColor: getCategoryColor(category) }]} />
+          <View style={[styles.progressFill, { width: `${((index) / questions.length) * 100}%` }]} />
         </View>
 
         <Text style={[styles.questionCounter, { color: c.textSecondary }]}>
@@ -308,20 +273,17 @@ export default function CategoryQuizSession() {
           style={[
             styles.timerBar,
             {
-              width: progressAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0%', '100%'],
-              }),
-              backgroundColor: timeLeft <= 10 ? Colors.error : getCategoryColor(category),
+              width: progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+              backgroundColor: timeLeft <= 10 ? Colors.error : Colors.primary,
             },
           ]}
         />
       </View>
 
       <View style={styles.body}>
-        <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(category) + '22' }]}>
-          <Text style={[styles.categoryText, { color: getCategoryColor(category) }]}>
-            {getCategoryLabel(category)} • %20 Puan
+        <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(q.category) + '22' }]}>
+          <Text style={[styles.categoryText, { color: getCategoryColor(q.category) }]}>
+            {getCategoryLabel(q.category)}
           </Text>
         </View>
 
@@ -357,16 +319,10 @@ export default function CategoryQuizSession() {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 56 },
 
-  progressHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 8,
-  },
+  progressHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 12, marginBottom: 8 },
   exitBtn: { fontSize: 20, fontWeight: '600', width: 32 },
   progressTrack: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 3 },
+  progressFill: { height: '100%', backgroundColor: Colors.primary, borderRadius: 3 },
   questionCounter: { fontSize: 13, fontWeight: '600', width: 40, textAlign: 'right' },
 
   timerRow: { height: 4, backgroundColor: 'transparent', marginHorizontal: 20, borderRadius: 2, overflow: 'hidden' },
@@ -378,57 +334,29 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
 
   timer: { fontSize: 15, fontWeight: '600' },
+
   question: { fontSize: 20, fontWeight: '700', lineHeight: 30 },
 
   options: { gap: 12 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1.5,
-  },
+  option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16, borderWidth: 1.5 },
   optionCorrect: { backgroundColor: Colors.success, borderColor: Colors.success },
   optionWrong: { backgroundColor: Colors.error, borderColor: Colors.error },
 
-  optionLetter: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  optionLetter: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.08)', alignItems: 'center', justifyContent: 'center' },
   optionLetterCorrect: { backgroundColor: 'rgba(255,255,255,0.3)' },
   optionLetterText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
   optionText: { flex: 1, fontSize: 15, fontWeight: '500' },
 
   resultScrollContent: { paddingTop: 56, paddingBottom: 40 },
   resultCard: {
-    margin: 20,
-    borderRadius: 28,
-    padding: 32,
-    alignItems: 'center',
-    gap: 8,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    margin: 20, borderRadius: 28, padding: 32, alignItems: 'center', gap: 8,
+    shadowColor: '#4338CA', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8,
   },
   resultEmoji: { fontSize: 56, marginBottom: 8 },
-  resultLabel: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' },
   resultTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
   resultScore: { fontSize: 56, fontWeight: '900', color: '#fff', lineHeight: 64 },
-  resultScoreLabel: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
-  resultStats: {
-    flexDirection: 'row',
-    marginTop: 16,
-    gap: 24,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 16,
-    padding: 16,
-  },
+  resultScoreLabel: { fontSize: 14, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
+  resultStats: { flexDirection: 'row', marginTop: 16, gap: 24, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 16 },
   resultStat: { alignItems: 'center', gap: 4, flex: 1 },
   resultStatValue: { fontSize: 20, fontWeight: '800', color: '#fff' },
   resultStatLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)' },
@@ -436,18 +364,11 @@ const styles = StyleSheet.create({
 
   resultMsg: { textAlign: 'center', fontSize: 15, paddingHorizontal: 32, lineHeight: 22 },
 
-  homeBtn: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
+  homeBtn: { marginHorizontal: 20, marginTop: 20, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   homeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
   reviewTitle: { fontSize: 18, fontWeight: '800', marginHorizontal: 20, marginTop: 24 },
-  reviewHint: { fontSize: 13, marginHorizontal: 20, marginTop: 4, marginBottom: 12 },
-  reviewList: { marginHorizontal: 20, gap: 10 },
+  reviewList: { marginHorizontal: 20, gap: 10, marginTop: 12 },
   reviewItem: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
   reviewBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
@@ -458,7 +379,6 @@ const styles = StyleSheet.create({
   reviewOpt: { borderWidth: 1.5, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, gap: 4 },
   reviewOptText: { fontSize: 14, fontWeight: '500', lineHeight: 20 },
   reviewTag: { fontSize: 12, fontWeight: '700' },
-  reviewTimeout: { fontSize: 13, fontStyle: 'italic', marginTop: 2 },
   reviewAciklama: { borderRadius: 12, borderWidth: 1, padding: 12, gap: 6, marginTop: 4 },
   reviewAciklamaLabel: { fontSize: 13, fontWeight: '800' },
   reviewAciklamaText: { fontSize: 13, lineHeight: 20 },

@@ -35,6 +35,8 @@ import {
 } from '../../lib/friends';
 import { Colors } from '../../constants/colors';
 import { BADGES, BadgeId } from '../../lib/badges';
+import { TITLES } from '../../lib/titles';
+import { getCategoryBreakdown } from '../../lib/categoryAnalysis';
 import { getLevelInfo } from '../../lib/levels';
 import { SEASON_LABEL, SEASON_END_AT, daysUntil } from '../../constants/season';
 import { enableAll, disableAll, isEnabled } from '../../lib/notifications';
@@ -292,6 +294,31 @@ export default function ProfileScreen() {
         );
       })()}
 
+      {/* Aday Kimliği */}
+      {(() => {
+        const title = profile?.titleId ? TITLES[profile.titleId] : null;
+        return (
+          <View style={[styles.levelCard, { backgroundColor: c.card, borderColor: c.border }]}>
+            <View style={styles.levelTop}>
+              <View
+                style={[
+                  styles.titleIconWrap,
+                  { backgroundColor: (title?.color ?? Colors.primary) + '22' },
+                ]}
+              >
+                <Ionicons name={(title?.icon ?? 'ribbon-outline') as never} size={22} color={title?.color ?? Colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.levelTitle, { color: c.text }]}>{title?.name ?? 'Henüz Unvanın Yok'}</Text>
+                <Text style={[styles.levelSub, { color: c.textSecondary }]}>
+                  {title?.description ?? 'İlk ders quizini çöz, unvanını kazan'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        );
+      })()}
+
       {/* Streak */}
       <View style={[styles.streakCard, { backgroundColor: c.card, borderColor: c.border }]}>
         <View style={styles.streakItem}>
@@ -396,6 +423,13 @@ export default function ProfileScreen() {
                   </Text>
                 </View>
               </View>
+              <TouchableOpacity
+                style={[styles.duelBtn, { backgroundColor: Colors.primary + '15', borderColor: Colors.primary + '44' }]}
+                onPress={() => router.push({ pathname: '/duel/new', params: { to: f.uid, name: f.displayName } })}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.duelBtnText}>⚔️</Text>
+              </TouchableOpacity>
               <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
             </TouchableOpacity>
           ))}
@@ -487,6 +521,30 @@ export default function ProfileScreen() {
         </View>
         <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
       </TouchableOpacity>
+
+      {/* Zayıf konu radarı girişi */}
+      {(() => {
+        const weakest = getCategoryBreakdown(profile?.categoryStats)[0];
+        if (!weakest) return null;
+        return (
+          <TouchableOpacity
+            style={[styles.examEdit, { backgroundColor: c.card, borderColor: c.border }]}
+            onPress={() => router.push('/wrong')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="analytics" size={20} color={Colors.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.examEditTitle, { color: c.text }]}>
+                En zayıf dersin: {weakest.label}
+              </Text>
+              <Text style={[styles.examEditSub, { color: c.textSecondary }]}>
+                %{Math.round(weakest.accuracy)} doğruluk — tekrar et
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
+          </TouchableOpacity>
+        );
+      })()}
 
       {/* Bildirim toggle */}
       <View style={[styles.notifRow, { backgroundColor: c.card, borderColor: c.border }]}>
@@ -649,6 +707,7 @@ const styles = StyleSheet.create({
 
   levelCard: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 12 },
   levelTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  titleIconWrap: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   levelEmoji: { fontSize: 30 },
   levelTitle: { fontSize: 15, fontWeight: '800' },
   levelSub: { fontSize: 12, marginTop: 2 },
@@ -680,6 +739,15 @@ const styles = StyleSheet.create({
   friendAvatarText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   friendName: { fontSize: 14, fontWeight: '700' },
   friendSub: { fontSize: 12, marginTop: 2 },
+  duelBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  duelBtnText: { fontSize: 16 },
   reqBtns: { flexDirection: 'row', gap: 8 },
   reqBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   friendsEmpty: { borderRadius: 16, borderWidth: 1, padding: 18, alignItems: 'center', gap: 8 },

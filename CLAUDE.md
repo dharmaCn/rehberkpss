@@ -57,13 +57,13 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-07-04)
+## Güncel Durum (2026-07-07)
 
 | Şey | Durum |
 |---|---|
-| Versiyon | v1.2.1 (build 24) |
-| App Store | Submit edildi, "Waiting for Review" (2 Tem) |
-| Google Play | Kapalı test (Alpha); 12 test kullanıcısı; ~16 Tem'de üretim başvurusu açılır (12'nin altına düşerse sayaç sıfırlanır) |
+| Versiyon | v1.3.0 (iOS build 27, Android versionCode 5) |
+| App Store | **Review geçti, yayında** |
+| Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
 Son oturumda eklenenler (detay için `git log`):
@@ -84,10 +84,39 @@ Son oturumda eklenenler (detay için `git log`):
 - [x] Arkadaş ekleme (2026-07-05): `lib/friends.ts` + `app/user/[uid].tsx` (herkese açık profil). Sıralamadaki kullanıcıya dokununca profili açılır, "Arkadaş Ol" ile istek gönderilir; profil sekmesinde gelen istekler (kabul/ret) ve arkadaş listesi görünür. Firestore: `friendRequests/{from_to}` koleksiyonu + `users/{uid}/friends/{friendUid}` alt koleksiyonu; rules güncellendi (**deploy gerekli**). Sohbet yok, ileride düello için zemin.
 
 **Özellikler (henüz yapılmadı):**
-- [ ] Haftalık Deneme Sınavı (pazar 30 soru, yüzdelik dilim, gerçek sınav formatı)
 - [ ] Aralıklı yanlış tekrarı cilası (`app/wrong/` iskeleti hazır)
-- [ ] Arkadaşla Düello (link paylaşımı + 5 soru, kazanan rozet)
 - [ ] Seviye/XP unvanları genişlet (Çaylak → Kâtip → Uzman → Şampiyon → …)
+
+## v1.5 Hedefleri (2026-07-08'de seçildi — sosyolojik analiz sonrası)
+
+Hedef kitle analizi: KPSS adayı belirsizlik içinde, yalnız, kıyas baskısı altında; kontrol hissi veren ritüellere ve "yalnız değilim" duygusuna ihtiyacı var. Seçilen üç özellik:
+
+1. **Canlı nabız (hızlı kazanım, ilk yapılacak):** Ana ekranda "Şu an X aday çalışıyor · bugün Y soru çözüldü" sayacı. Mevcut `results`/`categoryResults` verilerinden türetilebilir; 1-2 saatlik iş, yalnızlık hissine doğrudan cevap.
+2. **Haftalık Deneme + yüzdelik dilim:** Pazar günü 30 soru, gerçek sınav formatı, Türkiye geneli yüzdelik ("ilk %18'desin"). Adaya başka yerde bulamayacağı konum bilgisi verir. (Eski yol haritasından öne çekildi.)
+3. **Atanma Günlüğü + Kader Sorusu:** (a) Ay sonu otomatik, paylaşılabilir özet kartı — "Mart: 1.240 soru, 27 gün seri" (sonucu değil emeği paylaştırır, organik büyüme); (b) her akşam 21:00 push ile tüm kullanıcılara aynı zor soru, tek cevap hakkı, "Türkiye'nin %34'ü bildi" sonucu — düello push altyapısının üstüne biner.
+
+Not: "Çalışma Loncası" (takımlar) fikri şimdilik pas geçildi; ileride tekrar değerlendirilebilir.
+
+## v1.4.0 — Arkadaşla Düello (2026-07-08, kod tamam + simülatörde E2E test edildi)
+
+- **Akış:** Arkadaş listesinden ⚔️ → ders seç (Tarih/Coğrafya/Vatandaşlık/Güncel/Karışık) → meydan okuyan 5 soruyu çözer → rakip uygulamayı açınca ana ekranda "sana meydan okudu" kartı → aynı 5 soruyu çözer → VS sonuç ekranı + Rövanş. 48 saat cevapsızsa meydan okuyan hükmen kazanır. Kazanan +25 XP (totalScore+seasonScore).
+- **Dosyalar:** `lib/duels.ts` (veri katmanı), `components/DuelRunner.tsx` (5 soru koşucusu), `app/duel/new.tsx`, `app/duel/[id].tsx`; entegrasyon: profil arkadaş listesi, `app/user/[uid].tsx` ("Düelloya Davet Et" + düello istatistiği), ana ekran kartları.
+- **Firestore:** `duels/{autoId}` koleksiyonu; rules **deploy edildi** (2026-07-08, arkadaşlık kurallarıyla birlikte).
+- **Rozetler:** `duel_first`, `duel_win_3`, `duel_win_10`, `duel_streak_5`. Kullanıcı alanları: `duelCount`, `duelWins`, `duelStreak`.
+- **Bilinçli eksik (v1.4.1+):** rakibe anlık push (plan aşağıda), link ile davet, rastgele rakip, canlı mod.
+
+### Düello push bildirimi planı (v1.4.x — YAPILACAK, karar verildi 2026-07-08)
+
+Mevcut bildirimler tamamen lokal; rakibe anlık "sana meydan okundu" push'u için sunucu tarafı gerekiyor. Plan:
+
+1. **Push token toplama (istemci):** `expo-notifications` ile Expo push token al (`getExpoPushTokenAsync`, projectId EAS'ten), `users/{uid}.pushToken` alanına yaz. Uygulama açılışında ve bildirim izni verildiğinde güncelle. Rules: kullanıcı kendi profiline yazıyor, ek kural gerekmez.
+2. **Cloud Functions (sunucu):** Firebase Functions v2, iki Firestore trigger'ı:
+   - `duels` onCreate → `to` kullanıcısının pushToken'ına Expo Push API ile "⚔️ {fromName} sana meydan okudu! ({kategori})"
+   - `duels` onUpdate (status pending→completed) → `from` kullanıcısına "🏁 {toName} düellonu tamamladı — sonucu gör!"
+   - Gönderim: `https://exp.host/--/api/v2/push/send` (Expo Push API, APNs/FCM anahtarı gerekmez, EAS build'lerde çalışır).
+3. **⚠️ Blaze planı gerekiyor:** Cloud Functions, Firebase'de ücretli (Blaze, kullandıkça öde) plana geçiş ister — kredi kartı bağlanmalı. Bu ölçekte fiilen 0₺ civarı (ücretsiz kotalar geniş) ama karta onay Can'dan alınacak.
+4. Dağıtım: repo köküne `functions/` klasörü + `firebase deploy --only functions`.
+5. İleride aynı altyapı arkadaşlık isteği bildirimi ve "hükmen kazandın" (48s scheduler) için de kullanılır.
 
 **İçerik büyütme — tamamlandı (2026-07-04 itibarıyla mevcut sayılar):**
 - [x] Vatandaşlık: 199 soru (+49, web onay masasından geçirilerek eklendi)
@@ -106,7 +135,7 @@ Son oturumda eklenenler (detay için `git log`):
 
 ## Yayın Sürecinde Kalan İşler
 
-- **iOS:** review sonucu bekleniyor, onay gelirse otomatik yayına düşer.
+- **iOS:** v1.3.0 review geçti, yayında.
 - **Android:** ~16 Tem sayaç dolunca Play Console → Kontrol paneli'nden "Üretime başvur".
 
 ## Dosya Referansları

@@ -14,9 +14,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { getAuthSync } from '../../lib/firebase';
-import { fetchWrongQuestionIds, markQuestionMastered, clearMasteredQuestion } from '../../lib/firestore';
+import { fetchWrongQuestionIds, fetchUserProfile, markQuestionMastered, clearMasteredQuestion } from '../../lib/firestore';
 import { QUESTION_POOL, Question } from '../../constants/questions';
 import { getCategoryLabel, getCategoryColor } from '../../lib/quiz';
+import { getCategoryBreakdown, CategoryBreakdownEntry } from '../../lib/categoryAnalysis';
 import { Colors } from '../../constants/colors';
 import ReportQuestionButton from '../../components/ReportQuestionButton';
 
@@ -27,6 +28,7 @@ export default function WrongScreen() {
   const user = getAuthSync()?.currentUser ?? null;
 
   const [loading, setLoading] = useState(true);
+  const [breakdown, setBreakdown] = useState<CategoryBreakdownEntry[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [quizQueue, setQuizQueue] = useState<Question[]>([]);
   const [mode, setMode] = useState<'list' | 'quiz' | 'done'>('list');
@@ -45,13 +47,18 @@ export default function WrongScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      const ids = await fetchWrongQuestionIds(user.uid, 100);
+      const [ids, profile] = await Promise.all([
+        fetchWrongQuestionIds(user.uid, 100),
+        fetchUserProfile(user.uid),
+      ]);
       const map = new Map(QUESTION_POOL.map((q) => [q.id, q]));
       const found = ids.map((id) => map.get(id)).filter((x): x is Question => !!x);
       setQuestions(found);
+      setBreakdown(getCategoryBreakdown(profile?.categoryStats));
     } catch {
       // Hata olursa boş defter göster (sonsuz spinner yerine)
       setQuestions([]);
+      setBreakdown([]);
     } finally {
       setLoading(false);
     }
@@ -255,6 +262,27 @@ export default function WrongScreen() {
         <Text style={[styles.summaryLbl, { color: c.textSecondary }]}>soru bekliyor</Text>
       </View>
 
+      {breakdown.length > 0 && (
+        <View style={[styles.radarCard, { backgroundColor: c.card, borderColor: c.border }]}>
+          <Text style={[styles.radarTitle, { color: c.text }]}>Zayıf Konu Radarı</Text>
+          <View style={{ gap: 12, marginTop: 10 }}>
+            {breakdown.map((b) => (
+              <View key={b.key}>
+                <View style={styles.radarRowHead}>
+                  <Text style={[styles.radarLabel, { color: c.text }]}>{b.label}</Text>
+                  <Text style={[styles.radarStat, { color: c.textSecondary }]}>
+                    %{Math.round(b.accuracy)} · {b.total} soru
+                  </Text>
+                </View>
+                <View style={[styles.radarBarTrack, { backgroundColor: c.border }]}>
+                  <View style={[styles.radarBarFill, { width: `${Math.round(b.accuracy)}%`, backgroundColor: b.color }]} />
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
       {questions.length === 0 ? (
         <View style={[styles.empty, { backgroundColor: c.card, borderColor: c.border }]}>
           <Text style={styles.emptyEmoji}>🎉</Text>
@@ -313,6 +341,14 @@ const styles = StyleSheet.create({
   summaryCard: { borderRadius: 16, borderWidth: 1, padding: 18, alignItems: 'center', gap: 4 },
   summaryNum: { fontSize: 40, fontWeight: '900' },
   summaryLbl: { fontSize: 12, fontWeight: '600' },
+
+  radarCard: { borderRadius: 16, borderWidth: 1, padding: 16 },
+  radarTitle: { fontSize: 14, fontWeight: '800' },
+  radarRowHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  radarLabel: { fontSize: 13, fontWeight: '700' },
+  radarStat: { fontSize: 12, fontWeight: '600' },
+  radarBarTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  radarBarFill: { height: 8, borderRadius: 4 },
 
   empty: { borderRadius: 18, borderWidth: 1, padding: 24, alignItems: 'center', gap: 6 },
   emptyEmoji: { fontSize: 44 },

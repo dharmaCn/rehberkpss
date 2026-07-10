@@ -1,37 +1,68 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Sentry from '@sentry/react-native';
 import { useAuth } from '../hooks/useAuth';
 import { isDemoMode } from '../lib/demoMode';
 import { Colors } from '../constants/colors';
 import SeasonResetModal from '../components/SeasonResetModal';
 import { refreshComebackSchedule } from '../lib/notifications';
+import { ONBOARDING_SEEN_KEY, OnboardingContext } from '../lib/onboarding';
 
-export default function RootLayout() {
+if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    tracesSampleRate: 0.2,
+    sendDefaultPii: false,
+  });
+}
+
+function RootLayout() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
+  const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (loading) return;
+    AsyncStorage.getItem(ONBOARDING_SEEN_KEY)
+      .then((v) => setOnboardingSeen(v === '1'))
+      .catch(() => setOnboardingSeen(true));
+  }, []);
+
+  // Senkron işaretleme: onboarding ekranı bunu çağırınca state hemen güncellenir,
+  // AsyncStorage'ın async okuma turunu beklemek gerekmez (aksi halde yönlendirme
+  // efekti eski "görülmedi" değeriyle çalışıp kullanıcıyı tekrar onboarding'e atıyordu).
+  const markOnboardingSeen = useCallback(() => {
+    setOnboardingSeen(true);
+    AsyncStorage.setItem(ONBOARDING_SEEN_KEY, '1').catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (loading || onboardingSeen === null) return;
+    const inOnboarding = segments[0] === 'onboarding';
+    if (!onboardingSeen && !inOnboarding && !isDemoMode()) {
+      router.replace('/onboarding');
+      return;
+    }
     const inAuth = segments[0] === '(auth)';
-    if (!user && !inAuth && !isDemoMode()) {
+    if (!user && !inAuth && !inOnboarding && !isDemoMode()) {
       router.replace('/(auth)/login');
-    } else if (user && inAuth) {
+    } else if (user && (inAuth || inOnboarding)) {
       router.replace('/(tabs)');
     }
-  }, [user, loading, segments]);
+  }, [user, loading, segments, onboardingSeen]);
 
   // Her app açılışında 3/5/7 günlük comeback push'larını yeniden planla
   useEffect(() => {
     refreshComebackSchedule().catch(() => {});
   }, []);
 
-  if (loading) {
+  if (loading || onboardingSeen === null) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View style={{ flex: 1, backgroundColor: c.background, alignItems: 'center', justifyContent: 'center' }}>
@@ -42,10 +73,14 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }} />
-      {user && !isDemoMode() ? <SeasonResetModal /> : null}
-    </GestureHandlerRootView>
+    <OnboardingContext.Provider value={{ seen: onboardingSeen, markSeen: markOnboardingSeen }}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+        <Stack screenOptions={{ headerShown: false }} />
+        {user && !isDemoMode() ? <SeasonResetModal /> : null}
+      </GestureHandlerRootView>
+    </OnboardingContext.Provider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

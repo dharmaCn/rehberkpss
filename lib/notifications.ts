@@ -60,6 +60,19 @@ async function scheduleDaily(): Promise<void> {
   });
 }
 
+async function scheduleEveningQuiz(): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    identifier: 'evening-quiz',
+    content: { title: 'Akşam Sınavı 🌙', body: '1 dakika sonra 10 soruluk akşam sınavı başlıyor!' },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+      hour: 19,
+      minute: 59,
+      repeats: true,
+    },
+  });
+}
+
 async function scheduleWeeklySummary(): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     identifier: 'weekly-summary',
@@ -96,6 +109,7 @@ export async function enableAll(): Promise<boolean> {
   if (!ok) return false;
   await Notifications.cancelAllScheduledNotificationsAsync();
   await scheduleDaily();
+  await scheduleEveningQuiz();
   await scheduleWeeklySummary();
   await scheduleComeback();
   await setEnabledFlag(true);

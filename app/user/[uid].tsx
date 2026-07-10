@@ -25,6 +25,7 @@ import {
 } from '../../lib/friends';
 import { Colors } from '../../constants/colors';
 import { BADGES, BadgeId } from '../../lib/badges';
+import { TITLES } from '../../lib/titles';
 import { getLevelInfo } from '../../lib/levels';
 
 export default function PublicProfileScreen() {
@@ -152,6 +153,14 @@ export default function PublicProfileScreen() {
         <Text style={[styles.levelLine, { color: c.textSecondary }]}>
           {lvl.emoji} Seviye {lvl.level} — {lvl.title}
         </Text>
+        {profile.titleId && TITLES[profile.titleId] && (
+          <View style={[styles.titleChip, { backgroundColor: TITLES[profile.titleId].color + '22' }]}>
+            <Ionicons name={TITLES[profile.titleId].icon as never} size={14} color={TITLES[profile.titleId].color} />
+            <Text style={[styles.titleChipText, { color: TITLES[profile.titleId].color }]}>
+              {TITLES[profile.titleId].name}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Arkadaşlık butonu */}
@@ -178,6 +187,18 @@ export default function PublicProfileScreen() {
         </TouchableOpacity>
       )}
 
+      {/* Düello butonu — sadece arkadaşlar arasında */}
+      {!isSelf && me && status === 'friends' && (
+        <TouchableOpacity
+          style={[styles.friendBtn, { backgroundColor: c.card, borderColor: Colors.primary, borderWidth: 1.5 }]}
+          onPress={() => router.push({ pathname: '/duel/new', params: { to: uid, name } })}
+          activeOpacity={0.85}
+        >
+          <Text style={{ fontSize: 16 }}>⚔️</Text>
+          <Text style={[styles.friendBtnText, { color: Colors.primary }]}>Düelloya Davet Et</Text>
+        </TouchableOpacity>
+      )}
+
       {/* İstatistikler */}
       <View style={styles.statRow}>
         {[
@@ -198,6 +219,9 @@ export default function PublicProfileScreen() {
           { label: 'Tüm Zamanlar Puanı', value: (profile.totalScore ?? 0).toLocaleString('tr-TR'), icon: '⭐' },
           { label: 'En Yüksek Günlük Puan', value: profile.bestDayScore ?? 0, icon: '🚀' },
           { label: 'En Uzun Seri', value: `${profile.longestStreak ?? 0} gün`, icon: '📈' },
+          ...((profile.duelCount ?? 0) > 0
+            ? [{ label: 'Düello', value: `${profile.duelWins ?? 0} galibiyet / ${profile.duelCount}`, icon: '⚔️' }]
+            : []),
         ].map((s, i, arr) => (
           <View
             key={s.label}
@@ -252,6 +276,8 @@ const styles = StyleSheet.create({
   avatarText: { color: '#fff', fontSize: 36, fontWeight: '800' },
   name: { fontSize: 22, fontWeight: '800', marginTop: 4 },
   levelLine: { fontSize: 14, fontWeight: '600' },
+  titleChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, marginTop: 8 },
+  titleChipText: { fontSize: 12, fontWeight: '700' },
 
   friendBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
   friendBtnText: { fontSize: 15, fontWeight: '800' },
