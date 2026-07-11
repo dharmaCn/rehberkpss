@@ -1,0 +1,244 @@
+diff --git a/node_modules/@react-native-async-storage/async-storage/ios/RNCAsyncStorage.mm b/node_modules/@react-native-async-storage/async-storage/ios/RNCAsyncStorage.mm
+index fa3bb04..8364039 100644
+--- a/node_modules/@react-native-async-storage/async-storage/ios/RNCAsyncStorage.mm
++++ b/node_modules/@react-native-async-storage/async-storage/ios/RNCAsyncStorage.mm
+@@ -665,6 +665,28 @@ - (BOOL)_passthroughDelegate
+         [self.delegate respondsToSelector:@selector(isPassthrough)] && self.delegate.isPassthrough;
+ }
+ 
++// PATCH(kpssmobil): corrupt storage (nil manifest entries, broken files) used to raise an
++// NSException from these methods; RN 0.81's ObjC->JS exception conversion then corrupts the
++// Hermes runtime and crash-loops the app at startup. Instead: report the error through the
++// normal callback path and wipe the unreadable storage so the next launch starts clean.
++- (void)_recoverFromCorruptStorage
++{
++    @try {
++        [_manifest removeAllObjects];
++        [RCTGetCache() removeAllObjects];
++        RCTDeleteStorageDirectory();
++    } @catch (NSException *__unused ignored) {
++    }
++}
++
++- (NSDictionary *)_errorFromException:(NSException *)exception
++{
++    NSString *reason = exception.reason ?: @"Unknown storage exception";
++    return RCTMakeError([NSString stringWithFormat:@"Storage recovered from exception: %@", reason],
++                        nil,
++                        nil);
++}
++
+ #pragma mark - Exported JS Functions
+ 
+ // clang-format off
+@@ -699,16 +721,24 @@ - (BOOL)_passthroughDelegate
+         }
+     }
+ 
+-    NSDictionary *ensureSetupErrorOut = [self _ensureSetup];
+-    if (ensureSetupErrorOut) {
+-        callback(@[@[ensureSetupErrorOut], (id)kCFNull]);
+-        return;
++    @try {
++        NSDictionary *ensureSetupErrorOut = [self _ensureSetup];
++        if (ensureSetupErrorOut) {
++            callback(@[@[ensureSetupErrorOut], (id)kCFNull]);
++            return;
++        }
++        [self _multiGet:keys
++               callback:callback
++                 getter:^(__unused NSUInteger i, NSString *key, NSDictionary **errorOut) {
++                   return [self _getValueForKey:key errorOut:errorOut];
++                 }];
++    } @catch (NSException *exception) {
++        [self _recoverFromCorruptStorage];
++        @try {
++            callback(@[@[[self _errorFromException:exception]], (id)kCFNull]);
++        } @catch (NSException *__unused ignored) {
++        }
+     }
+-    [self _multiGet:keys
+-           callback:callback
+-             getter:^(__unused NSUInteger i, NSString *key, NSDictionary **errorOut) {
+-               return [self _getValueForKey:key errorOut:errorOut];
+-             }];
+ }
+ 
+ // clang-format off
+@@ -735,21 +765,29 @@ - (BOOL)_passthroughDelegate
+         }
+     }
+ 
+-    NSDictionary *errorOut = [self _ensureSetup];
+-    if (errorOut) {
+-        callback(@[@[errorOut]]);
+-        return;
+-    }
+-    BOOL changedManifest = NO;
+-    NSMutableArray<NSDictionary *> *errors;
+-    for (NSArray<NSString *> *entry in kvPairs) {
+-        NSDictionary *keyError = [self _writeEntry:entry changedManifest:&changedManifest];
+-        RCTAppendError(keyError, &errors);
+-    }
+-    if (changedManifest) {
+-        [self _writeManifest:&errors];
++    @try {
++        NSDictionary *errorOut = [self _ensureSetup];
++        if (errorOut) {
++            callback(@[@[errorOut]]);
++            return;
++        }
++        BOOL changedManifest = NO;
++        NSMutableArray<NSDictionary *> *errors;
++        for (NSArray<NSString *> *entry in kvPairs) {
++            NSDictionary *keyError = [self _writeEntry:entry changedManifest:&changedManifest];
++            RCTAppendError(keyError, &errors);
++        }
++        if (changedManifest) {
++            [self _writeManifest:&errors];
++        }
++        callback(@[RCTNullIfNil(errors)]);
++    } @catch (NSException *exception) {
++        [self _recoverFromCorruptStorage];
++        @try {
++            callback(@[@[[self _errorFromException:exception]]]);
++        } @catch (NSException *__unused ignored) {
++        }
+     }
+-    callback(@[RCTNullIfNil(errors)]);
+ }
+ 
+ // clang-format off
+@@ -776,6 +814,7 @@ - (BOOL)_passthroughDelegate
+         }
+     }
+ 
++    @try {
+     NSDictionary *errorOut = [self _ensureSetup];
+     if (errorOut) {
+         callback(@[@[errorOut]]);
+@@ -808,6 +847,13 @@ - (BOOL)_passthroughDelegate
+         [self _writeManifest:&errors];
+     }
+     callback(@[RCTNullIfNil(errors)]);
++    } @catch (NSException *exception) {
++        [self _recoverFromCorruptStorage];
++        @try {
++            callback(@[@[[self _errorFromException:exception]]]);
++        } @catch (NSException *__unused ignored) {
++        }
++    }
+ }
+ 
+ // clang-format off
+@@ -827,32 +873,40 @@ - (BOOL)_passthroughDelegate
+         }
+     }
+ 
+-    NSDictionary *errorOut = [self _ensureSetup];
+-    if (errorOut) {
+-        callback(@[@[errorOut]]);
+-        return;
+-    }
+-    NSMutableArray<NSDictionary *> *errors;
+-    BOOL changedManifest = NO;
+-    for (NSString *key in keys) {
+-        NSDictionary *keyError = RCTErrorForKey(key);
+-        if (!keyError) {
+-            if (_manifest[key] == (id)kCFNull) {
+-                NSString *filePath = [self _filePathForKey:key];
+-                [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
+-                [RCTGetCache() removeObjectForKey:key];
+-            }
+-            if (_manifest[key]) {
+-                changedManifest = YES;
+-                [_manifest removeObjectForKey:key];
++    @try {
++        NSDictionary *errorOut = [self _ensureSetup];
++        if (errorOut) {
++            callback(@[@[errorOut]]);
++            return;
++        }
++        NSMutableArray<NSDictionary *> *errors;
++        BOOL changedManifest = NO;
++        for (NSString *key in keys) {
++            NSDictionary *keyError = RCTErrorForKey(key);
++            if (!keyError) {
++                if (_manifest[key] == (id)kCFNull) {
++                    NSString *filePath = [self _filePathForKey:key];
++                    [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
++                    [RCTGetCache() removeObjectForKey:key];
++                }
++                if (_manifest[key]) {
++                    changedManifest = YES;
++                    [_manifest removeObjectForKey:key];
++                }
+             }
++            RCTAppendError(keyError, &errors);
++        }
++        if (changedManifest) {
++            [self _writeManifest:&errors];
++        }
++        callback(@[RCTNullIfNil(errors)]);
++    } @catch (NSException *exception) {
++        [self _recoverFromCorruptStorage];
++        @try {
++            callback(@[@[[self _errorFromException:exception]]]);
++        } @catch (NSException *__unused ignored) {
+         }
+-        RCTAppendError(keyError, &errors);
+-    }
+-    if (changedManifest) {
+-        [self _writeManifest:&errors];
+     }
+-    callback(@[RCTNullIfNil(errors)]);
+ }
+ 
+ // clang-format off
+@@ -870,10 +924,17 @@ - (BOOL)_passthroughDelegate
+         return;
+     }
+ 
+-    [_manifest removeAllObjects];
+-    [RCTGetCache() removeAllObjects];
+-    NSDictionary *error = RCTDeleteStorageDirectory();
+-    callback(@[RCTNullIfNil(error)]);
++    @try {
++        [_manifest removeAllObjects];
++        [RCTGetCache() removeAllObjects];
++        NSDictionary *error = RCTDeleteStorageDirectory();
++        callback(@[RCTNullIfNil(error)]);
++    } @catch (NSException *exception) {
++        @try {
++            callback(@[[self _errorFromException:exception]]);
++        } @catch (NSException *__unused ignored) {
++        }
++    }
+ }
+ 
+ // clang-format off
+@@ -890,11 +951,19 @@ - (BOOL)_passthroughDelegate
+         }
+     }
+ 
+-    NSDictionary *errorOut = [self _ensureSetup];
+-    if (errorOut) {
+-        callback(@[errorOut, (id)kCFNull]);
+-    } else {
+-        callback(@[(id)kCFNull, _manifest.allKeys]);
++    @try {
++        NSDictionary *errorOut = [self _ensureSetup];
++        if (errorOut) {
++            callback(@[errorOut, (id)kCFNull]);
++        } else {
++            callback(@[(id)kCFNull, _manifest.allKeys]);
++        }
++    } @catch (NSException *exception) {
++        [self _recoverFromCorruptStorage];
++        @try {
++            callback(@[[self _errorFromException:exception], (id)kCFNull]);
++        } @catch (NSException *__unused ignored) {
++        }
+     }
+ }
+ 
