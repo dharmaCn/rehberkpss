@@ -64,8 +64,8 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.2 hazırlanıyor (iOS build 35)** — boot recovery + soft update banner eklendi; henüz build alınmadı. Android versionCode 5 hâlâ güncel |
-| App Store | Production'da v1.3.1/build 34 yayında; **hâlâ crash var** (3 crash / son gün, iPhone 12 + iOS 26.5.2, Hermes JS boot'ta). AsyncStorage yamasından bağımsız yeni bir Hermes çökmesi — v1.3.2 self-heal ile kapatıyor |
+| Versiyon | **v1.3.2 / iOS build 35 App Store review'da** (2026-07-19 submit edildi) — boot recovery + soft update banner içeriyor. Android versionCode 5 hâlâ güncel |
+| App Store | v1.3.1/build 34 hâlâ prod'da yayında; build 35 review onaylanınca otomatik yayına girecek (phased release yok, immediate). Kritik crash fix olduğu için expedited review başvurusu yapılabilir |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
