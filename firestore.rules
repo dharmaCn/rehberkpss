@@ -150,6 +150,13 @@ service cloud.firestore {
                     && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
     }
 
+    // Uygulama konfig dokümanları — sürüm bilgisi vb. Herkes okur, kimse yazamaz
+    // (yazma Firebase Console üzerinden manuel yapılır).
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Soru hata bildirimleri — kullanıcı sadece kendi adına rapor oluşturabilir,
     // okuma/güncelleme/silme yok (geliştirici Firebase Console üzerinden inceler)
     match /questionReports/{reportId} {

@@ -26,6 +26,7 @@ import { Colors } from '../../constants/colors';
 import { daysUntil } from '../../constants/season';
 import ExamGoalModal from '../../components/ExamGoalModal';
 import DailyCultureModal from '../../components/DailyCultureModal';
+import UpdateBanner from '../../components/UpdateBanner';
 import { Duel, fetchMyDuels, DUEL_CATEGORY_LABELS } from '../../lib/duels';
 
 const CULTURE_CARD_IMAGE = require('../../assets/culture-card-bg.png');
@@ -222,6 +223,7 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
+      <UpdateBanner />
       {/* ═══ HEADER — gradient banner ═══ */}
       <LinearGradient
         colors={['#4F46E5', '#7C3AED']}

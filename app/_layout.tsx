@@ -10,6 +10,7 @@ import { Colors } from '../constants/colors';
 import SeasonResetModal from '../components/SeasonResetModal';
 import { refreshComebackSchedule } from '../lib/notifications';
 import { ONBOARDING_SEEN_KEY, OnboardingContext } from '../lib/onboarding';
+import { initBootCanary, markBootSuccess } from '../lib/bootRecovery';
 
 function RootLayout() {
   const { user, loading } = useAuth();
@@ -20,10 +21,24 @@ function RootLayout() {
   const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(ONBOARDING_SEEN_KEY)
+    // Onboarding okuma da AsyncStorage'a dokunuyor — canary'yi bekle,
+    // gerekirse self-heal temizliği önce çalışsın.
+    initBootCanary()
+      .then(() => AsyncStorage.getItem(ONBOARDING_SEEN_KEY))
       .then((v) => setOnboardingSeen(v === '1'))
       .catch(() => setOnboardingSeen(true));
   }, []);
+
+  // Uygulama sağ salim mount olup auth + onboarding çözüldüyse boot canary'yi
+  // sıfırla. 3sn bekleme, Hermes JS boot crash penceresini (yaklaşık 2sn)
+  // güvenle geçtiğimizden emin olmak için.
+  useEffect(() => {
+    if (loading || onboardingSeen === null) return;
+    const t = setTimeout(() => {
+      markBootSuccess().catch(() => {});
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [loading, onboardingSeen]);
 
   // Senkron işaretleme: onboarding ekranı bunu çağırınca state hemen güncellenir,
   // AsyncStorage'ın async okuma turunu beklemek gerekmez (aksi halde yönlendirme

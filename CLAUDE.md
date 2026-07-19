@@ -60,14 +60,21 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-07-11)
+## Güncel Durum (2026-07-19)
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.1, iOS build 34 TestFlight'a submit edildi** (2026-07-11, açılış crash'inin kök nedeni AsyncStorage yamasıyla çözüldü) — Android versionCode 5 hâlâ güncel |
-| App Store | Production'da yayında olan v1.3.0/build 27; v1.3.1 hattı (build 31/33 crash etti → build 34 AsyncStorage yamasıyla) TestFlight'ta test ediliyor, henüz production'a submit edilmedi |
+| Versiyon | **v1.3.2 hazırlanıyor (iOS build 35)** — boot recovery + soft update banner eklendi; henüz build alınmadı. Android versionCode 5 hâlâ güncel |
+| App Store | Production'da v1.3.1/build 34 yayında; **hâlâ crash var** (3 crash / son gün, iPhone 12 + iOS 26.5.2, Hermes JS boot'ta). AsyncStorage yamasından bağımsız yeni bir Hermes çökmesi — v1.3.2 self-heal ile kapatıyor |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
+
+**⚠️ AÇIK — v1.3.1/build 34 production crash'i (2026-07-19 tespit edildi):**
+Xcode Organizer'daki 2 sembolize log: `EXC_BAD_ACCESS` **Hermes JS engine** içinde, uygulama açıldıktan ~2-3 sn sonra (JS boot sırasında). Cihaz: iPhone 12 (iPhone13,2), iOS 26.5.2. Register'da `x4: 0x656d616e` = ASCII "name" → Hermes bir yerde `.name` property'sini okurken bozuk pointer'a çarpıyor. AsyncStorage NSException değil (build 34 yaması çalışıyor), bu farklı bir yol: muhtemelen v1.3.0'dan güncelleyen kullanıcının Firestore/AsyncStorage'inde eski yazılmış bir objenin şekli, v1.3.1'de eklenen kodun (Aday Kimliği / Zayıf Konu Radarı / duel / evening quiz) beklediğinden farklı → Hermes memory corruption.
+- **v1.3.2 (build 35) yaması:** `lib/bootRecovery.ts` — boot canary. Uygulama JS boot'a başlarken AsyncStorage'a sayacı +1 yazar; mount'tan 3sn sonra 0'a resetlenir. Bir sonraki açılışta sayaç ≥ 2 ise **nuclear reset**: onboarding+auth persistence dahil tüm AsyncStorage temizlenir → uygulama fresh install gibi başlar, kullanıcı tekrar giriş yapar, Firestore'daki verisi geri döner. `hooks/useAuth.ts` ve `app/_layout.tsx` bu promise'i bekliyor ki temizlik Firebase auth persistence okumadan önce bitsin.
+- **Yumuşak güncelleme banner'ı:** `lib/appVersion.ts` + `components/UpdateBanner.tsx`. Firestore `config/appVersion` dokümanından `{ latestVersion, releaseNotes }` okur; kurulu sürüm eskiyse ana ekranın üstünde chip gösterir → App Store linki. Kapatılınca 7 gün gösterilmez. Rules `config/*` public read açıldı (**deploy gerekli**). Yeni build çıkarınca Firebase Console → Firestore → `config/appVersion` dokümanında `latestVersion` alanını güncelle.
+- **v1.3.2 için app.json**: `version: 1.3.2` yapıldı (90062 hatasına düşmemek için). iOS buildNumber EAS'te autoIncrement.
+- Elimizdeki v1.3.1 kullanıcıları banner göremez (crash açılışta oluyor); v1.3.2 App Store'a çıkınca ~1-2 gün içinde iOS otomatik güncelleme ile eriyecek. Banner asıl gelecekteki hatalı build'lerde sigorta.
 
 **✅ ÇÖZÜLDÜ — TestFlight açılış crash'i (2026-07-10/11, kök neden bulundu ve yamalandı):**
 Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök neden: **cihazdaki bozuk AsyncStorage verisi**, açılışta (Firebase auth kalıcılığı + onboarding bayrağı okumaları sırasında) native `NSException` fırlatıyor; RN 0.81'in bu exception'ı JS Error'a çevirme kodu (`convertNSExceptionToJSError`, kendi dispatch kuyruğundan jsi::Runtime'a dokunuyor) Hermes'i bozup `EXC_BAD_ACCESS (SIGSEGV)` veriyor (crash log'larda çöken adresin ASCII metin olması — `0x75646f70` = "podu" — bellek bozulmasını ele veriyordu). Teşhis, cihazda uygulamayı **silip yeniden kurunca** (temiz veri) crash'in kaybolmasıyla doğrulandı; simülatörde temiz veriyle hiç üretilemiyordu.
