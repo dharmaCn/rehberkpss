@@ -64,8 +64,8 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.2 / iOS build 35 App Store review'da** (2026-07-19 submit edildi) — boot recovery + soft update banner içeriyor. Android versionCode 5 hâlâ güncel |
-| App Store | v1.3.1/build 34 hâlâ prod'da yayında; build 35 review onaylanınca otomatik yayına girecek (phased release yok, immediate). Kritik crash fix olduğu için expedited review başvurusu yapılabilir |
+| Versiyon | **v1.3.3 / iOS build 40 App Store review'da** (2026-07-22 submit edildi) — versiyon-değişimi süpürmesi + boot canary + soft update banner içeriyor. Android versionCode 5 hâlâ güncel |
+| App Store | v1.3.2/build 35 prod'da yayında (2026-07-19 onaylandı, otomatik yayına girdi) ama **hâlâ crash bildiriliyordu** (2 kere üst üste açılamayan kullanıcı 3.'de düzeliyordu — canary'nin beklenen ama zayıf davranışı). v1.3.3/build 40 review onaylanınca otomatik yayına girecek (phased release yok, immediate) |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
@@ -75,6 +75,11 @@ Xcode Organizer'daki 2 sembolize log: `EXC_BAD_ACCESS` **Hermes JS engine** içi
 - **Yumuşak güncelleme banner'ı:** `lib/appVersion.ts` + `components/UpdateBanner.tsx`. Firestore `config/appVersion` dokümanından `{ latestVersion, releaseNotes }` okur; kurulu sürüm eskiyse ana ekranın üstünde chip gösterir → App Store linki. Kapatılınca 7 gün gösterilmez. Rules `config/*` public read açıldı (**deploy gerekli**). Yeni build çıkarınca Firebase Console → Firestore → `config/appVersion` dokümanında `latestVersion` alanını güncelle.
 - **v1.3.2 için app.json**: `version: 1.3.2` yapıldı (90062 hatasına düşmemek için). iOS buildNumber EAS'te autoIncrement.
 - Elimizdeki v1.3.1 kullanıcıları banner göremez (crash açılışta oluyor); v1.3.2 App Store'a çıkınca ~1-2 gün içinde iOS otomatik güncelleme ile eriyecek. Banner asıl gelecekteki hatalı build'lerde sigorta.
+
+**⚠️ v1.3.2/build 35 yayına girdi ama crash tam kapanmadı (2026-07-21/22):** Gerçek kullanıcı testinde (arkadaş cihazı) 2 kez üst üste açılış crash'i, 3.'de nuclear reset devreye girip düzeldi — yani canary **beklendiği gibi çalıştı**, ama kullanıcı yine de 2 kez crash görüyor. Daha iyisi lazım: kök nedeni önceden önlemek.
+- **v1.3.3 (build 40) yaması — versiyon-değişimi süpürmesi:** `lib/bootRecovery.ts`'e `runVersionSweep()` eklendi. Uygulama açılışında son çalıştığı sürümü (`__last_run_version` anahtarı) kontrol eder; `app.json`'daki güncel sürümden farklıysa (yani kullanıcı güncelleme yapmışsa) — Firebase auth persistence (`firebase:` prefixli anahtarlar) ve `onboardingSeen` hariç **tüm AsyncStorage'ı henüz hiçbir kod okumadan siler**. Böylece eski sürümün yazdığı bozuk şekilli veri Hermes'e hiç ulaşmıyor, crash **hiç oluşmuyor** (reaktif canary'nin aksine proaktif).
+- **Versiyon çakışması dersi:** İlk denemede aynı `1.3.2` numarasıyla build 39 aldık ama Apple zaten `1.3.2`'yi (build 35) onaylamıştı → hata 90062/90186 ("bundle invalid... previously approved version", "pre-release train closed"). **Aynı versiyon numarası bir kez onaylandıktan sonra tekrar kullanılamaz** — bir sonraki yamada mutlaka `app.json`'daki `version`'ı da artır, sadece buildNumber yetmez.
+- App Store Connect'te yeni versiyon eklerken eski versiyonun **Notes** ve **Sign-In Information** alanları yeni versiyona kopyalanıyor (miras kalıyor) — her submit'te Notes'u güncel tutmayı unutma, Sign-in required kutusu boş kalmalı (misafir girişi var, review'cu "Hızlı Başla" ile girer).
 
 **✅ ÇÖZÜLDÜ — TestFlight açılış crash'i (2026-07-10/11, kök neden bulundu ve yamalandı):**
 Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök neden: **cihazdaki bozuk AsyncStorage verisi**, açılışta (Firebase auth kalıcılığı + onboarding bayrağı okumaları sırasında) native `NSException` fırlatıyor; RN 0.81'in bu exception'ı JS Error'a çevirme kodu (`convertNSExceptionToJSError`, kendi dispatch kuyruğundan jsi::Runtime'a dokunuyor) Hermes'i bozup `EXC_BAD_ACCESS (SIGSEGV)` veriyor (crash log'larda çöken adresin ASCII metin olması — `0x75646f70` = "podu" — bellek bozulmasını ele veriyordu). Teşhis, cihazda uygulamayı **silip yeniden kurunca** (temiz veri) crash'in kaybolmasıyla doğrulandı; simülatörde temiz veriyle hiç üretilemiyordu.
