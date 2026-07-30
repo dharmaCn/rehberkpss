@@ -21,6 +21,8 @@ import { guestDisplayName, isGuestDisplayName } from './guestName';
 import { SEASON_ID } from '../constants/season';
 import { BadgeId, evaluateNewBadges } from './badges';
 import { CategoryKey, TitleId, evaluateTitle } from './titles';
+import { AgsCategory } from '../constants/agsQuestions';
+import { AgsTitleId, evaluateAgsTitle } from './agsTitles';
 
 export interface ProfileMeta {
   examDate?: string;
@@ -71,6 +73,9 @@ export interface UserProfile {
   weeklyKey?: string;
   previousWeeklyAccuracy?: number | null;
   titleId?: TitleId | null;
+  // AGS — Eğitim Bilimleri (Aday Kimliği ile ayrı, kendi unvan seti)
+  agsCategoryStats?: Record<AgsCategory, { correct: number; total: number }>;
+  agsTitleId?: AgsTitleId | null;
 }
 
 export interface QuizResult {
@@ -478,44 +483,6 @@ export async function fetchLeaderboard(
   });
 }
 
-export interface TodayPulse {
-  candidateCount: number;
-  questionCount: number;
-}
-
-// Canlı Nabız: gerçek zamanlı bir "online" takibi yok — bugün en az bir quiz
-// tamamlamış aday sayısı ve bugün toplam çözülen soru sayısı, mevcut `results`
-// ve `categoryResults` dokümanlarından türetiliyor.
-export async function fetchTodayPulse(): Promise<TodayPulse> {
-  const today = getTodayKey();
-
-  const dailyQ = query(collection(db, 'results'), where('date', '==', today));
-  const dailySnap = await getDocs(dailyQ);
-
-  let candidateCount = 0;
-  let questionCount = 0;
-  dailySnap.docs.forEach((d) => {
-    const data = d.data() as {
-      mainCompleted?: boolean;
-      mainTotal?: number;
-      eveningCompleted?: boolean;
-      eveningTotal?: number;
-    };
-    candidateCount += 1;
-    if (data.mainCompleted) questionCount += data.mainTotal ?? 10;
-    if (data.eveningCompleted) questionCount += data.eveningTotal ?? 10;
-  });
-
-  const catQ = query(collection(db, 'categoryResults'), where('date', '==', today));
-  const catSnap = await getDocs(catQ);
-  catSnap.docs.forEach((d) => {
-    const data = d.data() as { total?: number };
-    questionCount += data.total ?? 0;
-  });
-
-  return { candidateCount, questionCount };
-}
-
 export async function fetchUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   return snap.exists() ? (snap.data() as UserProfile) : null;
@@ -621,6 +588,46 @@ export async function saveCategoryQuizResult(
     weeklyKey: currentWeekKey,
     previousWeeklyAccuracy,
     titleId: newTitleId,
+  });
+}
+
+const EMPTY_AGS_CATEGORY_STATS: Record<AgsCategory, { correct: number; total: number }> = {
+  'gelisim-psikolojisi': { correct: 0, total: 0 },
+  'ogrenme-psikolojisi': { correct: 0, total: 0 },
+  'ogretim-ilke-yontem': { correct: 0, total: 0 },
+  'olcme-degerlendirme': { correct: 0, total: 0 },
+  rehberlik: { correct: 0, total: 0 },
+  'sinif-yonetimi': { correct: 0, total: 0 },
+  'program-gelistirme': { correct: 0, total: 0 },
+  'ogretim-teknolojileri': { correct: 0, total: 0 },
+  'turk-egitim-sistemi': { correct: 0, total: 0 },
+};
+
+// AGS quiz sonucu — ana skor/liderlik tablosuna dokunmaz, yalnızca kendi
+// konu istatistiklerini ve Eğitim Bilimci unvanını günceller.
+export async function saveAgsQuizResult(
+  uid: string,
+  category: AgsCategory,
+  correct: number,
+  total: number
+): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  const userSnap = await getDoc(userRef);
+  const userData = (userSnap.data() ?? {}) as Partial<UserProfile>;
+
+  const prevStats = userData.agsCategoryStats ?? EMPTY_AGS_CATEGORY_STATS;
+  const prevForCat = prevStats[category] ?? { correct: 0, total: 0 };
+  const newAgsCategoryStats: Record<AgsCategory, { correct: number; total: number }> = {
+    ...EMPTY_AGS_CATEGORY_STATS,
+    ...prevStats,
+    [category]: { correct: prevForCat.correct + correct, total: prevForCat.total + total },
+  };
+
+  const newAgsTitleId = evaluateAgsTitle(newAgsCategoryStats);
+
+  await updateDoc(userRef, {
+    agsCategoryStats: newAgsCategoryStats,
+    agsTitleId: newAgsTitleId,
   });
 }
 

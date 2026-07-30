@@ -14,6 +14,8 @@ import * as Haptics from 'expo-haptics';
 import { AgsQuestion, AgsCategory } from '../../constants/agsQuestions';
 import { getDailyAgsQuestions, getAgsTopicLabel, getAgsTopicColor } from '../../lib/agsQuiz';
 import { calculateScore } from '../../lib/quiz';
+import { getAuthSync } from '../../lib/firebase';
+import { saveAgsQuizResult } from '../../lib/firestore';
 import { Colors } from '../../constants/colors';
 
 const QUESTION_TIME = 30;
@@ -103,10 +105,12 @@ export default function AgsQuizSession() {
     setTimeout(() => nextQuestion(pts, newCorrect), 900);
   }
 
-  function nextQuestion(_lastPts: number, _corrects: number) {
+  function nextQuestion(_lastPts: number, corrects: number) {
     const next = index + 1;
     if (next >= questions.length) {
       setFinished(true);
+      const user = getAuthSync()?.currentUser ?? null;
+      if (user) saveAgsQuizResult(user.uid, category, corrects, questions.length).catch(() => {});
     } else {
       setSelected(null);
       setIndex(next);

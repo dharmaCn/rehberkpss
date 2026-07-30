@@ -27,7 +27,6 @@ import { daysUntil } from '../../constants/season';
 import ExamGoalModal from '../../components/ExamGoalModal';
 import DailyCultureModal from '../../components/DailyCultureModal';
 import UpdateBanner from '../../components/UpdateBanner';
-import LivePulse from '../../components/LivePulse';
 import { Duel, fetchMyDuels, DUEL_CATEGORY_LABELS } from '../../lib/duels';
 
 const CULTURE_CARD_IMAGE = require('../../assets/culture-card-bg.png');
@@ -225,7 +224,6 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <UpdateBanner />
-      <LivePulse />
       {/* ═══ HEADER — gradient banner ═══ */}
       <LinearGradient
         colors={['#4F46E5', '#7C3AED']}
