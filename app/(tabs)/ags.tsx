@@ -3,17 +3,14 @@ import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
-import { AGS_TOPIC_ORDER, getAgsTopicLabel, getAgsTopicColor, getAgsTopicQuestionCount } from '../../lib/agsQuiz';
+import { AGS_TOPIC_ORDER, getAgsTopicLabel, getAgsTopicColor } from '../../lib/agsQuiz';
 
 export default function AgsScreen() {
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
 
-  const topics = useMemo(
-    () => AGS_TOPIC_ORDER.map((key) => ({ key, count: getAgsTopicQuestionCount(key) })),
-    []
-  );
+  const topics = useMemo(() => AGS_TOPIC_ORDER, []);
 
   return (
     <ScrollView
@@ -24,12 +21,12 @@ export default function AgsScreen() {
       <View style={styles.header}>
         <Text style={[styles.title, { color: c.text }]}>AGS</Text>
         <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-          Eğitim Bilimleri konuları — 9 alt dal, {topics.reduce((s, t) => s + t.count, 0)} soru
+          Eğitim Bilimleri konuları — 9 alt dal, yüzlerce soru
         </Text>
       </View>
 
       <View style={styles.grid}>
-        {topics.map(({ key, count }) => {
+        {topics.map((key) => {
           const color = getAgsTopicColor(key);
           return (
             <TouchableOpacity
@@ -42,7 +39,6 @@ export default function AgsScreen() {
                 <Ionicons name="school" size={22} color={color} />
               </View>
               <Text style={[styles.cardLabel, { color: c.text }]}>{getAgsTopicLabel(key)}</Text>
-              <Text style={[styles.cardSub, { color: c.textSecondary }]}>{count} soru</Text>
             </TouchableOpacity>
           );
         })}
@@ -67,5 +63,4 @@ const styles = StyleSheet.create({
   },
   iconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   cardLabel: { fontSize: 14, fontWeight: '700', lineHeight: 19 },
-  cardSub: { fontSize: 12 },
 });
