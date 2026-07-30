@@ -275,6 +275,7 @@ export async function saveQuizResult(
     await updateDoc(resultRef, {
       mainCompleted: true,
       mainScore: score,
+      mainTotal: totalQuestions,
       score: increment(score),
       correct,
       week,
@@ -289,6 +290,7 @@ export async function saveQuizResult(
       score,
       mainScore: score,
       mainCompleted: true,
+      mainTotal: totalQuestions,
       correct,
       date: today,
       week,
@@ -383,7 +385,8 @@ export async function hasCompletedTodayEveningQuiz(uid: string): Promise<boolean
 export async function saveEveningQuizResult(
   user: { uid: string; displayName: string | null; photoURL: string | null },
   score: number,
-  correct: number
+  correct: number,
+  totalQuestions = 10
 ): Promise<void> {
   const today = getTodayKey();
   const week = getWeekKey();
@@ -394,6 +397,7 @@ export async function saveEveningQuizResult(
       eveningCompleted: true,
       eveningScore: score,
       eveningCorrect: correct,
+      eveningTotal: totalQuestions,
       score: increment(score),
       week,
       seasonId: SEASON_ID,
@@ -408,6 +412,7 @@ export async function saveEveningQuizResult(
       eveningCompleted: true,
       eveningScore: score,
       eveningCorrect: correct,
+      eveningTotal: totalQuestions,
       date: today,
       week,
       seasonId: SEASON_ID,
@@ -471,6 +476,44 @@ export async function fetchLeaderboard(
       titleId: period === 'alltime' ? ((data.titleId as TitleId | null | undefined) ?? null) : undefined,
     };
   });
+}
+
+export interface TodayPulse {
+  candidateCount: number;
+  questionCount: number;
+}
+
+// Canlı Nabız: gerçek zamanlı bir "online" takibi yok — bugün en az bir quiz
+// tamamlamış aday sayısı ve bugün toplam çözülen soru sayısı, mevcut `results`
+// ve `categoryResults` dokümanlarından türetiliyor.
+export async function fetchTodayPulse(): Promise<TodayPulse> {
+  const today = getTodayKey();
+
+  const dailyQ = query(collection(db, 'results'), where('date', '==', today));
+  const dailySnap = await getDocs(dailyQ);
+
+  let candidateCount = 0;
+  let questionCount = 0;
+  dailySnap.docs.forEach((d) => {
+    const data = d.data() as {
+      mainCompleted?: boolean;
+      mainTotal?: number;
+      eveningCompleted?: boolean;
+      eveningTotal?: number;
+    };
+    candidateCount += 1;
+    if (data.mainCompleted) questionCount += data.mainTotal ?? 10;
+    if (data.eveningCompleted) questionCount += data.eveningTotal ?? 10;
+  });
+
+  const catQ = query(collection(db, 'categoryResults'), where('date', '==', today));
+  const catSnap = await getDocs(catQ);
+  catSnap.docs.forEach((d) => {
+    const data = d.data() as { total?: number };
+    questionCount += data.total ?? 0;
+  });
+
+  return { candidateCount, questionCount };
 }
 
 export async function fetchUserProfile(uid: string): Promise<UserProfile | null> {

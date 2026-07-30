@@ -49,6 +49,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="ags"
+        options={{
+          title: 'AGS',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon name={focused ? 'school' : 'school-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Sıralama',

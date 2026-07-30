@@ -9,23 +9,24 @@ import {
   Alert,
 } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { getAuthSync } from '../../lib/firebase';
-import { saveEveningQuizResult } from '../../lib/firestore';
-import { getEveningQuizQuestions, calculateScore, getCategoryLabel, getCategoryColor } from '../../lib/quiz';
-import { Question } from '../../constants/questions';
+import { AgsQuestion, AgsCategory } from '../../constants/agsQuestions';
+import { getDailyAgsQuestions, getAgsTopicLabel, getAgsTopicColor } from '../../lib/agsQuiz';
+import { calculateScore } from '../../lib/quiz';
 import { Colors } from '../../constants/colors';
-import ReportQuestionButton from '../../components/ReportQuestionButton';
 
 const QUESTION_TIME = 30;
 
-export default function EveningQuiz() {
+export default function AgsQuizSession() {
   const scheme = useColorScheme() ?? 'light';
   const c = scheme === 'dark' ? Colors.dark : Colors.light;
   const router = useRouter();
+  const { cat } = useLocalSearchParams<{ cat: AgsCategory }>();
 
-  const questions = useMemo(() => getEveningQuizQuestions(), []);
+  const category = (cat ?? 'gelisim-psikolojisi') as AgsCategory;
+  const questions = useMemo(() => getDailyAgsQuestions(category), [category]);
+
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
@@ -38,7 +39,8 @@ export default function EveningQuiz() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
 
-  const q: Question = questions[index];
+  const q: AgsQuestion = questions[index];
+  const topicColor = getAgsTopicColor(category);
 
   useEffect(() => {
     startTimer();
@@ -77,7 +79,7 @@ export default function EveningQuiz() {
     if (selected !== null) return;
     setSelected(-1);
     setAnswers((a) => [...a, -1]);
-    setTimeout(() => nextQuestion(0, correctCount), 1000);
+    setTimeout(() => nextQuestion(0, 0), 1000);
   }
 
   function handleAnswer(optIndex: number) {
@@ -101,15 +103,10 @@ export default function EveningQuiz() {
     setTimeout(() => nextQuestion(pts, newCorrect), 900);
   }
 
-  async function nextQuestion(lastPts: number, corrects: number) {
+  function nextQuestion(_lastPts: number, _corrects: number) {
     const next = index + 1;
     if (next >= questions.length) {
-      const finalScore = totalScore + lastPts;
       setFinished(true);
-      const user = getAuthSync()?.currentUser ?? null;
-      if (user) {
-        saveEveningQuizResult(user, finalScore, corrects, questions.length).catch(() => {});
-      }
     } else {
       setSelected(null);
       setIndex(next);
@@ -140,9 +137,10 @@ export default function EveningQuiz() {
         contentContainerStyle={styles.resultScrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.resultCard, { backgroundColor: '#4338CA' }]}>
+        <View style={[styles.resultCard, { backgroundColor: topicColor }]}>
           <Text style={styles.resultEmoji}>{emoji}</Text>
-          <Text style={styles.resultTitle}>Akşam Sınavı Bitti!</Text>
+          <Text style={styles.resultLabel}>{getAgsTopicLabel(category)} Quizi</Text>
+          <Text style={styles.resultTitle}>Tamamlandı!</Text>
           <Text style={styles.resultScore}>{totalScore}</Text>
           <Text style={styles.resultScoreLabel}>toplam puan</Text>
 
@@ -161,13 +159,16 @@ export default function EveningQuiz() {
 
         <Text style={[styles.resultMsg, { color: c.textSecondary }]}>
           {percentage >= 80
-            ? 'Mükemmel! Bu akşam çok iyiydin.'
+            ? 'Mükemmel! Bu konuyu çok iyi biliyorsun.'
             : percentage >= 60
-            ? 'İyi iş! Yarın akşam tekrar dene.'
-            : 'Yarın akşam daha iyisini yapacaksın!'}
+            ? 'İyi iş! Biraz daha çalışarak uzmanlaşırsın.'
+            : 'Tekrar dene, her tekrar seni sınava biraz daha yaklaştırır!'}
         </Text>
 
         <Text style={[styles.reviewTitle, { color: c.text }]}>Cevaplarını İncele</Text>
+        <Text style={[styles.reviewHint, { color: c.textSecondary }]}>
+          Bir soruya dokunarak doğru cevabı ve açıklamasını gör.
+        </Text>
 
         <View style={styles.reviewList}>
           {questions.map((rq, i) => {
@@ -214,20 +215,16 @@ export default function EveningQuiz() {
                       );
                     })}
 
+                    {userAns === -1 && (
+                      <Text style={[styles.reviewTimeout, { color: c.textSecondary }]}>⏱ Süre doldu — bu soruyu cevaplamadın.</Text>
+                    )}
+
                     {rq.aciklama && (
-                      <View style={[styles.reviewAciklama, { backgroundColor: Colors.primary + '12', borderColor: Colors.primary + '33' }]}>
-                        <Text style={[styles.reviewAciklamaLabel, { color: Colors.primary }]}>💡 Açıklama</Text>
+                      <View style={[styles.reviewAciklama, { backgroundColor: topicColor + '12', borderColor: topicColor + '33' }]}>
+                        <Text style={[styles.reviewAciklamaLabel, { color: topicColor }]}>💡 Açıklama</Text>
                         <Text style={[styles.reviewAciklamaText, { color: c.text }]}>{rq.aciklama}</Text>
                       </View>
                     )}
-
-                    <ReportQuestionButton
-                      questionId={rq.id}
-                      category={rq.category}
-                      question={rq.question}
-                      userAnswerIndex={userAns}
-                      correctIndex={rq.correctIndex}
-                    />
                   </View>
                 )}
               </View>
@@ -236,11 +233,11 @@ export default function EveningQuiz() {
         </View>
 
         <TouchableOpacity
-          style={[styles.homeBtn, { backgroundColor: Colors.primary }]}
-          onPress={() => router.replace('/(tabs)')}
+          style={[styles.homeBtn, { backgroundColor: topicColor }]}
+          onPress={() => router.replace('/(tabs)/ags')}
           activeOpacity={0.85}
         >
-          <Text style={styles.homeBtnText}>Ana Sayfaya Dön</Text>
+          <Text style={styles.homeBtnText}>AGS'ye Dön</Text>
         </TouchableOpacity>
       </ScrollView>
     );
@@ -251,7 +248,7 @@ export default function EveningQuiz() {
       <View style={styles.progressHeader}>
         <TouchableOpacity onPress={() => {
           clearTimer();
-          Alert.alert('Sınavdan Çık', 'İlerlemeniz kaydedilmeyecek. Çıkmak istiyor musunuz?', [
+          Alert.alert('Quiz\'den Çık', 'İlerlemeniz kaydedilmeyecek. Çıkmak istiyor musunuz?', [
             { text: 'Devam Et', onPress: startTimer },
             { text: 'Çık', style: 'destructive', onPress: () => router.back() },
           ]);
@@ -260,7 +257,7 @@ export default function EveningQuiz() {
         </TouchableOpacity>
 
         <View style={[styles.progressTrack, { backgroundColor: c.border }]}>
-          <View style={[styles.progressFill, { width: `${((index) / questions.length) * 100}%` }]} />
+          <View style={[styles.progressFill, { width: `${(index / questions.length) * 100}%`, backgroundColor: topicColor }]} />
         </View>
 
         <Text style={[styles.questionCounter, { color: c.textSecondary }]}>
@@ -273,17 +270,20 @@ export default function EveningQuiz() {
           style={[
             styles.timerBar,
             {
-              width: progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
-              backgroundColor: timeLeft <= 10 ? Colors.error : Colors.primary,
+              width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+              backgroundColor: timeLeft <= 10 ? Colors.error : topicColor,
             },
           ]}
         />
       </View>
 
       <View style={styles.body}>
-        <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(q.category) + '22' }]}>
-          <Text style={[styles.categoryText, { color: getCategoryColor(q.category) }]}>
-            {getCategoryLabel(q.category)}
+        <View style={[styles.categoryBadge, { backgroundColor: topicColor + '22' }]}>
+          <Text style={[styles.categoryText, { color: topicColor }]}>
+            {getAgsTopicLabel(category)}
           </Text>
         </View>
 
@@ -319,10 +319,16 @@ export default function EveningQuiz() {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 56 },
 
-  progressHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 12, marginBottom: 8 },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 8,
+  },
   exitBtn: { fontSize: 20, fontWeight: '600', width: 32 },
   progressTrack: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: Colors.primary, borderRadius: 3 },
+  progressFill: { height: '100%', borderRadius: 3 },
   questionCounter: { fontSize: 13, fontWeight: '600', width: 40, textAlign: 'right' },
 
   timerRow: { height: 4, backgroundColor: 'transparent', marginHorizontal: 20, borderRadius: 2, overflow: 'hidden' },
@@ -334,29 +340,57 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
 
   timer: { fontSize: 15, fontWeight: '600' },
-
   question: { fontSize: 20, fontWeight: '700', lineHeight: 30 },
 
   options: { gap: 12 },
-  option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16, borderWidth: 1.5 },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1.5,
+  },
   optionCorrect: { backgroundColor: Colors.success, borderColor: Colors.success },
   optionWrong: { backgroundColor: Colors.error, borderColor: Colors.error },
 
-  optionLetter: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.08)', alignItems: 'center', justifyContent: 'center' },
+  optionLetter: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   optionLetterCorrect: { backgroundColor: 'rgba(255,255,255,0.3)' },
   optionLetterText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
   optionText: { flex: 1, fontSize: 15, fontWeight: '500' },
 
   resultScrollContent: { paddingTop: 56, paddingBottom: 40 },
   resultCard: {
-    margin: 20, borderRadius: 28, padding: 32, alignItems: 'center', gap: 8,
-    shadowColor: '#4338CA', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8,
+    margin: 20,
+    borderRadius: 28,
+    padding: 32,
+    alignItems: 'center',
+    gap: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
   resultEmoji: { fontSize: 56, marginBottom: 8 },
+  resultLabel: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' },
   resultTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
   resultScore: { fontSize: 56, fontWeight: '900', color: '#fff', lineHeight: 64 },
-  resultScoreLabel: { fontSize: 14, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
-  resultStats: { flexDirection: 'row', marginTop: 16, gap: 24, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 16 },
+  resultScoreLabel: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
+  resultStats: {
+    flexDirection: 'row',
+    marginTop: 16,
+    gap: 24,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    padding: 16,
+  },
   resultStat: { alignItems: 'center', gap: 4, flex: 1 },
   resultStatValue: { fontSize: 20, fontWeight: '800', color: '#fff' },
   resultStatLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)' },
@@ -364,11 +398,18 @@ const styles = StyleSheet.create({
 
   resultMsg: { textAlign: 'center', fontSize: 15, paddingHorizontal: 32, lineHeight: 22 },
 
-  homeBtn: { marginHorizontal: 20, marginTop: 20, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  homeBtn: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
   homeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
   reviewTitle: { fontSize: 18, fontWeight: '800', marginHorizontal: 20, marginTop: 24 },
-  reviewList: { marginHorizontal: 20, gap: 10, marginTop: 12 },
+  reviewHint: { fontSize: 13, marginHorizontal: 20, marginTop: 4, marginBottom: 12 },
+  reviewList: { marginHorizontal: 20, gap: 10 },
   reviewItem: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
   reviewBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
@@ -379,6 +420,7 @@ const styles = StyleSheet.create({
   reviewOpt: { borderWidth: 1.5, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, gap: 4 },
   reviewOptText: { fontSize: 14, fontWeight: '500', lineHeight: 20 },
   reviewTag: { fontSize: 12, fontWeight: '700' },
+  reviewTimeout: { fontSize: 13, fontStyle: 'italic', marginTop: 2 },
   reviewAciklama: { borderRadius: 12, borderWidth: 1, padding: 12, gap: 6, marginTop: 4 },
   reviewAciklamaLabel: { fontSize: 13, fontWeight: '800' },
   reviewAciklamaText: { fontSize: 13, lineHeight: 20 },
