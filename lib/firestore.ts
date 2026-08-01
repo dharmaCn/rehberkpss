@@ -76,6 +76,9 @@ export interface UserProfile {
   // AGS — Eğitim Bilimleri (Aday Kimliği ile ayrı, kendi unvan seti)
   agsCategoryStats?: Record<AgsCategory, { correct: number; total: number }>;
   agsTitleId?: AgsTitleId | null;
+  agsCurrentStreak?: number;
+  agsLongestStreak?: number;
+  agsLastQuizDate?: string;
 }
 
 export interface QuizResult {
@@ -625,9 +628,19 @@ export async function saveAgsQuizResult(
 
   const newAgsTitleId = evaluateAgsTitle(newAgsCategoryStats);
 
+  const today = getTodayKey();
+  const prevAgsDate = userData.agsLastQuizDate ?? '';
+  const prevAgsStreak = userData.agsCurrentStreak ?? 0;
+  const prevAgsLongest = userData.agsLongestStreak ?? 0;
+  // AGS serisi genel kültürden bağımsız izlenir; dondurma hakkı yok (freezeAvailable=0).
+  const agsStreakUpd = computeStreakUpdate(today, prevAgsDate, prevAgsStreak, prevAgsLongest, 0);
+
   await updateDoc(userRef, {
     agsCategoryStats: newAgsCategoryStats,
     agsTitleId: newAgsTitleId,
+    agsCurrentStreak: agsStreakUpd.currentStreak,
+    agsLongestStreak: agsStreakUpd.longestStreak,
+    agsLastQuizDate: today,
   });
 }
 

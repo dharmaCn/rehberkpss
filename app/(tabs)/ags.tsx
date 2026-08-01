@@ -30,6 +30,7 @@ export default function AgsScreen() {
 
   const weakest = getAgsCategoryBreakdown(profile?.agsCategoryStats)[0];
   const title = profile?.agsTitleId ? AGS_TITLES[profile.agsTitleId] : null;
+  const streak = profile?.agsCurrentStreak ?? 0;
 
   return (
     <ScrollView
@@ -38,7 +39,15 @@ export default function AgsScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={[styles.title, { color: c.text }]}>AGS</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: c.text }]}>AGS</Text>
+          {streak > 0 && (
+            <View style={styles.streakChip}>
+              <Ionicons name="flame" size={14} color="#F59E0B" />
+              <Text style={styles.streakChipText}>{streak} gün serisi</Text>
+            </View>
+          )}
+        </View>
         <Text style={[styles.subtitle, { color: c.textSecondary }]}>
           Eğitim Bilimleri konuları — 9 alt dal, yüzlerce soru
         </Text>
@@ -97,8 +106,19 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingTop: 56, paddingBottom: 40, paddingHorizontal: 20 },
   header: { marginBottom: 20 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   title: { fontSize: 28, fontWeight: '800' },
   subtitle: { fontSize: 14, marginTop: 4 },
+  streakChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F59E0B1A',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  streakChipText: { fontSize: 12, fontWeight: '700', color: '#F59E0B' },
   titleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
