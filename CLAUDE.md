@@ -62,15 +62,17 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-07-30)
+## Güncel Durum (2026-08-01)
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.4 hazırlanıyor** — AGS modülü + soru havuzu genişletmesi + şık karıştırma düzeltmesi içeriyor. Yerel EAS build (`--local`) ile üretilip Transporter ile App Store Connect/TestFlight'a Can tarafından elle yükleniyor; henüz Apple review'a submit edilmedi. Android versionCode 5 hâlâ güncel |
-| App Store | v1.3.3/build 40 **onaylandı ve yayında**. v1.3.2/build 35'teki açılış crash'i düzeldi (versiyon-değişimi süpürmesi işe yaradı) |
+| Versiyon | **v1.3.4 / build 46 Apple review'da** (2026-08-01 submit edildi, "Waiting for Review") — AGS modülü + soru havuzu genişletmesi + şık karıştırma düzeltmesi + AGS streak içeriyor. Yerel EAS build (`--local`, Fastlane) ile üretilip Can Transporter ile App Store Connect'e yükledi, ben App Store Connect'te (Can'ın Chrome'u üzerinden, Claude in Chrome ile) yeni versiyonu oluşturup build'i seçtim, release notes/App Review notes güncelledim ve review'a gönderdim. **Yayın modu: Manuel** — onaylanınca otomatik yayına girmez, Can'ın App Store Connect'ten elle "Release" tıklaması gerekir (geçmiş crash tecrübesi nedeniyle bilinçli seçildi). Android versionCode 5 hâlâ güncel |
+| App Store | v1.3.3/build 40 **hâlâ yayında** (v1.3.4 onaylanıp Can tarafından elle yayınlanana kadar). v1.3.2/build 35'teki açılış crash'i düzeldi (versiyon-değişimi süpürmesi işe yaradı) |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
-| EAS build kotası | Ücretsiz aylık kota bu ay tükendi (aylık sıfırlanıyor) — bu yüzden `eas build --local` (bu Mac'te, Fastlane ile) kullanılıyor; bkz. aşağıdaki oturum notu |
+| EAS build kotası | Ücretsiz aylık kota Temmuz sonunda tükenmişti — `eas build --local` (bu Mac'te, Fastlane ile) kullanıldı; bkz. aşağıdaki oturum notu. Ağustos'ta kota sıfırlandı |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
+
+**App Store Connect uygulama görünen adı hâlâ "KPSS Quiz: Soru Bankası 2026"** — `app.json`'daki `name`/`CFBundleDisplayName` "KPSS AGS Quiz" olsa da, App Store Connect'in "App Name" alanı (App Information sayfası) bağımsız bir metadata alanı ve manuel güncellenmesi gerekiyor; Apple bunu değiştirmek için yeni versiyon açılmasını şart koşuyor ("To make changes to the app name... create a new app version"). Can'ın kendisinin App Store Connect → App Information'dan güncellemesi gerekiyor, kod tarafında yapılacak bir şey yok.
 
 **⚠️ AÇIK — v1.3.1/build 34 production crash'i (2026-07-19 tespit edildi):**
 Xcode Organizer'daki 2 sembolize log: `EXC_BAD_ACCESS` **Hermes JS engine** içinde, uygulama açıldıktan ~2-3 sn sonra (JS boot sırasında). Cihaz: iPhone 12 (iPhone13,2), iOS 26.5.2. Register'da `x4: 0x656d616e` = ASCII "name" → Hermes bir yerde `.name` property'sini okurken bozuk pointer'a çarpıyor. AsyncStorage NSException değil (build 34 yaması çalışıyor), bu farklı bir yol: muhtemelen v1.3.0'dan güncelleyen kullanıcının Firestore/AsyncStorage'inde eski yazılmış bir objenin şekli, v1.3.1'de eklenen kodun (Aday Kimliği / Zayıf Konu Radarı / duel / evening quiz) beklediğinden farklı → Hermes memory corruption.
@@ -190,7 +192,7 @@ Mevcut bildirimler tamamen lokal; rakibe anlık "sana meydan okundu" push'u içi
 
 ## Yayın Sürecinde Kalan İşler
 
-- **iOS:** Production'da v1.3.3/build 40 yayında. v1.3.4 (AGS modülü + düzeltmeler) yerel build ile üretildi, Can Transporter'la App Store Connect'e yükleyip TestFlight'tan test ediyor — henüz production review'a submit edilmedi. Test sonrası App Store Connect'te "App Name" alanının (gerekirse) güncellenmesi için yeni versiyon açılması gerekebilir (bu adım Can tarafından yapılmalı, kod tarafında `app.json`'daki isim zaten "KPSS AGS Quiz").
+- **iOS:** Production'da v1.3.3/build 40 yayında. v1.3.4/build 46 (AGS modülü + düzeltmeler + streak) 2026-08-01'de Apple review'a submit edildi ("Waiting for Review"). Review onaylanınca **manuel yayın** seçildiği için Can'ın App Store Connect → Distribution'dan elle "Release" tıklaması gerekecek. Ayrıca App Store Connect'teki "App Name" alanını ("KPSS Quiz: Soru Bankası 2026" → "KPSS AGS Quiz" gibi) güncellemek istersen App Information sayfasından Can'ın kendisinin yapması gerekiyor.
 - **Android:** ~16 Tem sayaç dolunca Play Console → Kontrol paneli'nden "Üretime başvur".
 
 ## Dosya Referansları
