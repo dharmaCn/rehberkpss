@@ -32,8 +32,10 @@ app/
 └── wrong/                   Yanlış tekrarı (aralıklı tekrar, 2 gün bekleme)
 
 components/  DailyCultureModal, ExamGoalModal, SeasonResetModal, ReportQuestionButton, DuelRunner
-constants/   questions.ts (902 soru), artworks.ts (81), facts.ts (101), topics.ts (30 ünite: 13 tarih + 10 coğrafya + 7 vatandaşlık), exams.ts, season.ts
-lib/         firestore.ts (veri katmanı), badges.ts, levels.ts (XP/seviye), titles.ts (Aday Kimliği unvanları), categoryAnalysis.ts (Zayıf Konu Radarı), duels.ts, notifications.ts, share.ts, demoMode.ts, guestName.ts, onboarding.ts
+constants/   questions.ts (genel kültür, 1062 soru: Tarih/Coğrafya/Vatandaşlık/Güncel), agsQuestions.ts (AGS/Eğitim Bilimleri, 600 soru: 9 alt dal), artworks.ts (81), facts.ts (101), topics.ts (30 ünite: 13 tarih + 10 coğrafya + 7 vatandaşlık), exams.ts, season.ts
+lib/         firestore.ts (veri katmanı), badges.ts, levels.ts (XP/seviye), titles.ts (Aday Kimliği unvanları — genel kültür), categoryAnalysis.ts (Zayıf Konu Radarı — genel kültür), agsQuiz.ts (AGS soru seçimi/etiket/renk), agsTitles.ts (AGS unvan seti), agsCategoryAnalysis.ts (AGS Zayıf Konu Radarı), duels.ts, notifications.ts, share.ts, demoMode.ts, guestName.ts, onboarding.ts
+app/(tabs)/ags.tsx  AGS sekmesi: 9 konu kartı + Zayıf Konu Radarı + unvan rozeti
+app/ags/     AGS quiz akışı (5 soru, 30sn timer) — kendi Firestore alanları (agsCategoryStats/agsTitleId), genel kültür skor/liderlik sistemine dokunmaz
 app/duel/    Arkadaşla düello (yeni + [id] sonuç ekranı)
 app/evening/ Akşam Sınavı (20:00'de açılan ek 10 soru)
 app/onboarding.tsx  Yeni kullanıcı karşılama akışı
@@ -60,13 +62,14 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-07-19)
+## Güncel Durum (2026-07-30)
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.3 / iOS build 40 App Store review'da** (2026-07-22 submit edildi) — versiyon-değişimi süpürmesi + boot canary + soft update banner içeriyor. Android versionCode 5 hâlâ güncel |
-| App Store | v1.3.2/build 35 prod'da yayında (2026-07-19 onaylandı, otomatik yayına girdi) ama **hâlâ crash bildiriliyordu** (2 kere üst üste açılamayan kullanıcı 3.'de düzeliyordu — canary'nin beklenen ama zayıf davranışı). v1.3.3/build 40 review onaylanınca otomatik yayına girecek (phased release yok, immediate) |
+| Versiyon | **v1.3.4 hazırlanıyor** — AGS modülü + soru havuzu genişletmesi + şık karıştırma düzeltmesi içeriyor. Yerel EAS build (`--local`) ile üretilip Transporter ile App Store Connect/TestFlight'a Can tarafından elle yükleniyor; henüz Apple review'a submit edilmedi. Android versionCode 5 hâlâ güncel |
+| App Store | v1.3.3/build 40 **onaylandı ve yayında**. v1.3.2/build 35'teki açılış crash'i düzeldi (versiyon-değişimi süpürmesi işe yaradı) |
 | Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
+| EAS build kotası | Ücretsiz aylık kota bu ay tükendi (aylık sıfırlanıyor) — bu yüzden `eas build --local` (bu Mac'te, Fastlane ile) kullanılıyor; bkz. aşağıdaki oturum notu |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
 **⚠️ AÇIK — v1.3.1/build 34 production crash'i (2026-07-19 tespit edildi):**
@@ -91,6 +94,27 @@ Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök ned
 **⚠️ Diğer build notları:**
 - İlk submit denemesi (build 29, v1.3.0) Apple tarafından **90062 hatasıyla reddedildi**: `app.json`'daki `"version"` (CFBundleShortVersionString) zaten onaylanmış 1.3.0 ile aynıydı, artırılması gerekiyordu → `1.3.1`'e çekildi. Bir sonraki sürümde `app.json`'daki `version`'ı da elle artırmayı unutma (EAS sadece `buildNumber`'ı `autoIncrement` ile otomatik artırıyor, marketing version'ı artırmıyor).
 - `eas build:version:set --platform ios` komutu **interaktif** — bu ortamda `expect` ile otomatikleştirildi ama alan öndeki değeri temizlemeden yazarsa değerleri birbirine karıştırabiliyor (`30` yerine yanlışlıkla `1.3.1` yazılmıştı, düzeltildi). Bu komutu tekrar çalıştırırken dikkatli ol, sonucu `eas build:version:get --platform ios` ile doğrula.
+
+### 2026-07-30 oturumunda eklenenler
+
+**AGS (Eğitim Bilimleri) modülü — yeni sekme, KPSS'nin genel kültür kısmından tamamen ayrı bir alan:**
+- `constants/agsQuestions.ts`: 600 soru, 9 alt dal (Gelişim Psikolojisi, Öğrenme Psikolojisi, Öğretim İlke ve Yöntemleri, Ölçme-Değerlendirme, Rehberlik, Sınıf Yönetimi, Program Geliştirme, Öğretim Teknolojileri, Türk Eğitim Sistemi — her biri ~46-76 soru).
+- `lib/agsQuiz.ts` (soru seçimi/etiket/renk), `app/(tabs)/ags.tsx` (tab, konu kartları), `app/ags/quiz.tsx` + `app/ags/_layout.tsx` (5 soru/30sn quiz akışı, `app/quiz/category.tsx`'in ayrı bir kopyası).
+- **Bilinçli tasarım kararı:** AGS skoru genel kültürün totalScore/seasonScore/liderlik sistemine hiç dokunmuyor — tamamen kendi alanları (`agsCategoryStats`, `agsTitleId`) üzerinden izleniyor. `firestore.rules`'daki `validUserUpdate` yeni alan eklemeyi kısıtlamadığı için **rules deploy'a gerek kalmadı**.
+- **Zayıf Konu Radarı + Aday Kimliği AGS'ye de eklendi:** `lib/agsCategoryAnalysis.ts` ve `lib/agsTitles.ts` — genel kültürdeki `categoryAnalysis.ts`/`titles.ts` ile aynı mantık, ayrı bir unvan seti (9 konu uzmanlığı + "Eğitim Bilimci"). AGS tab'ında en üstte gösteriliyor.
+- Soru sayısı UI'da tek tek gösterilmiyor ("X soru" kart başına yerine üstte tek satır "yüzlerce soru") — düşük sayıların kötü izlenim verme riskine karşı.
+
+**Genel kültür soru havuzu genişletmesi:** 902 → 1062 soru (+40 her kategoriden: Tarih/Coğrafya/Vatandaşlık/Güncel).
+
+**⚠️ Bulunan ve düzeltilen kritik hata — tüm sorularda doğru cevap A şıkkındaydı:** Hem yeni yazılan 160 genel kültür sorusunda hem de AGS'nin 600 sorusunun tamamında `correctIndex` hep `0` yazılmıştı (üstelik mevcut eski 902 sorudaki dağılım da zaten dengesizdi — 902/1062'sinde A ağırlıklıydı). TypeScript AST'sini (`typescript` paketi) kullanan bir script ile her sorunun id'sine göre deterministik olarak şıkları karıştırıp `correctIndex`'i buna göre güncelleyen bir düzeltme yapıldı (bkz. git log `fix(ags): şık karıştırma...` commit'i) — soru/açıklama metinleri değişmedi, sadece şık sırası ve doğru cevap konumu. **Ders:** Toplu soru üretiminden sonra `grep -oE "correctIndex: [0-9]" | sort | uniq -c` ile dağılım kontrolü rutine alınmalı.
+
+**Canlı Nabız özelliği eklenip sonra tamamen kaldırıldı:** Ana ekranda "bugün X aday · Y soru çözüldü" göstergesi (`components/LivePulse.tsx`, `lib/firestore.ts`'teki `fetchTodayPulse`) eklendi, ama düşük gerçek kullanıcı sayısıyla ("3 aday" gibi) tam tersi bir izlenim ("az kullanılıyor") verdiği fark edilince component ve fonksiyon komple silindi. **Ders:** Sosyal kanıt / canlı sayaç türü özellikler düşük DAU'lu bir uygulamada erken eklenmemeli; büyüdükten sonra ya da "bugün" yerine hiç küçülmeyen "toplam" metriklerle tekrar değerlendirilebilir.
+
+**Yerel EAS build (`--local`) iş akışı keşfedildi/belgelendi — EAS bulut kotası bittiğinde alternatif:**
+- `eas build --platform ios --profile production --local --output <yol>.ipa --non-interactive` bu Mac'te doğrudan derleyip .ipa üretiyor, kimlik bilgilerini EAS sunucularından arka planda otomatik çekiyor (manuel sertifika indirmeye gerek yok).
+- **Fastlane bu Mac'te kurulu değildi** (`brew install fastlane` ile kuruldu) — kurulu olmadan bu komut, kimlik bilgisi payload'unu (şifreli p12/provisioning profile base64) hata mesajıyla birlikte log dosyasına döküyor (`spawn fastlane ENOENT` sonrası). Fastlane kurulunca bu risk ortadan kalkıyor.
+- Üretilen .ipa Transporter ile Can tarafından App Store Connect'e elle yükleniyor (TestFlight testi için); bu, `eas submit` akışının yerini şimdilik alıyor.
+- **appVersionSource: "remote"** olduğu için buildNumber her `--local` build'de de otomatik artıyor (EAS sunucusunda takip ediliyor), `app.json`'daki `version` alanı ise lokal kalıyor — ikisi ayrı senkronize edilmeli.
 
 ### 2026-07-10 oturumunda eklenenler
 - **Aday Kimliği**: `lib/titles.ts` — ders performansına (categoryStats), streak'e ve haftalık gelişime göre kazanılan 12 unvanlık sistem (örn. "Tarih Kâşifi", "Dört Yönlü Aday"). Öncelik sıralı `evaluateTitle()` ile hesaplanıp `saveCategoryQuizResult` içinde her ders quizinden sonra güncelleniyor. Profilde (kendi + arkadaş) ve sıralamanın "Tüm Zamanlar" sekmesinde görünüyor.
@@ -166,7 +190,7 @@ Mevcut bildirimler tamamen lokal; rakibe anlık "sana meydan okundu" push'u içi
 
 ## Yayın Sürecinde Kalan İşler
 
-- **iOS:** Production'da v1.3.0/build 27 yayında. v1.3.1/build 31 (düello + akşam sınavı + Aday Kimliği + Zayıf Konu Radarı) 2026-07-10'da TestFlight'a submit edildi — Apple işleyip test için hazır hale getirince App Store Connect → TestFlight'tan test edilecek. Test onaylanırsa production'a ayrıca submit/review başvurusu gerekir.
+- **iOS:** Production'da v1.3.3/build 40 yayında. v1.3.4 (AGS modülü + düzeltmeler) yerel build ile üretildi, Can Transporter'la App Store Connect'e yükleyip TestFlight'tan test ediyor — henüz production review'a submit edilmedi. Test sonrası App Store Connect'te "App Name" alanının (gerekirse) güncellenmesi için yeni versiyon açılması gerekebilir (bu adım Can tarafından yapılmalı, kod tarafında `app.json`'daki isim zaten "KPSS AGS Quiz").
 - **Android:** ~16 Tem sayaç dolunca Play Console → Kontrol paneli'nden "Üretime başvur".
 
 ## Dosya Referansları
