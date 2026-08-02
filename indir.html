@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPSS AGS Quiz — İndir</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; line-height: 1.7; color: #1a1a1a; text-align: center; }
+    h1 { color: #4F46E5; font-size: 24px; }
+    .btn { display: inline-block; margin: 12px 8px; padding: 14px 28px; border-radius: 12px; background: #4F46E5; color: #fff; text-decoration: none; font-weight: 600; }
+    .btn.secondary { background: #f0f0f5; color: #4F46E5; }
+    p.hint { color: #777; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>📚 KPSS AGS Quiz</h1>
+  <p>Yönlendiriliyorsun…</p>
+  <p>
+    <a class="btn" id="ios-link" href="https://apps.apple.com/tr/app/kpss-quiz-soru-bankası-2026/id6774950987">🍎 App Store</a>
+    <a class="btn secondary" id="android-link" href="https://play.google.com/store/apps/details?id=com.rehberkpss.app">🤖 Google Play</a>
+  </p>
+  <p class="hint">Otomatik yönlenmezsen yukarıdaki butona dokun.</p>
+
+  <script>
+    var ua = navigator.userAgent || navigator.vendor || window.opera;
+    var iosUrl = document.getElementById('ios-link').href;
+    var androidUrl = document.getElementById('android-link').href;
+    if (/android/i.test(ua)) {
+      window.location.replace(androidUrl);
+    } else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+      window.location.replace(iosUrl);
+    }
+  </script>
+</body>
+</html>
