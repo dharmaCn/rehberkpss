@@ -62,13 +62,18 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-08-01)
+## Güncel Durum (2026-08-02)
+
+**Kısa özet — "uygulama şu an ne durumda?" sorusunun cevabı:**
+- 🍎 **App Store:** v1.3.3/build 40 yayında. v1.3.4/build 46 Apple review'da ("Waiting for Review", 2026-08-01 submit edildi). Onaylanınca **elle yayınlama** gerekiyor (Can'ın App Store Connect'ten "Release" tıklaması lazım).
+- 🤖 **Google Play:** v1.3.0 (versionCode 5) 2026-08-01'de **ilk kez üretime yayınlandı** (177 ülke). v1.3.4 (versionCode 6, AGS modülü dahil güncel kod) 2026-08-02'de üretim güncellemesi olarak Google incelemesine gönderildi, **inceleniyor**.
 
 | Şey | Durum |
 |---|---|
-| Versiyon | **v1.3.4 / build 46 Apple review'da** (2026-08-01 submit edildi, "Waiting for Review") — AGS modülü + soru havuzu genişletmesi + şık karıştırma düzeltmesi + AGS streak içeriyor. Yerel EAS build (`--local`, Fastlane) ile üretilip Can Transporter ile App Store Connect'e yükledi, ben App Store Connect'te (Can'ın Chrome'u üzerinden, Claude in Chrome ile) yeni versiyonu oluşturup build'i seçtim, release notes/App Review notes güncelledim ve review'a gönderdim. **Yayın modu: Manuel** — onaylanınca otomatik yayına girmez, Can'ın App Store Connect'ten elle "Release" tıklaması gerekir (geçmiş crash tecrübesi nedeniyle bilinçli seçildi). Android versionCode 5 hâlâ güncel |
+| iOS versiyon | **v1.3.4 / build 46 Apple review'da** (2026-08-01 submit edildi, "Waiting for Review") — AGS modülü + soru havuzu genişletmesi + şık karıştırma düzeltmesi + AGS streak içeriyor. Yerel EAS build (`--local`, Fastlane) ile üretilip Can Transporter ile App Store Connect'e yükledi, Claude App Store Connect'te (Can'ın Chrome'u üzerinden, Claude in Chrome ile) yeni versiyonu oluşturup build'i seçti, release notes/App Review notes güncelledi ve review'a gönderdi. **Yayın modu: Manuel** — onaylanınca otomatik yayına girmez, Can'ın App Store Connect'ten elle "Release" tıklaması gerekir (geçmiş crash tecrübesi nedeniyle bilinçli seçildi). |
 | App Store | v1.3.3/build 40 **hâlâ yayında** (v1.3.4 onaylanıp Can tarafından elle yayınlanana kadar). v1.3.2/build 35'teki açılış crash'i düzeldi (versiyon-değişimi süpürmesi işe yaradı) |
-| Google Play | Kapalı test (Alpha); ~16 Tem'de üretim başvurusu açılır |
+| Android versiyon | **v1.3.4 (versionCode 6) Google incelemesinde** (2026-08-02 `eas submit` ile üretim kanalına gönderildi). Üretimde şu an fiilen **v1.3.0 (versionCode 5)** yayında — 2026-08-01'de Play Console'daki eski kapalı-test AAB'si üretime taşınarak Android'in **ilk kez üretime çıkışı** tamamlandı (bkz. aşağıdaki 2026-08-01/02 oturum notu, iOS'taki tüm crash yamaları + AGS modülü Android'de henüz üretimde değildi, 1.3.4 ile geliyor). |
+| Google Play | **Üretim: Etkin** (kapalı test aşaması geride kaldı, hesaba üretim erişimi Google tarafından resmen verildi — "Tebrikler! Uygulamanıza Google Play üretim erişimi verildi" bildirimi alındı). `eas.json`'daki `submit.production.android.track` **"alpha"dan "production"a çevrildi** (artık `eas submit` direkt üretime gönderiyor, kapalı teste değil). |
 | EAS build kotası | Ücretsiz aylık kota Temmuz sonunda tükenmişti — `eas build --local` (bu Mac'te, Fastlane ile) kullanıldı; bkz. aşağıdaki oturum notu. Ağustos'ta kota sıfırlandı |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
 
@@ -96,6 +101,24 @@ Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök ned
 **⚠️ Diğer build notları:**
 - İlk submit denemesi (build 29, v1.3.0) Apple tarafından **90062 hatasıyla reddedildi**: `app.json`'daki `"version"` (CFBundleShortVersionString) zaten onaylanmış 1.3.0 ile aynıydı, artırılması gerekiyordu → `1.3.1`'e çekildi. Bir sonraki sürümde `app.json`'daki `version`'ı da elle artırmayı unutma (EAS sadece `buildNumber`'ı `autoIncrement` ile otomatik artırıyor, marketing version'ı artırmıyor).
 - `eas build:version:set --platform ios` komutu **interaktif** — bu ortamda `expect` ile otomatikleştirildi ama alan öndeki değeri temizlemeden yazarsa değerleri birbirine karıştırabiliyor (`30` yerine yanlışlıkla `1.3.1` yazılmıştı, düzeltildi). Bu komutu tekrar çalıştırırken dikkatli ol, sonucu `eas build:version:get --platform ios` ile doğrula.
+
+### 2026-08-01/02 oturumu — Android'in ilk kez üretime çıkışı
+
+**Durum tespiti:** Google Play Console'da KPSS AGS Quiz aylardır **kapalı test (Alpha)**'ta duruyordu, 14 kişilik test grubuyla tamamlanmış ama **hiç üretime (production) başvuru yapılmamıştı** — üretim kanalı "Etkin değil", hiç sürüm yayınlanmamış haldeydi.
+
+**Adım 1 — Eski AAB'yi (1.3.0) üretime taşıma (2026-08-01):**
+- Kapalı testte zaten yüklü olan 1.3.0 (versionCode 5) AAB'si "Kitaplıktan ekle" ile üretim sürümüne eklendi, 177 ülke/bölge seçildi, incelemeye gönderildi.
+- **Tuzak:** İlk seferde sadece ülke/bölge + mağaza metadata değişiklikleri "Yayın özeti"nden gönderilmiş, ama sürümün kendisi (AAB) hiç "önizle → onayla → gönder" akışından resmi olarak geçirilmemişti — bu yüzden saatlerce "Taslak" durumunda takılı kaldı, Play Console'un "Gönderim etkinliği" sayfası yanıltıcı şekilde "Yayınlandı" gösteriyordu (sadece metadata değişikliği yayınlanmıştı). Çözüm: Üretim → Sürümler → "Sürümü düzenle" ile taslağı tekrar açıp resmi "Önizle ve onayla" adımından geçirip ayrıca gönderildi. Bu ikinci gönderim gerçekten yayına girdi (2026-08-01 20:53) — Play Store'da canlı, PEGI 3 derecelendirmesiyle doğrulandı.
+- Bu ilk üretim gönderimi aynı zamanda hesabın "kapalı test → üretim" bariyerini de resmen aştı: Play Console kontrol panelinde "Tebrikler! Uygulamanıza Google Play üretim erişimi verildi" bildirimi düştü. **Bu bariyer bir daha karşımıza çıkmayacak** — sonraki sürüm güncellemeleri doğrudan üretime gönderilebilir, tekrar kapalı test gerekmiyor.
+
+**Adım 2 — Güncel kodla (1.3.4) gerçek Android build'i (2026-08-02):**
+- Can `eas build --platform android --profile production` ile 1.3.4 (versionCode 6, commit `e8e590d` — AGS modülü, düello, Aday Kimliği, Zayıf Konu Radarı dahil) build'ini kendi başlattı, bulut kuyruğunda tamamlandı.
+- AAB'yi Play Console'a yüklemek için `eas submit --platform android --latest` denendi, sırasıyla 2 engelle karşılaşıldı:
+  1. **"Google Play Android Developer API has not been used in project... or it is disabled"** → Google Cloud Console'da (console.developers.google.com/apis/api/androidpublisher.googleapis.com) API'nin "Enable" edilmesi gerekti (Can'ın kendisi yaptı, bu adım otomasyon için hassas sayılıp engellendi).
+  2. **"The service account is missing the necessary permissions"** → Play Console → Kullanıcılar ve izinler'de `eas-submit@rehberkpss.iam.gserviceaccount.com` servis hesabı hiç davetli değildi. Davet edilip KPSS AGS Quiz için **"Üretim sürümüne yayınlama, cihazları hariç tutma ve Play Uygulama İmzalama'yı kullanma"** izni verildi.
+- Ayrıca `eas.json`'daki `submit.production.android.track` değeri **"alpha"dan "production"a** değiştirildi — daha önce hiç kullanılmamış bu ayar, `eas submit`'in nereye gönderdiğini belirliyor; "alpha" kalsaydı her yeni build otomatik olarak kapalı teste gidecekti, üretime değil.
+- Bu 3 düzeltmeden sonra `eas submit` başarıyla çalıştı, 1.3.4 üretim incelemesine girdi (2026-08-02).
+- **Ders:** Android tarafında `eas submit` ilk kez kullanılıyordu (daha önceki tüm yüklemeler muhtemelen elle ya da farklı bir yoldan yapılmıştı) — servis hesabı hem Google Cloud API erişimine hem Play Console uygulama iznine ihtiyaç duyuyor, ikisi de tek seferlik kurulum, bir daha gerekmeyecek.
 
 ### 2026-07-30 oturumunda eklenenler
 
@@ -193,7 +216,8 @@ Mevcut bildirimler tamamen lokal; rakibe anlık "sana meydan okundu" push'u içi
 ## Yayın Sürecinde Kalan İşler
 
 - **iOS:** Production'da v1.3.3/build 40 yayında. v1.3.4/build 46 (AGS modülü + düzeltmeler + streak) 2026-08-01'de Apple review'a submit edildi ("Waiting for Review"). Review onaylanınca **manuel yayın** seçildiği için Can'ın App Store Connect → Distribution'dan elle "Release" tıklaması gerekecek. Ayrıca App Store Connect'teki "App Name" alanını ("KPSS Quiz: Soru Bankası 2026" → "KPSS AGS Quiz" gibi) güncellemek istersen App Information sayfasından Can'ın kendisinin yapması gerekiyor.
-- **Android:** ~16 Tem sayaç dolunca Play Console → Kontrol paneli'nden "Üretime başvur".
+- **Android:** Üretim kanalı artık aktif. v1.3.0 üretimde canlı, v1.3.4 (güncel kod, AGS modülü dahil) 2026-08-02'de Google incelemesine gönderildi — onay bekleniyor (**yönetilen yayınlama devre dışı, yani onaylanınca otomatik yayına girer**, iOS'un aksine elle "Release" gerekmiyor). Kontrol: Play Console → KPSS AGS Quiz → Üretim sekmesi → "Sürümler" altında 1.3.4'ün durumu ("İncelemede" → "Google Play'de Mevcut" olduğunda yayınlanmış demektir).
+- **Android sonraki sürümler için:** Artık `eas build --platform android --profile production` + `eas submit --platform android --latest` ikilisi yeterli — servis hesabı izinleri ve `eas.json` track ayarı kalıcı olarak düzeltildi, tekrar kurulum gerekmiyor.
 
 ## Dosya Referansları
 
