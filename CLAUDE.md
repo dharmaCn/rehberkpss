@@ -9,6 +9,7 @@
 - Gizlilik politikası: `https://dharmacn.github.io/rehberkpss/privacy-policy.html`
 - App Store: `https://apps.apple.com/tr/app/kpss-quiz-soru-bankası-2026/id6774950987`
 - Google Play: `https://play.google.com/store/apps/details?id=com.rehberkpss.app`
+- Platform algılayan ortak indirme linki (Android→Play Store, iOS→App Store): `https://dharmacn.github.io/rehberkpss/indir.html` (repo kökündeki `indir.html`, GitHub Pages ile aynı yerden yayınlanıyor)
 
 ## Ortam
 
@@ -79,6 +80,10 @@ firebase deploy --only firestore:rules,firestore:indexes
 | Age Ratings (iOS) | Apple'ın yeni "Social Media" sorularına (App Information → Age Ratings anketi) cevap verildi — uygulamada içerik yeniden yayma/sosyal besleme özelliği olmadığı için "No" işaretlendi. Hesaplanan derecelendirme hâlâ 4+. |
 | EAS build kotası | Ücretsiz aylık kota Temmuz sonunda tükenmişti — `eas build --local` (bu Mac'te, Fastlane ile) kullanıldı; bkz. aşağıdaki oturum notu. Ağustos'ta kota sıfırlandı |
 | Stabil snapshot | `git tag v1.2.1-stable`, `git branch backup/v1.2.1-stable` — bozulursa `git reset --hard v1.2.1-stable` |
+
+**⚠️ Crash/hata izleme şu an aktif değil, elle kontrol gerekiyor:** Sentry entegrasyonu daha önce TestFlight'ta çökmeye sebep olduğu için tamamen kaldırıldı (kod tabanında hiç iz kalmadı) — yani ne Android'de ne iOS'ta gerçek zamanlı/bildirimli bir hata izleme yok. Kontrol için elle bakmak gerekiyor: **Android** → Play Console → Kalite → Android vitals (crash/ANR raporları). **iOS** → Xcode → Window → Organizer → Crashes (sadece bu Mac'ten, App Store kullanıcılarının sembolize crash logları). İleride gerçek zamanlı bir çözüm (Sentry'yi doğru yapılandırıp geri eklemek gibi) değerlendirilebilir.
+
+**✅ Sıralama/düello/arkadaşlık iOS-Android arası tamamen ortak:** `lib/firestore.ts`'teki `fetchLeaderboard()` platform bazlı hiçbir filtre içermiyor — tek Firebase projesi, tek `users`/`results` koleksiyonu. iOS'tan ve Android'den gelen kullanıcılar aynı günlük/haftalık/tüm zamanlar sıralamasında, aynı düello/arkadaşlık sisteminde buluşuyor.
 
 **App Store Connect uygulama görünen adı hâlâ "KPSS Quiz: Soru Bankası 2026"** — `app.json`'daki `name`/`CFBundleDisplayName` "KPSS AGS Quiz" olsa da, App Store Connect'in "App Name" alanı (App Information sayfası) bağımsız bir metadata alanı ve manuel güncellenmesi gerekiyor; Apple bunu değiştirmek için yeni versiyon açılmasını şart koşuyor ("To make changes to the app name... create a new app version"). Can'ın kendisinin App Store Connect → App Information'dan güncellemesi gerekiyor, kod tarafında yapılacak bir şey yok.
 
