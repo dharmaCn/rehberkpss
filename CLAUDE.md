@@ -70,13 +70,13 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 **Kısa özet — "uygulama şu an ne durumda?" sorusunun cevabı:**
 - 🍎 **App Store:** v1.3.4 **canlı ve yayında** — AGS modülü, düello, Aday Kimliği, Zayıf Konu Radarı, akşam sınavı dahil güncel kod gerçek kullanıcılarda.
-- 🤖 **Google Play:** v1.3.4 **canlı ve yayında**, v1.3.5 (görsel yükleme + sıralama tekrar düzeltmeleri) **build/submit aşamasında** — bkz. aşağıdaki 2026-08-03 oturum notu.
+- 🤖 **Google Play:** v1.3.4 **canlı**, v1.3.5 (görsel yükleme + sıralama tekrar düzeltmeleri, versionCode 7) **Google incelemesinde** (2026-08-03'te submit edildi) — bkz. aşağıdaki 2026-08-03 oturum notu.
 - **İki platform da senkron ve güncel** — ilk kez bu noktaya ulaşıldı (Android'in üretime hiç çıkmamış olması Ağustos başındaki oturumların ana konusuydu, bkz. aşağıdaki oturum notları).
 
 | Şey | Durum |
 |---|---|
 | iOS versiyon | **v1.3.4 / build 46 — App Store'da canlı.** Yerel EAS build (`--local`, Fastlane) ile üretilip Can Transporter ile App Store Connect'e yüklendi, Claude App Store Connect'te build'i seçip review'a gönderdi, Apple onayladı, ardından yayına alındı (manuel yayın modu seçiliydi, geçmiş crash tecrübesi nedeniyle). App Store'daki "What's New" bölümü 1.3.4'ü doğru şekilde gösteriyor. |
-| Android versiyon | **v1.3.4 (versionCode 6) — Google Play'de canlı.** v1.3.5 hazırlanıyor (bkz. 2026-08-03 oturum notu). `eas build --platform android --profile production` ile alınıp `eas submit` ile üretim kanalına gönderildi, Google onayladı, 2026-08-02 12:41'de yayına girdi. |
+| Android versiyon | **v1.3.4 (versionCode 6) hâlâ canlı; v1.3.5 (versionCode 7) Google incelemesinde.** v1.3.5, `eas build --platform android --profile production` + `eas submit --platform android --latest` ile 2026-08-03'te üretim kanalına gönderildi (submit "COMPLETED" döndü, Google onayı bekleniyor). Önceki v1.3.4: aynı komut ikilisiyle alınıp gönderilmiş, Google onaylamış, 2026-08-02 12:41'de yayına girmişti. |
 | Google Play | **Üretim: Etkin** (kapalı test aşaması geride kaldı, hesaba üretim erişimi Google tarafından resmen verildi). `eas.json`'daki `submit.production.android.track` **"alpha"dan "production"a çevrildi** (artık `eas submit` direkt üretime gönderiyor). Mağaza ekran görüntüleri de 1.3.4'e göre güncellendi (AGS sekmesi, Pratik, Sıralama, Profil dahil, `aso/screenshots/android-2026-08-02/`). |
 | Age Ratings (iOS) | Apple'ın yeni "Social Media" sorularına (App Information → Age Ratings anketi) cevap verildi — uygulamada içerik yeniden yayma/sosyal besleme özelliği olmadığı için "No" işaretlendi. Hesaplanan derecelendirme hâlâ 4+. |
 | EAS build kotası | Ücretsiz aylık kota Temmuz sonunda tükenmişti — `eas build --local` (bu Mac'te, Fastlane ile) kullanıldı; bkz. aşağıdaki oturum notu. Ağustos'ta kota sıfırlandı |
@@ -125,7 +125,7 @@ Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök ned
 
 **Build ortamı notu — Reanimated bozuk node_modules kalıntısı:** İlk `expo run:android` denemesi `NativeProxyCommon.java`'da "cannot find symbol" hatalarıyla patladı — `node_modules/react-native-reanimated` içinde `NodesManager.java`'nın tanımlamadığı eski/legacy metodları çağıran bir dosya kalmıştı (paketin kendi içinde tutarsız bir kalıntı, muhtemelen önceki bir `npm install`'dan kalma). `rm -rf node_modules/react-native-reanimated && npm install react-native-reanimated@4.1.7 --no-save` ile paket temiz yeniden kurulunca dosya kayboldu ve build sorunsuz tamamlandı. Benzer bir "cannot find symbol"/tutarsız native hata görülürse ilgili paketi tek başına temiz yeniden kurmayı dene.
 
-**Versiyon:** `app.json`'daki `version` `1.3.4` → `1.3.5`'e çekildi (Android tarafında versionCode zaten `remote`/otomatik artıyor ama marketing version'ı da bu düzeltme için artırmak netlik sağlıyor).
+**Versiyon:** `app.json`'daki `version` `1.3.4` → `1.3.5`'e çekildi. `eas build --platform android --profile production` ile alındı (versionCode 6→7, remote/otomatik arttı), `eas submit --platform android --latest` ile üretim kanalına gönderildi — submit "COMPLETED" döndü, Google incelemesi sürüyor.
 
 ### 2026-08-01/02 oturumu — Android'in ilk kez üretime çıkışı
 
