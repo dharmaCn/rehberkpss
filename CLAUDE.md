@@ -18,6 +18,7 @@
 - Firebase Firestore + Auth (Google, Apple, misafir/anonim)
 - EAS Build (`eas.json`: `appVersionSource: "remote"`, iOS production `autoIncrement: true`)
 - iOS simülatör UDID: `BF4715BD-61A3-4115-B27F-CE79BD7776D9` (iPhone 16 Pro Max)
+- **Android emülatör bu Mac'te kurulu** (2026-08-03'te kuruldu): Android Studio + SDK `~/Library/Android/sdk`, AVD adı `Pixel_8_API_34` (Android 14, Google APIs, arm64-v8a). Çalıştırmak için: `export ANDROID_SDK_ROOT="$HOME/Library/Android/sdk" ANDROID_HOME="$HOME/Library/Android/sdk" JAVA_HOME="/opt/homebrew/opt/openjdk@17"`, sonra Android Studio → Device Manager'dan emülatörü başlat (veya `emulator -avd Pixel_8_API_34` — `emulator` PATH'e ekli değilse `$ANDROID_SDK_ROOT/emulator/emulator`). Uygulamayı kurup Metro'ya bağlamak için `npx expo run:android` (native modüller içerdiğinden Expo Go çalışmaz, dev build şart). `adb`/`avdmanager`/`sdkmanager` de `platform-tools`/`cmdline-tools` altında kurulu.
 
 ## Mimari
 
@@ -65,17 +66,17 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-08-02)
+## Güncel Durum (2026-08-03)
 
 **Kısa özet — "uygulama şu an ne durumda?" sorusunun cevabı:**
 - 🍎 **App Store:** v1.3.4 **canlı ve yayında** — AGS modülü, düello, Aday Kimliği, Zayıf Konu Radarı, akşam sınavı dahil güncel kod gerçek kullanıcılarda.
-- 🤖 **Google Play:** v1.3.4 **canlı ve yayında** (2026-08-02 12:41'de yayına girdi) — aynı özellik seti Android'de de gerçek kullanıcılarda.
+- 🤖 **Google Play:** v1.3.4 **canlı ve yayında**, v1.3.5 (görsel yükleme + sıralama tekrar düzeltmeleri) **build/submit aşamasında** — bkz. aşağıdaki 2026-08-03 oturum notu.
 - **İki platform da senkron ve güncel** — ilk kez bu noktaya ulaşıldı (Android'in üretime hiç çıkmamış olması Ağustos başındaki oturumların ana konusuydu, bkz. aşağıdaki oturum notları).
 
 | Şey | Durum |
 |---|---|
 | iOS versiyon | **v1.3.4 / build 46 — App Store'da canlı.** Yerel EAS build (`--local`, Fastlane) ile üretilip Can Transporter ile App Store Connect'e yüklendi, Claude App Store Connect'te build'i seçip review'a gönderdi, Apple onayladı, ardından yayına alındı (manuel yayın modu seçiliydi, geçmiş crash tecrübesi nedeniyle). App Store'daki "What's New" bölümü 1.3.4'ü doğru şekilde gösteriyor. |
-| Android versiyon | **v1.3.4 (versionCode 6) — Google Play'de canlı.** `eas build --platform android --profile production` ile alınıp `eas submit` ile üretim kanalına gönderildi, Google onayladı, 2026-08-02 12:41'de yayına girdi. |
+| Android versiyon | **v1.3.4 (versionCode 6) — Google Play'de canlı.** v1.3.5 hazırlanıyor (bkz. 2026-08-03 oturum notu). `eas build --platform android --profile production` ile alınıp `eas submit` ile üretim kanalına gönderildi, Google onayladı, 2026-08-02 12:41'de yayına girdi. |
 | Google Play | **Üretim: Etkin** (kapalı test aşaması geride kaldı, hesaba üretim erişimi Google tarafından resmen verildi). `eas.json`'daki `submit.production.android.track` **"alpha"dan "production"a çevrildi** (artık `eas submit` direkt üretime gönderiyor). Mağaza ekran görüntüleri de 1.3.4'e göre güncellendi (AGS sekmesi, Pratik, Sıralama, Profil dahil, `aso/screenshots/android-2026-08-02/`). |
 | Age Ratings (iOS) | Apple'ın yeni "Social Media" sorularına (App Information → Age Ratings anketi) cevap verildi — uygulamada içerik yeniden yayma/sosyal besleme özelliği olmadığı için "No" işaretlendi. Hesaplanan derecelendirme hâlâ 4+. |
 | EAS build kotası | Ücretsiz aylık kota Temmuz sonunda tükenmişti — `eas build --local` (bu Mac'te, Fastlane ile) kullanıldı; bkz. aşağıdaki oturum notu. Ağustos'ta kota sıfırlandı |
@@ -109,6 +110,22 @@ Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök ned
 **⚠️ Diğer build notları:**
 - İlk submit denemesi (build 29, v1.3.0) Apple tarafından **90062 hatasıyla reddedildi**: `app.json`'daki `"version"` (CFBundleShortVersionString) zaten onaylanmış 1.3.0 ile aynıydı, artırılması gerekiyordu → `1.3.1`'e çekildi. Bir sonraki sürümde `app.json`'daki `version`'ı da elle artırmayı unutma (EAS sadece `buildNumber`'ı `autoIncrement` ile otomatik artırıyor, marketing version'ı artırmıyor).
 - `eas build:version:set --platform ios` komutu **interaktif** — bu ortamda `expect` ile otomatikleştirildi ama alan öndeki değeri temizlemeden yazarsa değerleri birbirine karıştırabiliyor (`30` yerine yanlışlıkla `1.3.1` yazılmıştı, düzeltildi). Bu komutu tekrar çalıştırırken dikkatli ol, sonucu `eas build:version:get --platform ios` ile doğrula.
+
+### 2026-08-03 oturumu — Android'de görsel yükleme + sıralama tekrar bug'ı düzeltmesi, v1.3.5
+
+**Rapor edilen sorun:** Bir arkadaş Android'de görselli sorularda (Günün Genel Kültür Sorusu, Kültür & Sanat testleri) fotoların açılmadığını bildirdi.
+
+**Kök neden:** `components/DailyCultureModal.tsx` ve `app/art/index.tsx` React Native'in çekirdek `Image` bileşenini kullanıyordu; Wikimedia Commons `Special:FilePath` URL'leri 2 kez redirect ediyor (302→301→asıl görsel) ve bu çok adımlı zincir Android'in eski `Image`/Fresco altyapısında iOS'a göre daha sık başarısız oluyor.
+
+**Düzeltme:** Her iki dosyada da `Image` importu `react-native` yerine `expo-image`'dan alınacak şekilde değiştirildi (`resizeMode` → `contentFit`). `expo-image` pakete eklendi (`~3.0.11`). **Native modül olduğu için bu düzeltme ancak yeni bir build ile Android kullanıcılarına ulaşır.**
+
+**Bu Mac'te ilk kez Android emülatör kuruldu** (bkz. yukarıdaki Ortam bölümü) çünkü değişikliği gerçek cihazda test etmek gerekiyordu — Android Studio + SDK + AVD (`Pixel_8_API_34`) komut satırından (`sdkmanager`/`avdmanager`) ve GUI'den kuruldu, `npx expo run:android` ile yerel dev build alınıp emülatöre kuruldu, Wikimedia görselinin (Michelangelo freski) sorunsuz yüklendiği doğrulandı.
+
+**Yol boyunca ikinci bir bug bulundu ve düzeltildi — sıralamada tekrar eden kullanıcı:** Test sırasında sıralama ekranında React "duplicate key" hatası çıktı (`app/(tabs)/leaderboard.tsx:180`), aynı `uid`'ye sahip iki satır. Kök neden: `results` koleksiyonu doküman ID'si `${uid}_${date}` olarak deterministik yazılıyor, ama muhtemelen eski bir sürümden kalma farklı ID'li bir "yetim" kayıt aynı `uid` alanıyla duruyor; `fetchLeaderboard` (`lib/firestore.ts:438`) sorgusu sadece `date`/`week` alanına göre filtrelediği için ikisini de döndürüyordu. **Düzeltme:** `fetchLeaderboard` artık normalden fazla doküman çekip (`count * 3`) `uid` bazında tekilleştiriyor (en yüksek skoru tutarak), sonra tekrar sıralayıp `count`'a kesiyor — Firestore'daki eski veriye dokunulmadı, sadece okuma tarafında güvenli bir tekilleştirme eklendi.
+
+**Build ortamı notu — Reanimated bozuk node_modules kalıntısı:** İlk `expo run:android` denemesi `NativeProxyCommon.java`'da "cannot find symbol" hatalarıyla patladı — `node_modules/react-native-reanimated` içinde `NodesManager.java`'nın tanımlamadığı eski/legacy metodları çağıran bir dosya kalmıştı (paketin kendi içinde tutarsız bir kalıntı, muhtemelen önceki bir `npm install`'dan kalma). `rm -rf node_modules/react-native-reanimated && npm install react-native-reanimated@4.1.7 --no-save` ile paket temiz yeniden kurulunca dosya kayboldu ve build sorunsuz tamamlandı. Benzer bir "cannot find symbol"/tutarsız native hata görülürse ilgili paketi tek başına temiz yeniden kurmayı dene.
+
+**Versiyon:** `app.json`'daki `version` `1.3.4` → `1.3.5`'e çekildi (Android tarafında versionCode zaten `remote`/otomatik artıyor ama marketing version'ı da bu düzeltme için artırmak netlik sağlıyor).
 
 ### 2026-08-01/02 oturumu — Android'in ilk kez üretime çıkışı
 

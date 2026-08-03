@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
-  Image,
   ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -145,7 +145,7 @@ export default function ArtScreen() {
             <Image
               source={{ uri: q.image }}
               style={styles.image}
-              resizeMode="contain"
+              contentFit="contain"
               onLoadEnd={() => setImgLoading(false)}
               onError={() => { setImgError(true); setImgLoading(false); }}
             />

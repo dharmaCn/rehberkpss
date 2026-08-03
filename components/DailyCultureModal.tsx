@@ -4,11 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ScrollView,
   ActivityIndicator,
   useColorScheme,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -90,7 +90,7 @@ export default function DailyCultureModal({ visible, question, uid, onClose, onA
                 <Image
                   source={{ uri: question.image }}
                   style={styles.image}
-                  resizeMode="contain"
+                  contentFit="contain"
                   onLoadEnd={() => setImgLoading(false)}
                   onError={() => { setImgError(true); setImgLoading(false); }}
                 />

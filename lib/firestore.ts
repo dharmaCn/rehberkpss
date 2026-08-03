@@ -440,6 +440,9 @@ export async function fetchLeaderboard(
   count = 10
 ): Promise<LeaderboardEntry[]> {
   let q;
+  // 'results' dokümanları uid+tarih başına tek olacak şekilde yazılıyor, ama eski sürümlerden
+  // kalma yetim ikinci kayıtlar aynı uid ile karşımıza çıkabiliyor — dedup için fazladan çekiyoruz.
+  const fetchCount = period === 'alltime' ? count : count * 3;
 
   if (period === 'daily') {
     const today = getTodayKey();
@@ -447,7 +450,7 @@ export async function fetchLeaderboard(
       collection(db, 'results'),
       where('date', '==', today),
       orderBy('score', 'desc'),
-      limit(count)
+      limit(fetchCount)
     );
   } else if (period === 'weekly') {
     const week = getWeekKey();
@@ -455,19 +458,20 @@ export async function fetchLeaderboard(
       collection(db, 'results'),
       where('week', '==', week),
       orderBy('score', 'desc'),
-      limit(count)
+      limit(fetchCount)
     );
   } else {
     q = query(
       collection(db, 'users'),
       where('seasonId', '==', SEASON_ID),
       orderBy('seasonScore', 'desc'),
-      limit(count)
+      limit(fetchCount)
     );
   }
 
   const snap = await getDocs(q);
-  return snap.docs.map((d, i) => {
+  const byUid = new Map<string, Omit<LeaderboardEntry, 'rank'>>();
+  for (const d of snap.docs) {
     const data = d.data() as Record<string, unknown>;
     const score = (data.score as number | undefined) ?? (data.seasonScore as number | undefined) ?? 0;
     const uid = data.uid as string;
@@ -475,15 +479,21 @@ export async function fetchLeaderboard(
     // Eski "Misafir #XXXXX" isimlerini de kapsayarak sıralamada daha doğal görünsün diye
     // deterministik bir takma adla değiştiriyoruz (aynı uid her zaman aynı adı alır).
     const displayName = isGuestDisplayName(rawName) ? guestDisplayName(uid) : rawName!;
-    return {
+    const existing = byUid.get(uid);
+    if (existing && existing.score >= score) continue;
+    byUid.set(uid, {
       uid,
       displayName,
       photoURL: (data.photoURL as string) ?? '',
       score,
-      rank: i + 1,
       titleId: period === 'alltime' ? ((data.titleId as TitleId | null | undefined) ?? null) : undefined,
-    };
-  });
+    });
+  }
+
+  return Array.from(byUid.values())
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count)
+    .map((entry, i) => ({ ...entry, rank: i + 1 }));
 }
 
 export async function fetchUserProfile(uid: string): Promise<UserProfile | null> {
