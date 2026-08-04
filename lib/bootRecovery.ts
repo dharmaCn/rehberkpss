@@ -12,7 +12,11 @@ import Constants from 'expo-constants';
 
 const COUNTER_KEY = '__boot_attempt_count';
 const VERSION_KEY = '__last_run_version';
-const CRASH_THRESHOLD = 2;
+// 2'den 1'e düşürüldü (2026-08-04): v1.3.4'te aynı Hermes/EXC_BAD_ACCESS crash'i
+// tekrar görüldü, kullanıcı iyileşmeden önce 2 çökme yaşıyordu. Eşik 1 olunca
+// ilk crash'in hemen ardından gelen açılışta nuclear reset tetiklenir — kullanıcı
+// en fazla 1 çökme görür.
+const CRASH_THRESHOLD = 1;
 const KEEP_KEYS = new Set<string>([COUNTER_KEY]);
 
 // Sürüm süpürmesinde korunanlar: canary + sürüm kaydı + onboarding bayrağı
