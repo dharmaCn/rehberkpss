@@ -66,16 +66,16 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-08-03)
+## Güncel Durum (2026-08-05)
 
 **Kısa özet — "uygulama şu an ne durumda?" sorusunun cevabı:**
-- 🍎 **App Store:** v1.3.4 **canlı ve yayında** — AGS modülü, düello, Aday Kimliği, Zayıf Konu Radarı, akşam sınavı dahil güncel kod gerçek kullanıcılarda.
+- 🍎 **App Store:** v1.3.4 **canlı**, v1.3.5 (build 48 — boot canary eşiği düşürüldü, sıralama tekrar + görsel yükleme düzeltmeleri) **Apple incelemesinde** (2026-08-05'te submit edildi, 48 saate kadar sürebilir) — bkz. aşağıdaki 2026-08-04/05 oturum notu.
 - 🤖 **Google Play:** v1.3.4 **canlı**, v1.3.5 (görsel yükleme + sıralama tekrar düzeltmeleri, versionCode 7) **Google incelemesinde** (2026-08-03'te submit edildi) — bkz. aşağıdaki 2026-08-03 oturum notu.
 - **İki platform da senkron ve güncel** — ilk kez bu noktaya ulaşıldı (Android'in üretime hiç çıkmamış olması Ağustos başındaki oturumların ana konusuydu, bkz. aşağıdaki oturum notları).
 
 | Şey | Durum |
 |---|---|
-| iOS versiyon | **v1.3.4 / build 46 — App Store'da canlı.** Yerel EAS build (`--local`, Fastlane) ile üretilip Can Transporter ile App Store Connect'e yüklendi, Claude App Store Connect'te build'i seçip review'a gönderdi, Apple onayladı, ardından yayına alındı (manuel yayın modu seçiliydi, geçmiş crash tecrübesi nedeniyle). App Store'daki "What's New" bölümü 1.3.4'ü doğru şekilde gösteriyor. |
+| iOS versiyon | **v1.3.4/build 46 hâlâ canlı; v1.3.5/build 48 Apple incelemesinde.** `eas build --platform ios --profile production` (EAS_SKIP_AUTO_FINGERPRINT=1 ile, fingerprint hesaplama EAS kesintisi yüzünden timeout veriyordu) + App Store Connect'te elle yeni versiyon (1.3.5) oluşturulup build 48 eklendi, "What's New" ve "Notes" güncellendi, manuel yayın modu korunarak review'a gönderildi (2026-08-05). Apple onayladıktan sonra Can'ın elle "Release This Version" yapması gerekecek. |
 | Android versiyon | **v1.3.4 (versionCode 6) hâlâ canlı; v1.3.5 (versionCode 7) Google incelemesinde.** v1.3.5, `eas build --platform android --profile production` + `eas submit --platform android --latest` ile 2026-08-03'te üretim kanalına gönderildi (submit "COMPLETED" döndü, Google onayı bekleniyor). Önceki v1.3.4: aynı komut ikilisiyle alınıp gönderilmiş, Google onaylamış, 2026-08-02 12:41'de yayına girmişti. |
 | Google Play | **Üretim: Etkin** (kapalı test aşaması geride kaldı, hesaba üretim erişimi Google tarafından resmen verildi). `eas.json`'daki `submit.production.android.track` **"alpha"dan "production"a çevrildi** (artık `eas submit` direkt üretime gönderiyor). Mağaza ekran görüntüleri de 1.3.4'e göre güncellendi (AGS sekmesi, Pratik, Sıralama, Profil dahil, `aso/screenshots/android-2026-08-02/`). |
 | Age Ratings (iOS) | Apple'ın yeni "Social Media" sorularına (App Information → Age Ratings anketi) cevap verildi — uygulamada içerik yeniden yayma/sosyal besleme özelliği olmadığı için "No" işaretlendi. Hesaplanan derecelendirme hâlâ 4+. |
@@ -114,6 +114,16 @@ Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök ned
 **⚠️ Diğer build notları:**
 - İlk submit denemesi (build 29, v1.3.0) Apple tarafından **90062 hatasıyla reddedildi**: `app.json`'daki `"version"` (CFBundleShortVersionString) zaten onaylanmış 1.3.0 ile aynıydı, artırılması gerekiyordu → `1.3.1`'e çekildi. Bir sonraki sürümde `app.json`'daki `version`'ı da elle artırmayı unutma (EAS sadece `buildNumber`'ı `autoIncrement` ile otomatik artırıyor, marketing version'ı artırmıyor).
 - `eas build:version:set --platform ios` komutu **interaktif** — bu ortamda `expect` ile otomatikleştirildi ama alan öndeki değeri temizlemeden yazarsa değerleri birbirine karıştırabiliyor (`30` yerine yanlışlıkla `1.3.1` yazılmıştı, düzeltildi). Bu komutu tekrar çalıştırırken dikkatli ol, sonucu `eas build:version:get --platform ios` ile doğrula.
+
+### 2026-08-04/05 oturumu — iOS v1.3.4'te crash tekrarı, boot canary düzeltmesi, v1.3.5 iOS submit
+
+**Xcode Organizer'da v1.3.4/build 46 için 2 yeni crash bulundu** (Version filtresi 1.3.1'de takılı kalmıştı, 1.3.4'e çevrilip bakıldı). Detaylar için yukarıdaki "AÇIK — v1.3.1/build 34" bölümünün sonuna eklenen not'a bakın — özetle: aynı cihaz (iPhone 12/iPhone13,2, iOS 26.5.2), aynı Hermes `EXC_BAD_ACCESS` imzası, art arda 2 açılış crash'i. `lib/bootRecovery.ts`'teki `CRASH_THRESHOLD` `2`'den `1`'e düşürüldü.
+
+**iOS build + submit akışı (EAS bulut kesintisi ve iki manuel adım gerektirdi):**
+- `eas build --platform ios --profile production` ilk denemede "Failed to compute project fingerprint" ile başarısız oldu (EAS'te o sırada "Elevated Android build failures" kesintisi vardı, muhtemelen genel altyapıyı etkiledi). `EAS_SKIP_AUTO_FINGERPRINT=1` ortam değişkeniyle tekrar denenince build başarıyla tamamlandı (buildNumber 46→48, ilk başarısız deneme de bir buildNumber tüketmişti).
+- `eas submit --platform ios --latest` ilk seferinde `getaddrinfo ENOTFOUND api.expo.dev` ağ hatasıyla "başarısız" göründü, ama **submit sunucu tarafında aslında tamamlanmıştı** — CLI sadece durumu takip edemedi. İkinci submit denemesi bu yüzden "Build number 48 for app version 1.3.5 has already been used" hatası verdi; App Store Connect → TestFlight'ta build 48'in zaten "Complete" durumda olduğu doğrulandı. **Ders: `eas submit` ağ hatasıyla başarısız görünse bile App Store Connect/Play Console'dan gerçek durumu doğrulamadan tekrar denemeyin** — build numarası tekrar kullanılamaz hatasına düşebilirsiniz.
+- Build 48 App Store Connect'e yüklendikten sonra **review'a otomatik gönderilmedi** — 1.3.4 zaten "Ready for Distribution" (canlı, salt okunur) olduğu için yeni bir versiyon (1.3.5) elle oluşturulması gerekti: iOS App başlığının yanındaki mavi "+" ikonu → "New Version" → "1.3.5" yazılıp "Create". Yeni versiyon sayfasında "What's New in This Version" **boş geliyor, zorunlu alan** (eski versiyondan miras kalmıyor) — dolduruldu. "Notes" alanı ise eski versiyondan (1.3.4) miras kaldı, 1.3.5'e göre güncellendi. Build 48 "Add Build" ile seçildi, "Manually release this version" zaten seçili geldi (önceki tercih korunmuş). Save → "Add for Review" → "Submit for Review" ile review'a gönderildi (2026-08-05).
+- Apple onayı sonrası (48 saate kadar sürebilir) Can'ın App Store Connect'ten elle "Release This Version" yapması gerekecek (manuel yayın modu, geçmiş crash tecrübesi nedeniyle).
 
 ### 2026-08-03 oturumu — Android'de görsel yükleme + sıralama tekrar bug'ı düzeltmesi, v1.3.5
 
