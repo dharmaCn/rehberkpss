@@ -25,6 +25,7 @@ import {
   updateUserDisplayName,
   UserProfile,
 } from '../../lib/firestore';
+import { previousMonthKey, monthLabel } from '../../lib/monthlyRecap';
 import {
   FriendEntry,
   FriendRequest,
@@ -456,6 +457,22 @@ export default function ProfileScreen() {
         </View>
       )}
 
+      {/* Atanma Günlüğü — geçen ayın özet kartı */}
+      <TouchableOpacity
+        style={[styles.recapCard, { backgroundColor: c.card, borderColor: c.border }]}
+        onPress={() => router.push(`/recap/${previousMonthKey()}` as never)}
+        activeOpacity={0.85}
+      >
+        <View style={styles.recapIconBox}>
+          <Ionicons name="book" size={20} color={Colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.recapTitle, { color: c.text }]}>Atanma Günlüğü</Text>
+          <Text style={[styles.recapSub, { color: c.textSecondary }]}>{monthLabel(previousMonthKey())} özetin hazır</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
+      </TouchableOpacity>
+
       {/* Rozetler */}
       <Text style={[styles.sectionTitle, { color: c.text }]}>Rozetlerim</Text>
       <View style={styles.badgeGrid}>
@@ -723,6 +740,10 @@ const styles = StyleSheet.create({
   streakLbl: { fontSize: 11, fontWeight: '600' },
 
   weeklyCard: { borderRadius: 16, padding: 16, borderWidth: 1 },
+  recapCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, padding: 14, borderWidth: 1 },
+  recapIconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primary + '14' },
+  recapTitle: { fontSize: 14, fontWeight: '800' },
+  recapSub: { fontSize: 12, marginTop: 2 },
   weeklyBars: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 110 },
   weeklyCol: { flex: 1, alignItems: 'center', gap: 4 },
   weeklyScore: { fontSize: 10, fontWeight: '700', minHeight: 12 },

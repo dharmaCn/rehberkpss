@@ -23,7 +23,7 @@ const CATEGORIES = [
 ] as const;
 
 const TOPICS = [
-  { subject: 'tarih', label: 'Tarih', sub: '13 ünite • Kart + mini quiz', icon: '📜', color: '#EF4444' },
+  { subject: 'tarih', label: 'Tarih', sub: '14 ünite • Kart + mini quiz', icon: '📜', color: '#EF4444' },
   { subject: 'cografya', label: 'Coğrafya', sub: '10 ünite • Kart + mini quiz', icon: '🌍', color: '#10B981' },
   { subject: 'vatandaslik', label: 'Vatandaşlık', sub: '7 ünite • Kart + mini quiz', icon: '🏛️', color: Colors.primary },
 ] as const;

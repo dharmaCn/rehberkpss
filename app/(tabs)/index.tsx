@@ -16,8 +16,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuthSync } from '../../lib/firebase';
-import { hasCompletedTodayQuiz, hasCompletedTodayEveningQuiz, fetchUserProfile, hasAnsweredDailyArt, fetchDueWrongCount, UserProfile } from '../../lib/firestore';
+import { hasCompletedTodayQuiz, hasCompletedTodayEveningQuiz, hasCompletedWeeklyExam, fetchUserProfile, hasAnsweredDailyArt, fetchDueWrongCount, UserProfile } from '../../lib/firestore';
+import { isWeeklyExamAvailable, WEEKLY_EXAM_QUESTION_COUNT } from '../../lib/quiz';
 import { getTodayKey } from '../../lib/dateKey';
+import { previousMonthKey, monthLabel, fetchMonthlyRecap } from '../../lib/monthlyRecap';
 import { getDailyArtQuestion } from '../../constants/artworks';
 import { getDailyFact, FACT_CATEGORY_LABELS } from '../../constants/facts';
 import { openStoreReview } from '../../lib/review';
@@ -105,6 +107,8 @@ export default function HomeScreen() {
   const [duels, setDuels] = useState<Duel[]>([]);
   const [eveningDone, setEveningDone] = useState<boolean | null>(null);
   const [eveningPhase, setEveningPhase] = useState<'hidden' | 'countdown' | 'ready'>('hidden');
+  const [weeklyExamDone, setWeeklyExamDone] = useState<boolean | null>(null);
+  const [recapBannerMonth, setRecapBannerMonth] = useState<string | null>(null);
   const eveningPulse = useRef(new Animated.Value(0)).current;
   const dailyArt = useMemo(() => getDailyArtQuestion(), []);
   const dailyFact = useMemo(() => getDailyFact(), []);
@@ -127,6 +131,7 @@ export default function HomeScreen() {
     fetchDueWrongCount(user.uid).then(setDueWrong).catch(() => {});
     fetchMyDuels(user.uid).then(setDuels).catch(() => {});
     hasCompletedTodayEveningQuiz(user.uid).then(setEveningDone).catch(() => {});
+    hasCompletedWeeklyExam(user.uid).then(setWeeklyExamDone).catch(() => {});
   }, [user, dailyArt.id]);
 
   useEffect(() => {
@@ -166,6 +171,28 @@ export default function HomeScreen() {
     refreshAll(false);
   }, [refreshAll]));
 
+  // Atanma Günlüğü — bildirim kaçırılırsa diye açılışta bir kez kontrol (yedek yol).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const month = previousMonthKey();
+        const seenKey = `monthlyRecapSeen:${month}`;
+        const seen = await AsyncStorage.getItem(seenKey);
+        if (seen) return;
+        const recap = await fetchMonthlyRecap(user.uid, month);
+        if (cancelled || recap.daysActive === 0) return;
+        setRecapBannerMonth(month);
+      } catch {
+        // sessizce geç
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return 'Günaydın';
@@ -203,6 +230,7 @@ export default function HomeScreen() {
   }, [eveningDone]);
 
   const showEveningQuiz = eveningPhase === 'ready';
+  const showWeeklyExam = isWeeklyExamAvailable() && weeklyExamDone === false;
 
   useEffect(() => {
     if (!showEveningQuiz) return;
@@ -316,6 +344,27 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {recapBannerMonth && (
+        <TouchableOpacity
+          style={[styles.banner, { backgroundColor: Colors.primary + '1A', borderColor: Colors.primary }]}
+          onPress={() => {
+            AsyncStorage.setItem(`monthlyRecapSeen:${recapBannerMonth}`, '1').catch(() => {});
+            router.push(`/recap/${recapBannerMonth}` as never);
+            setRecapBannerMonth(null);
+          }}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.bannerEmoji}>📖</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.bannerTitle, { color: c.text }]}>Atanma Günlüğün hazır!</Text>
+            <Text style={[styles.bannerBody, { color: c.textSecondary }]}>
+              {monthLabel(recapBannerMonth)} özetini gör ve paylaş
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.primary} />
+        </TouchableOpacity>
+      )}
+
       {/* Düello kartları */}
       {incomingDuels.map((d) => (
         <TouchableOpacity
@@ -384,6 +433,30 @@ export default function HomeScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.eveningTitle}>Akşam Sınavı hazır!</Text>
               <Text style={styles.eveningBody}>10 soru, gece yarısına kadar açık — hemen çöz</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
+
+      {showWeeklyExam && (
+        <TouchableOpacity
+          style={styles.eveningWrap}
+          onPress={() => router.push('/weekly/exam' as never)}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={['#B45309', '#F59E0B']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.eveningCard}
+          >
+            <View style={styles.eveningIconBox}>
+              <Text style={styles.eveningEmoji}>🏆</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.eveningTitle}>Haftalık Deneme hazır!</Text>
+              <Text style={styles.eveningBody}>{WEEKLY_EXAM_QUESTION_COUNT} soru, Türkiye ile yarış — sadece bugün</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </LinearGradient>

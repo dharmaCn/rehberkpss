@@ -110,6 +110,17 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
+    // Haftalık Deneme sonuçları — haftada bir kez, totalScore/sıralamaya dokunmaz
+    // (AGS modülüyle aynı izole-istatistik yaklaşımı), bu yüzden güncelleme yok.
+    match /weeklyExamResults/{resultId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && resultId == request.auth.uid + '_' + request.resource.data.week
+                    && request.resource.data.uid == request.auth.uid
+                    && validWeeklyExamResultData(request.resource.data);
+      allow update, delete: if false;
+    }
+
     // Düellolar — meydan okuyan (from) kendi sonucuyla oluşturur,
     // rakip (to) tamamlayarak sonucunu ekler. Sadece taraflar okuyabilir.
     match /duels/{duelId} {
@@ -222,5 +233,14 @@ service cloud.firestore {
       && data.score is int && data.score >= 0 && data.score <= 1500
       && data.correct is int && data.correct >= 0 && data.correct <= 10
       && data.date is string && data.date.size() == 10; // YYYY-MM-DD
+  }
+
+  // Haftalık Deneme sonucu doğrulama (30 soru, max 150pt/soru)
+  function validWeeklyExamResultData(data) {
+    return data.keys().hasAll(['uid', 'displayName', 'score', 'correct', 'week'])
+      && data.uid is string
+      && data.score is int && data.score >= 0 && data.score <= 4500
+      && data.correct is int && data.correct >= 0 && data.correct <= 30
+      && data.week is string;
   }
 }

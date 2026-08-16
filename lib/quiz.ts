@@ -1,6 +1,7 @@
 import { QUESTION_POOL, Question } from '../constants/questions';
+import { getWeekKey } from './dateKey';
 
-export { getTodayKey } from './dateKey';
+export { getTodayKey, getWeekKey } from './dateKey';
 export { getCategoryLabel, getCategoryColor } from './categoryMeta';
 
 export function getDailyQuestions(): Question[] {
@@ -71,3 +72,28 @@ export function getDailyCategoryQuestions(category: Question['category'], count 
 }
 
 export const CATEGORY_SCORE_MULTIPLIER = 0.2;
+
+// Haftalık Deneme — sadece Pazar günü açılır (bkz. isWeeklyExamAvailable).
+export const WEEKLY_EXAM_QUESTION_COUNT = 30;
+
+export function isWeeklyExamAvailable(): boolean {
+  return new Date().getDay() === 0; // Pazar
+}
+
+export function getWeeklyExamQuestions(): Question[] {
+  // "YYYY-Www" formatını sayısal bir seed'e çevir — aynı hafta herkes aynı
+  // 30 soruyu görür (getDailyQuestions'daki deterministik shuffle deseninin aynısı).
+  const weekKey = getWeekKey();
+  const [yearPart, weekPart] = weekKey.split('-W');
+  const seed = parseInt(yearPart, 10) * 100 + parseInt(weekPart, 10);
+
+  const shuffled = [...QUESTION_POOL];
+  let s = seed;
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.slice(0, WEEKLY_EXAM_QUESTION_COUNT);
+}

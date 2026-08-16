@@ -16,7 +16,7 @@ import {
   addDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { getTodayKey } from './dateKey';
+import { getTodayKey, getWeekKey } from './dateKey';
 import { guestDisplayName, isGuestDisplayName } from './guestName';
 import { SEASON_ID } from '../constants/season';
 import { BadgeId, evaluateNewBadges } from './badges';
@@ -99,13 +99,6 @@ export interface LeaderboardEntry {
   score: number;
   rank?: number;
   titleId?: TitleId | null;
-}
-
-function getWeekKey(): string {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const week = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-  return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
 function yesterdayKey(today: string): string {
@@ -433,6 +426,49 @@ export async function saveEveningQuizResult(
     totalScore: increment(score),
     seasonScore: increment(score),
   });
+}
+
+export async function hasCompletedWeeklyExam(uid: string): Promise<boolean> {
+  const week = getWeekKey();
+  const snap = await getDoc(doc(db, 'weeklyExamResults', `${uid}_${week}`));
+  return snap.exists();
+}
+
+// Haftalık Deneme puanı totalScore/sıralamaya dahil edilmiyor — AGS modülüyle aynı
+// izole-istatistik yaklaşımı (bkz. firestore.rules: weeklyExamResults tek seferlik yazılır).
+export async function saveWeeklyExamResult(
+  user: { uid: string; displayName: string | null; photoURL: string | null },
+  score: number,
+  correct: number,
+  totalQuestions = 30
+): Promise<{ percentile?: number }> {
+  const week = getWeekKey();
+  const resultRef = doc(db, 'weeklyExamResults', `${user.uid}_${week}`);
+  await setDoc(resultRef, {
+    uid: user.uid,
+    displayName: user.displayName ?? 'Anonim',
+    photoURL: user.photoURL ?? '',
+    score,
+    correct,
+    total: totalQuestions,
+    week,
+    completedAt: serverTimestamp(),
+  });
+
+  let percentile: number | undefined;
+  try {
+    const weekQ = query(collection(db, 'weeklyExamResults'), where('week', '==', week));
+    const weekSnap = await getDocs(weekQ);
+    const scores = weekSnap.docs.map((d) => (d.data() as { score: number }).score);
+    if (scores.length > 1) {
+      const beaten = scores.filter((s) => s < score).length;
+      percentile = Math.round((beaten / scores.length) * 100);
+    }
+  } catch {
+    // ignore
+  }
+
+  return { percentile };
 }
 
 export async function fetchLeaderboard(

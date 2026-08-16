@@ -28,7 +28,7 @@ const SLIDES = [
   {
     icon: 'book' as const,
     title: 'Konu anlatımı ve arkadaşla düello',
-    body: '30 üniteyi hap bilgi kartlarıyla öğren, arkadaşlarını meydan okumaya davet et.',
+    body: '31 üniteyi hap bilgi kartlarıyla öğren, arkadaşlarını meydan okumaya davet et.',
     colors: ['#0EA5E9', '#4338CA'] as const,
   },
   {

@@ -87,6 +87,34 @@ async function scheduleWeeklySummary(): Promise<void> {
   });
 }
 
+async function scheduleWeeklyExamReady(): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    identifier: 'weekly-exam-ready',
+    content: { title: 'Haftalık Deneme hazır 🏆', body: 'Türkiye ile yarış — 30 soruluk gerçek sınav formatı seni bekliyor!' },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+      weekday: 1, // Sunday=1 in iOS calendar weekday
+      hour: 10,
+      minute: 0,
+      repeats: true,
+    },
+  });
+}
+
+async function scheduleMonthlyRecapReady(): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    identifier: 'monthly-recap-ready',
+    content: { title: 'Atanma Günlüğün hazır 📖', body: 'Geçen ayın özetini görmek ve paylaşmak için aç.' },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+      day: 1,
+      hour: 10,
+      minute: 0,
+      repeats: true,
+    },
+  });
+}
+
 async function scheduleComeback(): Promise<void> {
   // 3, 5, 7 days from now — rescheduled on every app open
   const days = [3, 5, 7];
@@ -111,6 +139,8 @@ export async function enableAll(): Promise<boolean> {
   await scheduleDaily();
   await scheduleEveningQuiz();
   await scheduleWeeklySummary();
+  await scheduleWeeklyExamReady();
+  await scheduleMonthlyRecapReady();
   await scheduleComeback();
   await setEnabledFlag(true);
   return true;

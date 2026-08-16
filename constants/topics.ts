@@ -2758,6 +2758,148 @@ export const TOPICS: Topic[] = [
     },
   },
 
+  {
+    id: 't14',
+    subject: 'tarih',
+    title: 'Büyük Selçuklu Devleti',
+    icon: '🏰',
+    summary: 'Kuruluşu, önemli hükümdarları ve Anadolu\'nun kapılarının Türklere açılması.',
+    levels: {
+      kolay: {
+        cards: [
+          'Büyük Selçuklu Devleti\'ni Tuğrul Bey kurmuştur.',
+          'Selçuklular, Oğuzların Kınık boyuna mensuptur.',
+          'Dandanakan Savaşı (1040) ile Selçuklular Gaznelilerden bağımsızlıklarını kazanmıştır.',
+          'Malazgirt Savaşı (1071) Sultan Alparslan döneminde kazanılmıştır.',
+          'Malazgirt zaferiyle Anadolu\'nun kapıları Türklere açılmıştır.',
+          'Selçukluların en parlak dönemi Melikşah zamanında yaşanmıştır.',
+          'Nizamülmülk, Melikşah döneminin ünlü veziridir.',
+          'Nizamiye Medreseleri, Nizamülmülk tarafından kurulmuştur.',
+          'Selçuklu hükümdarları "Sultan" unvanını kullanmıştır.',
+        ],
+        questions: [
+          {
+            question: 'Büyük Selçuklu Devleti\'ni kim kurmuştur?',
+            options: ['Alparslan', 'Tuğrul Bey', 'Melikşah', 'Çağrı Bey'],
+            correctIndex: 1,
+            aciklama: 'Büyük Selçuklu Devleti\'ni Tuğrul Bey 1040\'ta kurmuştur.',
+          },
+          {
+            question: 'Selçuklular hangi Türk boyuna mensuptur?',
+            options: ['Kınık', 'Kayı', 'Avşar', 'Bayat'],
+            correctIndex: 0,
+            aciklama: 'Selçuklular, Oğuzların 24 boyundan biri olan Kınık boyuna mensuptur.',
+          },
+          {
+            question: 'Anadolu\'nun kapılarını Türklere açan savaş hangisidir?',
+            options: ['Dandanakan Savaşı', 'Malazgirt Savaşı', 'Miryokefalon Savaşı', 'Kösedağ Savaşı'],
+            correctIndex: 1,
+            aciklama: '1071 Malazgirt Savaşı ile Anadolu\'nun kapıları Türklere açılmıştır.',
+          },
+          {
+            question: 'Malazgirt Savaşı\'nı kazanan Selçuklu Sultanı kimdir?',
+            options: ['Tuğrul Bey', 'Melikşah', 'Alparslan', 'Sencer'],
+            correctIndex: 2,
+            aciklama: 'Malazgirt Savaşı 1071\'de Sultan Alparslan tarafından kazanılmıştır.',
+          },
+          {
+            question: 'Selçuklu Devleti\'nin en parlak dönemi hangi hükümdar zamanında yaşanmıştır?',
+            options: ['Tuğrul Bey', 'Çağrı Bey', 'Alparslan', 'Melikşah'],
+            correctIndex: 3,
+            aciklama: 'Selçukluların en geniş sınırlara ulaştığı ve en parlak dönemi Melikşah zamanıdır.',
+          },
+          {
+            question: 'Nizamiye Medreseleri\'ni kim kurmuştur?',
+            options: ['Nizamülmülk', 'Alparslan', 'Ömer Hayyam', 'Melikşah'],
+            correctIndex: 0,
+            aciklama: 'Nizamiye Medreseleri, Melikşah döneminin ünlü veziri Nizamülmülk tarafından kurulmuştur.',
+          },
+        ],
+      },
+      orta: {
+        cards: [
+          'Dandanakan Savaşı (1040) sonucunda Selçuklular bağımsız bir devlet hâline gelmiş, Gazneli Devleti gerilemeye başlamıştır.',
+          'Malazgirt Savaşı sonrasında Anadolu\'da çok sayıda beylik kurulmuş, bu süreç Anadolu\'nun Türkleşmesini hızlandırmıştır.',
+          'Melikşah döneminde sınırlar Orta Asya\'dan Anadolu\'ya, Basra Körfezi\'nden Kafkaslara kadar genişlemiştir.',
+          'Nizamülmülk, "Siyasetname" adlı eseriyle devlet yönetimine dair görüşlerini kaleme almıştır.',
+          'Selçuklularda ülke, hanedanın ortak malı sayıldığından Melikşah\'ın ölümünden sonra taht kavgaları başlamış ve devlet parçalanma sürecine girmiştir.',
+          'İkta sistemi, Selçuklularda toprakların hizmet karşılığı dağıtıldığı askerî-idari bir sistemdir.',
+          'Selçuklu sonrasında kurulan Anadolu Selçuklu Devleti, Anadolu\'daki Türk siyasi birliğini sağlamayı hedeflemiştir.',
+        ],
+        questions: [
+          {
+            question: 'Dandanakan Savaşı\'nın (1040) en önemli sonucu nedir?',
+            options: [
+              'Anadolu\'nun fethedilmesi',
+              'Selçukluların Gaznelilerden bağımsızlığını kazanması',
+              'Bağdat\'ın alınması',
+              'İstanbul\'un kuşatılması',
+            ],
+            correctIndex: 1,
+            aciklama: 'Dandanakan Savaşı sonucunda Selçuklular Gazneli hakimiyetinden kurtulup bağımsız bir devlet olmuştur.',
+          },
+          {
+            question: 'Selçuklularda toprakların hizmet karşılığında dağıtıldığı sisteme ne ad verilir?',
+            options: ['İkta sistemi', 'Tımar sistemi', 'Miri sistem', 'Vakıf sistemi'],
+            correctIndex: 0,
+            aciklama: 'İkta sistemi, Büyük Selçuklularda toprakların askeri-idari hizmet karşılığında dağıtılmasıdır (Osmanlı\'daki tımarın öncülüdür).',
+          },
+          {
+            question: '"Siyasetname" adlı eserin yazarı kimdir?',
+            options: ['Alparslan', 'Nizamülmülk', 'Ömer Hayyam', 'Melikşah'],
+            correctIndex: 1,
+            aciklama: 'Siyasetname, Selçuklu veziri Nizamülmülk tarafından yazılmış, devlet yönetimi üzerine bir eserdir.',
+          },
+          {
+            question: 'Melikşah\'ın ölümünden sonra Büyük Selçuklu Devleti\'nde yaşanan sürecin temel nedeni nedir?',
+            options: [
+              'Dış saldırılar',
+              'Ülkenin hanedanın ortak malı sayılması nedeniyle taht kavgaları',
+              'Ekonomik kriz',
+              'Din değişikliği',
+            ],
+            correctIndex: 1,
+            aciklama: 'Türklerde ülke hanedanın ortak malı sayıldığından, güçlü bir hükümdarın ölümü genellikle taht kavgalarına ve parçalanmaya yol açardı.',
+          },
+        ],
+      },
+      zor: {
+        cards: [
+          'Selçuklular, Abbasi halifesini Şii Büveyhoğulları\'nın baskısından kurtararak İslam dünyasında "halifenin koruyucusu" konumuna gelmiştir.',
+          'Tuğrul Bey, 1055\'te Bağdat\'a girerek halife tarafından "Doğunun ve Batının Sultanı" unvanıyla onurlandırılmıştır.',
+          'Malazgirt sonrası Anadolu\'da kurulan ilk beyliklerden biri Süleyman Şah önderliğindeki Anadolu (İznik) Selçuklu Devleti\'dir.',
+          'Selçuklularda "atabeylik" kurumu, şehzadelerin devlet yönetimi konusunda yetiştirilmesini sağlayan bir sistemdi.',
+          'Melikşah döneminde Ömer Hayyam başkanlığında bir bilim kurulu, Celali Takvimi\'ni hazırlamıştır.',
+        ],
+        questions: [
+          {
+            question: 'Tuğrul Bey, Bağdat\'a girdikten sonra halife tarafından hangi unvanla onurlandırılmıştır?',
+            options: [
+              'Halifenin Vekili',
+              'Doğunun ve Batının Sultanı',
+              'Ulu Hakan',
+              'Emir-ül Ümera',
+            ],
+            correctIndex: 1,
+            aciklama: '1055\'te Bağdat\'a giren Tuğrul Bey, halife tarafından "Doğunun ve Batının Sultanı" unvanıyla onurlandırılmıştır.',
+          },
+          {
+            question: 'Melikşah döneminde Ömer Hayyam başkanlığında hazırlanan takvim hangisidir?',
+            options: ['Hicri Takvim', 'Celali Takvimi', 'Rumi Takvim', 'Miladi Takvim'],
+            correctIndex: 1,
+            aciklama: 'Celali Takvimi, Melikşah\'ın emriyle Ömer Hayyam başkanlığındaki bilim kurulu tarafından hazırlanmıştır.',
+          },
+          {
+            question: 'Selçuklularda şehzadelerin devlet yönetimi konusunda yetiştirilmesini sağlayan kuruma ne ad verilir?',
+            options: ['Divan', 'Atabeylik', 'Kurultay', 'Nizamiye'],
+            correctIndex: 1,
+            aciklama: 'Atabeylik, şehzadelere devlet tecrübesi kazandırmak amacıyla deneyimli bir devlet adamının görevlendirildiği sistemdir.',
+          },
+        ],
+      },
+    },
+  },
+
   // ═══════════════════════════════════════════════════════════════════
   // COĞRAFYA
   // ═══════════════════════════════════════════════════════════════════
