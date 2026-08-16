@@ -1,5 +1,4 @@
-import { AgsCategory, AGS_TOPIC_META } from '../constants/agsQuestions';
-import { AGS_TOPIC_ORDER } from './agsQuiz';
+import { AgsCategory, AGS_TOPIC_META, AGS_TOPIC_ORDER } from '../constants/agsTopicMeta';
 
 export type AgsTitleId =
   | 'gelisim_uzman'

@@ -29,7 +29,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { QUESTION_POOL, Question } from '../constants/questions';
+import type { Question } from '../constants/questions';
 import { BadgeId } from './badges';
 
 export type DuelCategory = Question['category'] | 'karisik';
@@ -75,6 +75,9 @@ export const DUEL_CATEGORY_LABELS: Record<DuelCategory, string> = {
 // ─── Soru seçimi ───
 
 export function pickDuelQuestions(category: DuelCategory): Question[] {
+  // Boot sırasında büyük soru havuzunun gereksiz yere yüklenmemesi için tembel require
+  // (Hermes/iOS 26 PAC crash'i açılışta yoğun JS nesne-özellik erişimiyle tetikleniyor).
+  const { QUESTION_POOL } = require('../constants/questions') as typeof import('../constants/questions');
   const pool =
     category === 'karisik' ? QUESTION_POOL : QUESTION_POOL.filter((q) => q.category === category);
   const shuffled = [...pool];
@@ -86,6 +89,7 @@ export function pickDuelQuestions(category: DuelCategory): Question[] {
 }
 
 export function questionsByIds(ids: string[]): Question[] {
+  const { QUESTION_POOL } = require('../constants/questions') as typeof import('../constants/questions');
   const map = new Map(QUESTION_POOL.map((q) => [q.id, q]));
   return ids.map((id) => map.get(id)).filter((q): q is Question => q !== undefined);
 }

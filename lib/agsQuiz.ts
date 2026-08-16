@@ -1,24 +1,9 @@
-import { AGS_QUESTION_POOL, AGS_TOPIC_META, AgsCategory, AgsQuestion } from '../constants/agsQuestions';
+import { AGS_QUESTION_POOL, AgsQuestion } from '../constants/agsQuestions';
+import { AgsCategory } from '../constants/agsTopicMeta';
 
-export const AGS_TOPIC_ORDER: AgsCategory[] = [
-  'gelisim-psikolojisi',
-  'ogrenme-psikolojisi',
-  'ogretim-ilke-yontem',
-  'olcme-degerlendirme',
-  'rehberlik',
-  'sinif-yonetimi',
-  'program-gelistirme',
-  'ogretim-teknolojileri',
-  'turk-egitim-sistemi',
-];
-
-export function getAgsTopicLabel(cat: AgsCategory): string {
-  return AGS_TOPIC_META[cat].label;
-}
-
-export function getAgsTopicColor(cat: AgsCategory): string {
-  return AGS_TOPIC_META[cat].color;
-}
+export { AGS_TOPIC_ORDER } from '../constants/agsTopicMeta';
+export { getAgsTopicLabel, getAgsTopicColor } from './agsCategoryMeta';
+import { AGS_TOPIC_ORDER } from '../constants/agsTopicMeta';
 
 export function getAgsTopicQuestionCount(cat: AgsCategory): number {
   return AGS_QUESTION_POOL.filter((q) => q.category === cat).length;

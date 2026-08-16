@@ -1,5 +1,5 @@
-import { AgsCategory } from '../constants/agsQuestions';
-import { AGS_TOPIC_ORDER, getAgsTopicLabel, getAgsTopicColor } from './agsQuiz';
+import { AgsCategory, AGS_TOPIC_ORDER } from '../constants/agsTopicMeta';
+import { getAgsTopicLabel, getAgsTopicColor } from './agsCategoryMeta';
 
 export interface AgsCategoryBreakdownEntry {
   key: AgsCategory;

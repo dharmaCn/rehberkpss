@@ -16,12 +16,12 @@ import {
   addDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { getTodayKey } from './quiz';
+import { getTodayKey } from './dateKey';
 import { guestDisplayName, isGuestDisplayName } from './guestName';
 import { SEASON_ID } from '../constants/season';
 import { BadgeId, evaluateNewBadges } from './badges';
 import { CategoryKey, TitleId, evaluateTitle } from './titles';
-import { AgsCategory } from '../constants/agsQuestions';
+import { AgsCategory } from '../constants/agsTopicMeta';
 import { AgsTitleId, evaluateAgsTitle } from './agsTitles';
 
 export interface ProfileMeta {

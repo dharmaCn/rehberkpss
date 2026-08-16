@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuthSync } from '../../lib/firebase';
 import { hasCompletedTodayQuiz, hasCompletedTodayEveningQuiz, fetchUserProfile, hasAnsweredDailyArt, fetchDueWrongCount, UserProfile } from '../../lib/firestore';
-import { getDailyQuestions, getTodayKey } from '../../lib/quiz';
+import { getTodayKey } from '../../lib/dateKey';
 import { getDailyArtQuestion } from '../../constants/artworks';
 import { getDailyFact, FACT_CATEGORY_LABELS } from '../../constants/facts';
 import { openStoreReview } from '../../lib/review';
@@ -30,6 +30,12 @@ import UpdateBanner from '../../components/UpdateBanner';
 import { Duel, fetchMyDuels, DUEL_CATEGORY_LABELS } from '../../lib/duels';
 
 const CULTURE_CARD_IMAGE = require('../../assets/culture-card-bg.png');
+
+// getDailyQuestions() her zaman 10 döner (havuz 1062 soru, slice(0, 10)) — sabit
+// tutup ana ekranın açılışta dev soru havuzunu (constants/questions.ts) yüklemesini
+// önlüyoruz (Hermes/iOS 26 PAC crash'i açılışta yoğun JS nesne-özellik erişimiyle
+// tetikleniyor, bkz. CLAUDE.md).
+const DAILY_QUESTION_COUNT = 10;
 
 function secondsUntilEveningQuiz(): number {
   const now = new Date();
@@ -102,7 +108,7 @@ export default function HomeScreen() {
   const eveningPulse = useRef(new Animated.Value(0)).current;
   const dailyArt = useMemo(() => getDailyArtQuestion(), []);
   const dailyFact = useMemo(() => getDailyFact(), []);
-  const questionCount = useMemo(() => getDailyQuestions().length, []);
+  const questionCount = DAILY_QUESTION_COUNT;
   const today = getTodayKey();
 
   const refreshAll = useCallback((openExamIfNeeded = false) => {

@@ -1,4 +1,4 @@
-import { getCategoryColor } from './quiz';
+import { getCategoryColor } from './categoryMeta';
 
 export type CategoryKey = 'tarih' | 'cografya' | 'vatandaslik' | 'guncel';
 

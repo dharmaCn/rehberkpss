@@ -1,5 +1,5 @@
 import { CategoryKey } from './titles';
-import { getCategoryLabel, getCategoryColor } from './quiz';
+import { getCategoryLabel, getCategoryColor } from './categoryMeta';
 
 export interface CategoryBreakdownEntry {
   key: CategoryKey;

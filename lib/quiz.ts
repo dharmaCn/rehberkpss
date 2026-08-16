@@ -1,5 +1,8 @@
 import { QUESTION_POOL, Question } from '../constants/questions';
 
+export { getTodayKey } from './dateKey';
+export { getCategoryLabel, getCategoryColor } from './categoryMeta';
+
 export function getDailyQuestions(): Question[] {
   const today = new Date();
   const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
@@ -16,11 +19,6 @@ export function getDailyQuestions(): Question[] {
   return shuffled.slice(0, 10);
 }
 
-export function getTodayKey(): string {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-}
-
 export function calculateScore(
   correct: boolean,
   timeRemaining: number,
@@ -30,16 +28,6 @@ export function calculateScore(
   const base = 100;
   const speedBonus = Math.floor((timeRemaining / totalTime) * 50);
   return base + speedBonus;
-}
-
-export function getCategoryLabel(cat: Question['category']): string {
-  const map = { tarih: 'Tarih', cografya: 'Coğrafya', vatandaslik: 'Vatandaşlık', guncel: 'Güncel' };
-  return map[cat];
-}
-
-export function getCategoryColor(cat: Question['category']): string {
-  const map = { tarih: '#EF4444', cografya: '#10B981', vatandaslik: '#4F46E5', guncel: '#F59E0B' };
-  return map[cat];
 }
 
 export function eveningQuizDoneKey(dateKey: string): string {
