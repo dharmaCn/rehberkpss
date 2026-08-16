@@ -36,12 +36,14 @@ app/
 └── wrong/                   Yanlış tekrarı (aralıklı tekrar, 2 gün bekleme)
 
 components/  DailyCultureModal, ExamGoalModal, SeasonResetModal, ReportQuestionButton, DuelRunner
-constants/   questions.ts (genel kültür, 1062 soru: Tarih/Coğrafya/Vatandaşlık/Güncel), agsQuestions.ts (AGS/Eğitim Bilimleri, 600 soru: 9 alt dal), artworks.ts (81), facts.ts (101), topics.ts (30 ünite: 13 tarih + 10 coğrafya + 7 vatandaşlık), exams.ts, season.ts
+constants/   questions.ts (genel kültür, 1103 soru: Tarih/Coğrafya/Vatandaşlık/Güncel), agsQuestions.ts (AGS/Eğitim Bilimleri, 616 soru: 9 alt dal), artworks.ts (81), facts.ts (101), topics.ts (31 ünite: 14 tarih + 10 coğrafya + 7 vatandaşlık), exams.ts, season.ts
 lib/         firestore.ts (veri katmanı), badges.ts, levels.ts (XP/seviye), titles.ts (Aday Kimliği unvanları — genel kültür), categoryAnalysis.ts (Zayıf Konu Radarı — genel kültür), agsQuiz.ts (AGS soru seçimi/etiket/renk), agsTitles.ts (AGS unvan seti), agsCategoryAnalysis.ts (AGS Zayıf Konu Radarı), duels.ts, notifications.ts, share.ts, demoMode.ts, guestName.ts, onboarding.ts
 app/(tabs)/ags.tsx  AGS sekmesi: 9 konu kartı + Zayıf Konu Radarı + unvan rozeti
 app/ags/     AGS quiz akışı (5 soru, 30sn timer) — kendi Firestore alanları (agsCategoryStats/agsTitleId), genel kültür skor/liderlik sistemine dokunmaz
 app/duel/    Arkadaşla düello (yeni + [id] sonuç ekranı)
 app/evening/ Akşam Sınavı (20:00'de açılan ek 10 soru)
+app/weekly/  Haftalık Deneme (Pazar günü açılan 30 soruluk gerçek sınav formatı, yüzdelik dilim)
+app/recap/[month].tsx  Atanma Günlüğü (aylık paylaşılabilir özet kartı)
 app/onboarding.tsx  Yeni kullanıcı karşılama akışı
 ```
 
@@ -213,11 +215,21 @@ Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök ned
 
 Hedef kitle analizi: KPSS adayı belirsizlik içinde, yalnız, kıyas baskısı altında; kontrol hissi veren ritüellere ve "yalnız değilim" duygusuna ihtiyacı var. Seçilen üç özellik:
 
-1. **Canlı nabız (hızlı kazanım, ilk yapılacak):** Ana ekranda "Şu an X aday çalışıyor · bugün Y soru çözüldü" sayacı. Mevcut `results`/`categoryResults` verilerinden türetilebilir; 1-2 saatlik iş, yalnızlık hissine doğrudan cevap.
-2. **Haftalık Deneme + yüzdelik dilim:** Pazar günü 30 soru, gerçek sınav formatı, Türkiye geneli yüzdelik ("ilk %18'desin"). Adaya başka yerde bulamayacağı konum bilgisi verir. (Eski yol haritasından öne çekildi.)
-3. **Atanma Günlüğü + Kader Sorusu:** (a) Ay sonu otomatik, paylaşılabilir özet kartı — "Mart: 1.240 soru, 27 gün seri" (sonucu değil emeği paylaştırır, organik büyüme); (b) her akşam 21:00 push ile tüm kullanıcılara aynı zor soru, tek cevap hakkı, "Türkiye'nin %34'ü bildi" sonucu — düello push altyapısının üstüne biner.
+1. **Canlı nabız (hızlı kazanım, ilk yapılacak):** Ana ekranda "Şu an X aday çalışıyor · bugün Y soru çözüldü" sayacı. Mevcut `results`/`categoryResults` verilerinden türetilebilir; 1-2 saatlik iş, yalnızlık hissine doğrudan cevap. **Not:** Bu daha önce (2026-07-30 civarı) denenip düşük gerçek kullanıcı sayısı ters etki yarattığı için kaldırılmıştı — v1.5 kapsamında tekrar gündeme gelmedi.
+2. **✅ Haftalık Deneme + yüzdelik dilim — YAPILDI (2026-08-09):** Pazar günü 30 soru, gerçek sınav formatı, o haftaki katılımcılara göre yüzdelik dilim ("Türkiye genelinde ilk %18'desin"). Detaylar aşağıda.
+3. **✅ Atanma Günlüğü — YAPILDI (2026-08-09, sadece (a) kısmı):** Ay sonu otomatik, paylaşılabilir özet kartı — o ay çözülen soru sayısı + aktif gün (sonucu değil emeği paylaştırır). **Kader Sorusu (b) yapılmadı** — push/Cloud Functions altyapısı gerektiriyor, bu konu daha önce kapatılmıştı (bkz. reference_yollar.md / proje hafızası), gündeme getirilmedi.
 
 Not: "Çalışma Loncası" (takımlar) fikri şimdilik pas geçildi; ileride tekrar değerlendirilebilir.
+
+### Haftalık Deneme + Atanma Günlüğü + içerik genişletmesi (2026-08-09 oturumu)
+
+Kullanıcıyla karşılıklı Q&A ile kapsam netleştirildi (plan modu kullanıldı), sonra uygulandı:
+
+- **Haftalık Deneme:** `lib/quiz.ts`'e `getWeeklyExamQuestions()` (haftalık deterministik seed, `QUESTION_POOL`'dan 30 soru — tüm Türkiye aynı hafta aynı soruları görür) + `isWeeklyExamAvailable()` (sadece Pazar). `app/weekly/exam.tsx` — `app/evening/quiz.tsx`'in klonu, 30 soru/30sn, yüzdelik chip + paylaşım kartı eklendi. Yeni Firestore koleksiyonu `weeklyExamResults/{uid}_{weekKey}` — **bilinçli olarak `users.totalScore`'a dokunmuyor** (AGS modülüyle aynı izole-istatistik yaklaşımı), bu yüzden `validUserUpdate`'in totalScore tavanını değiştirmeye gerek kalmadı. `firestore.rules` deploy edildi. Ana ekranda Pazar günü açılan altın renkli kart, Pazar 10:00 için yerel bildirim (`scheduleWeeklyExamReady`).
+- **Atanma Günlüğü:** `lib/monthlyRecap.ts` — `fetchMonthlyRecap(uid, monthKey)` `results` koleksiyonundaki `mainTotal+eveningTotal` alanlarını o ay için toplar (kategori quiz'leri v1'de dahil değil, bir alt sınır/yaklaşık değer). Yeni Firestore koleksiyonu **yok** — kullanıcı zaten kendi `results` dokümanlarını okuyabiliyor. `components/MonthlyRecapCard.tsx` + `app/recap/[month].tsx` — `captureAndShare` (`lib/share.ts`, zaten kurulu `react-native-view-shot`) ile paylaşılabilir kart. Profilde kalıcı giriş noktası + ayın 1'i için yerel bildirim + bildirim kaçırılırsa diye ana ekranda açılış-anı yedek banner'ı (AsyncStorage `monthlyRecapSeen:{monthKey}` bayrağıyla bir kez gösterilir).
+- **İçerik (ilk parti, devam edecek):** Genel kültüre 40 yeni soru (tarih/coğrafya/vatandaşlık/güncel'e 10'ar, h366-375/c291-300/v241-250/g191-200), AGS'ye 16 yeni soru (Gelişim Psikolojisi gp077-084 + Ölçme-Değerlendirme ov077-084), yeni bir tarih ünitesi (`t14` — Büyük Selçuklu Devleti, `constants/topics.ts`). `app/(tabs)/practice.tsx`'teki "13 ünite" → "14 ünite", `app/onboarding.tsx`'teki "30 üniteyi" → "31 üniteyi" güncellendi. **Hedef olan tam 30-40 soru/kategori (13 kategori) henüz tamamlanmadı** — bu ilk parti sadece formatın/akışın çalıştığını doğrulamak ve gerçek, doğrulanmış içerik eklemek içindi; kalan içerik yazımı ayrı bir oturumda devam edecek.
+- **Paylaşılan altyapı:** `getWeekKey()` (`lib/firestore.ts`'te unexported olarak duruyordu) `lib/dateKey.ts`'e taşındı, `getMonthKey()` da oraya eklendi — hem `lib/firestore.ts` hem `lib/quiz.ts`/`lib/monthlyRecap.ts` oradan import ediyor.
+- **Doğrulama:** `npx tsc --noEmit` her adımdan sonra çalıştırıldı, tüm değişiklikler tip hatasız. **Simülatörde uçtan uca UI testi yapılmadı** (kullanıcı test aşamasını erteledi) — bir sonraki oturumda `npx expo run:ios --udid BF4715BD-61A3-4115-B27F-CE79BD7776D9` ile Pazar günü kartı/ekranı, paylaşım akışı ve Atanma Günlüğü ekranının gerçek cihazda/simülatörde doğrulanması gerekiyor.
 
 ## v1.4.0 — Arkadaşla Düello (2026-07-08, kod tamam + simülatörde E2E test edildi; 2026-07-10 commit'lendi ve build 29'a girdi)
 
