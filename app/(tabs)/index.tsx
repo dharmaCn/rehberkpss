@@ -33,7 +33,7 @@ import { Duel, fetchMyDuels, DUEL_CATEGORY_LABELS } from '../../lib/duels';
 
 const CULTURE_CARD_IMAGE = require('../../assets/culture-card-bg.png');
 
-// getDailyQuestions() her zaman 10 döner (havuz 1163 soru, slice(0, 10)) — sabit
+// getDailyQuestions() her zaman 10 döner (havuz 1275 soru, slice(0, 10)) — sabit
 // tutup ana ekranın açılışta dev soru havuzunu (constants/questions.ts) yüklemesini
 // önlüyoruz (Hermes/iOS 26 PAC crash'i açılışta yoğun JS nesne-özellik erişimiyle
 // tetikleniyor, bkz. CLAUDE.md).
