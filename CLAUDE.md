@@ -68,17 +68,17 @@ eas submit --platform ios --latest
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## Güncel Durum (2026-08-05)
+## Güncel Durum (2026-08-21)
 
 **Kısa özet — "uygulama şu an ne durumda?" sorusunun cevabı:**
-- 🍎 **App Store:** v1.3.4 **canlı**, v1.3.5 (build 48 — boot canary eşiği düşürüldü, sıralama tekrar + görsel yükleme düzeltmeleri) **Apple incelemesinde** (2026-08-05'te submit edildi, 48 saate kadar sürebilir) — bkz. aşağıdaki 2026-08-04/05 oturum notu.
-- 🤖 **Google Play:** v1.3.4 **canlı**, v1.3.5 (görsel yükleme + sıralama tekrar düzeltmeleri, versionCode 7) **Google incelemesinde** (2026-08-03'te submit edildi) — bkz. aşağıdaki 2026-08-03 oturum notu.
-- **İki platform da senkron ve güncel** — ilk kez bu noktaya ulaşıldı (Android'in üretime hiç çıkmamış olması Ağustos başındaki oturumların ana konusuydu, bkz. aşağıdaki oturum notları).
+- 🍎 **App Store:** v1.3.5 **canlı**, v1.3.6 (build 49 — Haftalık Deneme, Atanma Günlüğü, ~230 yeni soru) **Apple incelemesinde** (2026-08-21'de submit edildi, 48 saate kadar sürebilir).
+- 🤖 **Google Play:** v1.3.5 **canlı**, v1.3.6 (versionCode 9, aynı içerik) **Google incelemesine gönderildi** (2026-08-21, submit "COMPLETED" döndü).
+- **İki platform da senkron** — aynı gün, aynı içerikle her iki mağazaya da gönderim yapıldı.
 
 | Şey | Durum |
 |---|---|
-| iOS versiyon | **v1.3.4/build 46 hâlâ canlı; v1.3.5/build 48 Apple incelemesinde.** `eas build --platform ios --profile production` (EAS_SKIP_AUTO_FINGERPRINT=1 ile, fingerprint hesaplama EAS kesintisi yüzünden timeout veriyordu) + App Store Connect'te elle yeni versiyon (1.3.5) oluşturulup build 48 eklendi, "What's New" ve "Notes" güncellendi, manuel yayın modu korunarak review'a gönderildi (2026-08-05). Apple onayladıktan sonra Can'ın elle "Release This Version" yapması gerekecek. |
-| Android versiyon | **v1.3.4 (versionCode 6) hâlâ canlı; v1.3.5 (versionCode 7) Google incelemesinde.** v1.3.5, `eas build --platform android --profile production` + `eas submit --platform android --latest` ile 2026-08-03'te üretim kanalına gönderildi (submit "COMPLETED" döndü, Google onayı bekleniyor). Önceki v1.3.4: aynı komut ikilisiyle alınıp gönderilmiş, Google onaylamış, 2026-08-02 12:41'de yayına girmişti. |
+| iOS versiyon | **v1.3.5/build 48 hâlâ canlı; v1.3.6/build 49 Apple incelemesinde.** `eas build --platform ios --profile production` (EAS_SKIP_AUTO_FINGERPRINT=1 ile, fingerprint hesaplama zaman zaman timeout veriyor) + App Store Connect'te elle yeni versiyon (1.3.6) oluşturulup build 49 eklendi, "What's New" ve "Notes" güncellendi, manuel yayın modu korunarak review'a gönderildi (2026-08-21). Apple onayladıktan sonra Can'ın elle "Release This Version" yapması gerekecek. |
+| Android versiyon | **v1.3.5 (versionCode 7) hâlâ canlı; v1.3.6 (versionCode 9) Google incelemesinde.** İlk build denemesi fingerprint timeout'uyla başarısız oldu (versionCode 8 boşa gitti), `EAS_SKIP_AUTO_FINGERPRINT=1` ile tekrar denenip versionCode 9 olarak başarıyla build alındı ve `eas submit` ile gönderildi (2026-08-21). |
 | Google Play | **Üretim: Etkin** (kapalı test aşaması geride kaldı, hesaba üretim erişimi Google tarafından resmen verildi). `eas.json`'daki `submit.production.android.track` **"alpha"dan "production"a çevrildi** (artık `eas submit` direkt üretime gönderiyor). Mağaza ekran görüntüleri de 1.3.4'e göre güncellendi (AGS sekmesi, Pratik, Sıralama, Profil dahil, `aso/screenshots/android-2026-08-02/`). |
 | Age Ratings (iOS) | Apple'ın yeni "Social Media" sorularına (App Information → Age Ratings anketi) cevap verildi — uygulamada içerik yeniden yayma/sosyal besleme özelliği olmadığı için "No" işaretlendi. Hesaplanan derecelendirme hâlâ 4+. |
 | EAS build kotası | Ücretsiz aylık kota Temmuz sonunda tükenmişti — `eas build --local` (bu Mac'te, Fastlane ile) kullanıldı; bkz. aşağıdaki oturum notu. Ağustos'ta kota sıfırlandı |
@@ -119,6 +119,15 @@ Build 31 ve 33, kurulumdan sonra her açılışta anında çöküyordu. Kök ned
 **⚠️ Diğer build notları:**
 - İlk submit denemesi (build 29, v1.3.0) Apple tarafından **90062 hatasıyla reddedildi**: `app.json`'daki `"version"` (CFBundleShortVersionString) zaten onaylanmış 1.3.0 ile aynıydı, artırılması gerekiyordu → `1.3.1`'e çekildi. Bir sonraki sürümde `app.json`'daki `version`'ı da elle artırmayı unutma (EAS sadece `buildNumber`'ı `autoIncrement` ile otomatik artırıyor, marketing version'ı artırmıyor).
 - `eas build:version:set --platform ios` komutu **interaktif** — bu ortamda `expect` ile otomatikleştirildi ama alan öndeki değeri temizlemeden yazarsa değerleri birbirine karıştırabiliyor (`30` yerine yanlışlıkla `1.3.1` yazılmıştı, düzeltildi). Bu komutu tekrar çalıştırırken dikkatli ol, sonucu `eas build:version:get --platform ios` ile doğrula.
+
+### 2026-08-21 oturumu — v1.3.6: Haftalık Deneme + Atanma Günlüğü + büyük içerik genişletmesi, her iki mağazaya gönderim
+
+Önceki oturumlarda kod tarafı tamamlanan **Haftalık Deneme** ve **Atanma Günlüğü** özellikleri ile ~230 yeni soru (genel kültür 902→1275, AGS 600→751) `main`'e commit'liydi ama hiçbir build'e girmemişti. Bu oturumda:
+
+- `app.json`'daki `version` `1.3.5` → `1.3.6`'ya çekildi (her iki platformda da 1.3.5 zaten canlı/onaylanmıştı, aynı numara tekrar kullanılamaz).
+- **iOS:** `eas build --platform ios --profile production` (`EAS_SKIP_AUTO_FINGERPRINT=1` ile — fingerprint hesaplama yine timeout verdi) → build 49 başarıyla alındı → `eas submit` ile App Store Connect'e yüklendi → App Store Connect'te elle yeni versiyon (1.3.6) oluşturulup build 49 eklendi, "What's New" (yeni özellikler + soru sayıları) ve "Notes" (review'cu için "Guest" ile giriş talimatı) güncellendi, manuel yayın modu korunarak review'a gönderildi.
+- **Android:** İlk `eas build` denemesi fingerprint timeout'uyla başarısız oldu (versionCode 7→8 boşa arttı), `EAS_SKIP_AUTO_FINGERPRINT=1` ile tekrar denenip versionCode 9 ile başarıyla build alındı, `eas submit --platform android --latest` ile üretim kanalına gönderildi (submit "COMPLETED" döndü).
+- **Ders — soru havuzu genişletmesinde tempo:** Kullanıcı "tek seferde en fazla kaç soru ekleyebilirsin" diye sordu; cevap olarak "~100-120/parti (kategori başına 25-30), daha fazlası doğruluk riski taşır" denildi ve bu tempoda genel kültüre ek 112 soru (kategori başına 28) daha eklendi — AGS'ye bu turda dokunulmadı (kullanıcı açıkça istedi). Her partiden sonra `Math.imul` tabanlı shuffle script'i + `grep correctIndex` dağılım kontrolü + `tsc --noEmit` rutini uygulandı.
 
 ### 2026-08-04/05 oturumu — iOS v1.3.4'te crash tekrarı, boot canary düzeltmesi, v1.3.5 iOS submit
 
